@@ -90,6 +90,8 @@ public class LuaInvocationHandler implements InvocationHandler
 			{
 				print.call(methodName+" "+e.getMessage());
 			}  	
+			if(ret==null && (retType.equals(boolean.class)||retType.equals(Boolean.class)))
+				return false;
 			return ret;
 		}
 	}
