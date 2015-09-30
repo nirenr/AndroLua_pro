@@ -1,15 +1,19 @@
-﻿# AndroLua-
-lua 5.3.1 for android pro
+require "import"
+import "android.widget.*"
+import "android.view.*"
+import "android.app.*"
+import "android.net.*"
+import "android.content.*"
 
-关于
-AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
+help=[===[
+@关于@
+@AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
 官方QQ群：236938279
 http://jq.qq.com/?_wv=1027&k=dcofRr
 百度贴吧：
 http://c.tieba.baidu.com/mo/m?kw=androlua
 项目地址：
 http://sf.net/p/androlua
-https://github.com/nirenr/AndroLua
 点击链接支持我的工作，一块也可以哦：
 https://qr.alipay.com/apt7ujjb4jngmu3z9a
 
@@ -35,24 +39,19 @@ canvas
 
 jni
 由nirenr开发
-
-与标准Lua5.3.1的区别
-1，增加string.gfind函数，用于迭代查找字符串位置，
-2，修改os.clock适应安卓的CPU机制
-3，增加table.foreach兼容Lua5.1
-
-1，参考链接
-关于lua的语法和Android API请参考以下网页。
+@
+@1，参考链接@
+@关于lua的语法和Android API请参考以下网页。
 Lua官网：
 http://www.lua.org
 Android 中文API：
 http://android.toolib.net/reference/packages.html
-
-2，导入模块
-在每个脚本程序的开头应该写上 require "import" 以导入import模块，简化写代码的难度。目前程序内置bson,canvas,cjson,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zlib。
-
-3，导入包或类
-可以导入包或者类
+@
+@2，导入模块@
+@在每个脚本程序的开头应该写上 require "import" 以导入import模块，简化写代码的难度。目前程序内置bson,canvas,cjson,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zlib。
+@
+@3，导入包或类@
+@可以导入包或者类
 import "android.widget.*"
 import "android.widget.Button"
 导入内部类
@@ -62,26 +61,26 @@ import "android.view.View_OnClickListener"
 或
 View.OnClickListene
 包名和类名必须用引号包围。
-
-4，创建布局与组件
-layout=LinearLayout(activity)
+@
+@4，创建布局与组件@
+@layout=LinearLayout(activity)
 activity.setContentView(layout)
 button=Button(activity)
 layout.addView(button)
 注.activity是当前窗口的Context对象，如果习惯写this只需要
 this=activity
 button=Button(this)
-
-5，使用方法
-button.setText("按钮")
+@
+@5，使用方法@
+@button.setText("按钮")
 
 getter/setter
 Java的getxxx方法没有参数与setxxx方法只有一个参数时可以简写，
 button.Text="按钮"
 x=button.X
-
-6，使用事件
-创建事件处理函数
+@
+@6，使用事件@
+@创建事件处理函数
 function click(s)
     print("点击")
     end
@@ -100,9 +99,9 @@ onClick事件可以简写
 button.onClick=function(v)
     print(v)
     end
-
-7，回调方法
-function onResume()
+@
+@7，回调方法@
+@function onResume()
     print("返回程序")
     end
 function onDestroy()
@@ -112,9 +111,9 @@ function onCreateOptionsMenu(menu)
     menu.add("菜单")
     end
 支持onCreate,onStart,onResume,onPause,onStop,onDestroy,onActivityResult,onCreateOptionsMenu,onCreateContextMenu,onMenuItemSelected
-
-8，按键与触控
-function onKeyDown(code,event)
+@
+@8，按键与触控@
+@function onKeyDown(code,event)
     print(code event)
     end
 function onTouchEvent(event)
@@ -122,16 +121,16 @@ function onTouchEvent(event)
     end
 支持onKeyDown,onKeyUp,onKeyLongPress,onTouchEvent
 函数必须返布尔值
-
-9，使用数组
-array=float{1,2,3}
+@
+@9，使用数组@
+@array=float{1,2,3}
 或者
 array=int[10]
 a=array[0]
 array[0]=4
-
-10，使用线程
-需导入import模块，参看thread与task函数说明
+@
+@10，使用线程@
+@需导入import模块，参看thread与task函数说明
 任务
 
 task(str,args,callback)
@@ -166,9 +165,9 @@ t.Enable=true 启动定时器
 t.stop() 停止定时器
 
 注意：定时器函数定义run函数时定时器重复执行run函数，否则重复执行构建时的func函数
-
-11，使用布局表
-使用布局表须导入android.view与android.widget包。
+@
+@11，使用布局表@
+@使用布局表须导入android.view与android.widget包。
 require "import"
 import "android.widget.*"
 import "android.view.*"
@@ -197,9 +196,9 @@ function draw(canvas,paint)
     end
 控件背景色使用backgroundColor设置，值为"十六进制颜色值"。
 其他参考loadlayout与loadbitmap
-
-12，2D绘图
-require "import"
+@
+@12，2D绘图@
+@require "import"
 import "android.app.*"
 import "android.os.*"
 import "android.widget.*"
@@ -230,9 +229,9 @@ callback=SurfaceHolder_Callback{
 holder=sureface.getHolder()
 holder.addCallback(callback)
 activity.setContentView(sureface)
-
-13，部分模块
-(1) canvas模块
+@
+@13，部分模块@
+@(1) canvas模块
 require "import"
 import "canvas"
 import "android.app.*"
@@ -356,10 +355,10 @@ function click()
     Toast.makeText(activity, edit.getText().toString(), Toast.LENGTH_SHORT ).show()
     end
 activity.setContentView(loadlayout(layout))
+@
 
-
-关于打包
-新建工程或在脚本目录新建init.lua文件。
+@关于打包@
+@新建工程或在脚本目录新建init.lua文件。
 写入以下内容，即可将文件夹下所有lua文件打包，main.lua为程序人口。
 appname="demo"
 appver="1.0"
@@ -367,9 +366,9 @@ packagename="com.androlua.demo"
 目录下icon.png替换图标，welcome.png替换启动图。
 没有int.lua文件打包当前文件。
 打包使用debug签名。
-
-部分函数参考
-
+@
+@部分函数参考@
+@
 [a]表示参数a可选，(...)表示不定参数。函数调用在只有一个参数且参数为字符串或表时可以省略括号。
 AndroLua库函数在import模块，为便于使用都是全局变量。
 s 表示string类型，i 表示整数类型，n 表示浮点数或整数类型，t 表示表类型，b 表示布尔类型，o 表示Java对象类型，f为Lua函数。
@@ -525,6 +524,229 @@ luajava.tostring(o)
 参数：o Java对象
 返回：Lua字符串
 作用：相当于 o.toString()
+@
+
+@布局表字符串常量@
+@布局表支持属性字符串常量
+    -- android:drawingCacheQuality
+    auto=0,
+    low=1,
+    high=2,
+
+    -- android:importantForAccessibility
+    auto=0,
+    yes=1,
+    no=2,
+
+    -- android:layerType
+    none=0,
+    software=1,
+    hardware=2,
+
+    -- android:layoutDirection
+    ltr=0,
+    rtl=1,
+    inherit=2,
+    locale=3,
+
+    -- android:scrollbarStyle
+    insideOverlay=0x0,
+    insideInset=0x01000000,
+    outsideOverlay=0x02000000,
+    outsideInset=0x03000000,
+
+    -- android:visibility
+    visible=0,
+    invisible=1,
+    gone=2,
+
+    wrap_content=-2,
+    fill_parent=-1,
+    match_parent=-1,
+    wrap=-2,
+    fill=-1,
+    match=-1,
+
+    -- android:orientation
+    vertical=1,
+    horizontal= 0,
+
+    -- android:gravity
+    axis_clip = 8,
+    axis_pull_after = 4,
+    axis_pull_before = 2,
+    axis_specified = 1,
+    axis_x_shift = 0,
+    axis_y_shift = 4,
+    bottom = 80,
+    center = 17,
+    center_horizontal = 1,
+    center_vertical = 16,
+    clip_horizontal = 8,
+    clip_vertical = 128,
+    display_clip_horizontal = 16777216,
+    display_clip_vertical = 268435456,
+    --fill = 119,
+    fill_horizontal = 7,
+    fill_vertical = 112,
+    horizontal_gravity_mask = 7,
+    left = 3,
+    no_gravity = 0,
+    relative_horizontal_gravity_mask = 8388615,
+    relative_layout_direction = 8388608,
+    right = 5,
+    start = 8388611,
+    top = 48,
+    vertical_gravity_mask = 112,
+    end = 8388613,
+
+    -- android:textAlignment
+    inherit=0,
+    gravity=1,
+    textStart=2,
+    textEnd=3,
+    textCenter=4,
+    viewStart=5,
+    viewEnd=6,
+    
+    -- android:inputType
+    none=0x00000000,
+    text=0x00000001,
+    textCapCharacters=0x00001001,
+    textCapWords=0x00002001,
+    textCapSentences=0x00004001,
+    textAutoCorrect=0x00008001,
+    textAutoComplete=0x00010001,
+    textMultiLine=0x00020001,
+    textImeMultiLine=0x00040001,
+    textNoSuggestions=0x00080001,
+    textUri=0x00000011,
+    textEmailAddress=0x00000021,
+    textEmailSubject=0x00000031,
+    textShortMessage=0x00000041,
+    textLongMessage=0x00000051,
+    textPersonName=0x00000061,
+    textPostalAddress=0x00000071,
+    textPassword=0x00000081,
+    textVisiblePassword=0x00000091,
+    textWebEditText=0x000000a1,
+    textFilter=0x000000b1,
+    textPhonetic=0x000000c1,
+    textWebEmailAddress=0x000000d1,
+    textWebPassword=0x000000e1,
+    number=0x00000002,
+    numberSigned=0x00001002,
+    numberDecimal=0x00002002,
+    numberPassword=0x00000012,
+    phone=0x00000003,
+    datetime=0x00000004,
+    date=0x00000014,
+    time=0x00000024,
+
+相对布局rule
+    layout_above=2,
+    layout_alignBaseline=4,
+    layout_alignBottom=8,
+    layout_alignEnd=19,
+    layout_alignLeft=5,
+    layout_alignParentBottom=12,
+    layout_alignParentEnd=21,
+    layout_alignParentLeft=9,
+    layout_alignParentRight=11,
+    layout_alignParentStart=20,
+    layout_alignParentTop=10,
+    layout_alignRight=7,
+    layout_alignStart=18,
+    layout_alignTop=6,
+    layout_alignWithParentIfMissing=0,
+    layout_below=3,
+    layout_centerHorizontal=14,
+    layout_centerInParent=13,
+    layout_centerVertical=15,
+    layout_toEndOf=17,
+    layout_toLeftOf=0,
+    layout_toRightOf=1,
+    layout_toStartOf=16
+    
+
+
+尺寸单位
+    px=0,
+    dp=1,
+    sp=2,
+    pt=3,
+    in=4,
+    mm=5
+
+@
+]===]
+list={}
+for t,c in help:gmatch("(%b@@)\n*(%b@@)") do
+    --print(t)
+    t=t:sub(2,-2)
+    c=c:sub(2,-2)
+    list[t]=c
+    list[#list+1]=t
+    end
+
+function show(v)
+    local s=v.getText()
+    local c=list[s]
+    if c then
+        help_dlg.setTitle(s)
+        help_tv.setText(c)
+        help_dlg.show()
+        --  local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String({c}))
+        -- listview.setAdapter(adapter)
+        end
+    end
+
+
+
+listview=ListView(activity)
+listview.setOnItemClickListener(AdapterView.OnItemClickListener{
+    onItemClick=function(parent, v, pos,id)
+        show(v)
+        end
+    })
+activity.setTitle("帮助")
+activity.setTheme(android.R.style.Theme_Holo_Light)
+local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(list))
+listview.setAdapter(adapter)
+activity.setContentView(listview)
+
+help_dlg=Dialog(activity,android.R.style.Theme_Holo_Light)
+help_sv=ScrollView(activity)
+help_tv=TextView(activity)
+help_tv.setTextSize(20)
+help_tv.TextIsSelectable=true
+help_sv.addView(help_tv)
+help_dlg.setContentView(help_sv)
+
+func={}
+func["捐赠"]=function()
+    intent = Intent();
+    intent.setAction("android.intent.action.VIEW");
+    content_url = Uri.parse("https://qr.alipay.com/apt7ujjb4jngmu3z9a");
+    intent.setData(content_url);
+    activity.startActivity(intent);
+    end
+func["返回"]=function()
+    activity.finish()
+    end
+
+items={"捐赠","返回"}
+function onCreateOptionsMenu(menu)
+    for k,v in ipairs(items) do
+        m=menu.add(v)
+        m.setShowAsActionFlags(1)
+        end
+    end
+
+function onMenuItemSelected(id,item)
+    func[item.getTitle()]()
+    end
+
 
 
 

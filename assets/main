@@ -1,0 +1,719 @@
+require "import"
+require "console"
+import "android.app.*"
+import "android.os.*"
+import "android.widget.*"
+import "android.view.*"
+import "com.androlua.*"
+import "java.io.*"
+import "android.text.method.*"
+
+activity.setTitle('AndroLua+')
+activity.setTheme(android.R.style.Theme_Holo_Light)
+--activity. getActionBar().show()
+luadir=luajava.luadir.."/" or "/sdcard/androlua/"
+luaconf=luadir.."lua.conf"
+pcall(dofile,luaconf)
+luapath=luapath or luadir.."new.lua"
+luadir=luapath:match("^(.-)[^/]+$")
+activity.getActionBar().setDisplayShowHomeEnabled(false)
+
+code=[===[
+require "import"
+import "android.widget.*"
+import "android.view.*"
+
+]===]
+pcode=[[
+require "import"
+import "android.app.*"
+import "android.os.*"
+import "android.widget.*"
+import "android.view.*"
+require "layout"
+activity.setTitle('AndroLua+')
+activity.setTheme(android.R.style.Theme_Holo_Light)
+activity.setContentView(loadlayout(layout.main))
+]]
+
+
+lcode=[[
+layout={
+    main={
+        LinearLayout,
+        orientation="vertical",
+        {
+            TextView,
+            text="hello AndroLua+",
+            layout_width="fill"
+            },
+        },
+    }
+]]
+
+about=[[
+AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
+官方QQ群：236938279
+http://jq.qq.com/?_wv=1027&k=dcofRr
+百度贴吧：
+http://c.tieba.baidu.com/mo/m?kw=androlua
+项目地址：
+http://sf.net/p/androlua
+点击链接支持我的工作，一块也可以哦：
+https://qr.alipay.com/apt7ujjb4jngmu3z9a
+]]
+
+
+layout={
+    main={
+ 
+            LuaEditor,
+            id="editor",
+            text= "",
+            lineColor="#000000",
+            layout_width="fill",
+            layout_height="fill",
+            --layout_weight=1 ,
+            --gravity="top"
+            
+        },
+    
+    create={
+        LinearLayout ,
+        layout_width="fill",
+        orientation=1,
+        {
+            TextView,
+            id="create_t",
+            text=dir,
+            layout_width="fill",
+            paddingLeft=20,
+            },
+        {
+            EditText,
+            id="create_e",
+            layout_width="fill",
+            paddingLeft=20,
+            },
+        {
+            Button,
+            text="确定",
+            layout_width="fill",
+            onClick="create"
+            },
+        },
+
+    help={
+        ScrollView,
+        {
+            LinearLayout,
+            layout_width="fill",
+            orientation=1,
+            paddingLeft=20,
+            {
+                TextView,
+                --                id="help",
+                autoLinkMask=1,
+                movementMethod=LinkMovementMethod.getInstance(),
+                linkTextColor="#0000ff",
+                layout_width="fill",
+                text=about,
+                textIsSelectable=true
+               },
+            {
+                TextView,
+                --                id="help",
+                autoLinkMask=1,
+                movementMethod=LinkMovementMethod.getInstance(),
+                linkTextColor="#0000ff",
+                layout_width="fill",
+                text=help1,
+                textIsSelectable=true
+               },
+            {
+                TextView,
+                --               id="about",
+                linkTextColor="#0000ff",
+                layout_width="fill",
+                text=help2,
+                textIsSelectable=true
+                },
+            }
+        },
+
+    build={
+        ScrollView ,
+        {
+            LinearLayout,
+            orientation=1,
+            layout_width="fill",
+            paddingLeft=20,
+            {
+                TextView,
+                text="脚本路径"
+                },
+            {
+                EditText,
+                id="luaPath",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="包名称"
+                },
+            {
+                EditText,
+                id="packageName",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="程序名称"
+                },
+            {
+                EditText,
+                id="appName",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="程序版本"
+                },
+            {
+                EditText,
+                id="appVer",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="apk路径"
+                },
+            {
+                EditText,
+                id="apkPath",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="打包使用debug签名",
+                id="status"
+                },
+            {
+                Button,
+                --                id="build_",
+                text="确定",
+                layout_width="fill",
+                onClick="click"
+                },
+            }
+        },
+    project={
+        ScrollView ,
+        {
+            LinearLayout,
+            orientation=1,
+            layout_width="fill",
+            paddingLeft=20,
+            {
+                TextView,
+                text="程序名称"
+                },
+            {
+                EditText,
+                id="project_appName",
+                text="demo",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                TextView,
+                text="包名称"
+                },
+            {
+                EditText,
+                id="project_packageName",
+                text="com.androlua.demo",
+                layout_width="fill",
+                singleLine=true,
+                },
+            {
+                Button,
+                text="确定",
+                layout_width="fill",
+                onClick="create_project"
+                },
+            }
+        }
+    }
+
+func={}
+func["打开"]=function()
+    save()
+    list(listview, luadir)
+    open_dlg.show()
+    end
+func["新建"]=function()
+    save()
+    create_t.setText(luadir)
+    create_dlg.show()
+    end
+    
+luaprojectdir=luajava.luadir.."/project/"
+function create_project()
+    local appname=project_appName.getText().toString()
+    local packagename=project_packageName.getText().toString()
+    local f=File(luaprojectdir..appname)
+    if f.exists() then
+        print("工程已存在")
+        return
+        end
+    if not f.mkdirs() then
+        print("工程创建失败")
+        return
+        end
+        luadir=luaprojectdir..appname.."/"
+        write(luadir.."init.lua",string.format("appname=\"%s\"\nappver=\"1.0\"\npackagename=\"%s\"",appname,packagename))
+        write(luadir.."main.lua",pcode)
+        write(luadir.."layout.lua",lcode)
+        project_dlg.hide()
+        luapath=luadir.."main.lua"
+        read(luapath)
+    end
+
+
+func["新建工程"]=function()
+    save()
+    project_dlg=Dialog(activity)
+    project_dlg.setTitle("新建工程")
+    project_dlg.setContentView(loadlayout(layout.project))
+    project_dlg.show()
+    end
+func["保存"]=function()
+    save()
+    Toast.makeText(activity, "文件已保存."..luapath, Toast.LENGTH_SHORT ).show()
+    end
+func["运行"]=function()
+    save()
+    local p={}
+    local e=pcall(loadfile(luadir.."init.lua","bt",p))
+    if e then
+        activity.newActivity(luadir.."main.lua")
+        else
+        activity.newActivity(luapath)
+        end
+    end
+func["撤销"]=function()
+    editor.undo()
+    end
+func["恢复"]=function()
+    editor.redo()
+    end
+func["格式化"]=function()
+    local str= editor.getText().toString()
+    local x= editor.getScrollX()
+    local y= editor.getScrollY()
+    editor.setText(console.format(str))
+    task([[luajava.bindClass("java.lang.Thread").sleep(200)]], function()editor.scrollTo(x,y)end)
+    end
+func["查错"]= function ()
+    local src=editor.getText()
+    src=src.toString()
+    local _,data=loadstring(src)
+    
+    if data then
+        local _,_,line,data=data:find(".(%d+).(.+)")
+        editor.gotoLine(tonumber(line))
+        Toast.makeText(activity,line..":".. data, Toast.LENGTH_SHORT ).show()
+        else
+        Toast.makeText(activity, "没有语法错误", Toast.LENGTH_SHORT ).show()
+        end
+    end
+
+func["编译"]=function()
+    save()
+    local path,str=console.build(luapath)
+    if path then
+        Toast.makeText(activity, "编译完成: "..path, Toast.LENGTH_SHORT ).show()
+        else
+        Toast.makeText(activity, "编译出错: "..str, Toast.LENGTH_SHORT ).show()
+        end
+    end
+
+func["打包"]=function()
+    save()
+    local p={}
+    local e=pcall(loadfile(luadir.."init.lua","bt",p))
+    if e then
+        Toast.makeText(activity, "正在打包..", Toast.LENGTH_SHORT ).show()
+        task(bin,luadir,p.appname,p.appver,p.packagename,luadir..p.appname..".apk",print)
+        return nil
+        end
+    apkname=luapath:match("(%w+)%.lua$")
+    apkname=apkname or "demo"
+    packagename="com.androlua."..apkname
+    local luadir="/sdcard/androlua/"
+    apkpath=luadir..apkname..".apk"
+
+    luaPath.setText(luapath)
+    appName.setText(apkname)
+    appVer.setText("1.0")
+    packageName.setText(packagename)
+    apkPath.setText(apkpath)
+    build_dlg.show()
+    end
+func["确定"]=function()
+    Toast.makeText(activity, "正在打包..", Toast.LENGTH_SHORT ).show()
+    task(bin,luaPath.getText().toString(),appName.getText().toString(),appVer.getText().toString(),packageName.getText().toString(),apkPath.getText().toString(),function(s)status.setText(s)end)
+    end
+
+func["日志"]=function()
+    activity.newActivity("logcat")
+    end
+
+func["帮助"]=function()
+    activity.newActivity("help")
+    --help_dlg.show()
+    end
+
+func["手册"]=function()
+    activity.newActivity("luadoc")
+    end
+
+function read(path)
+    local f=io.open(path,"r")
+    editor.setText(f:read("*all"))
+    f:close()
+    editor.clearHistories()
+    activity.getActionBar().setSubtitle(".."..path:match("(/[^/]+/[^/]+)$"))
+    local p={}
+    local e=pcall(loadfile(luadir.."init.lua","bt",p))
+    if e then
+        activity.setTitle(p.appname)
+        else
+        activity.setTitle("AndroLua+")
+        end
+    luapath=path
+    write(luaconf,string.format("luapath=%q",path))
+    Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
+    end
+
+function write(path,str)
+    local sw=io.open(path,"wb")
+    sw:write(str)
+    sw:close()
+    return str
+    end
+
+function save()
+    local src=editor.getText().toString()
+    write(luapath,src)
+    return src
+    end
+
+bin=[[luapath,appname,appver,packagename,apkpath=...
+require "import"
+require "console"
+
+import "java.util.zip.*"
+import "java.io.*"
+import "mao.res.*"
+import "apksigner.*"
+function copy(input,output)
+    local b=byte[2^16]
+    local l=input.read(b)
+    while l>1 do
+        output.write(b,0,l)
+        l=input.read(b)
+        end
+    end
+
+local tmp="/sdcard/AndroLua/tmp.apk"
+local info=activity.getApplicationInfo()
+local ver=activity.getPackageManager().getPackageInfo(activity.getPackageName(),0).versionName
+
+local zip=ZipFile(info.publicSourceDir)
+local out=ZipOutputStream(FileOutputStream(tmp))
+local entries= zip.entries()
+--dir="/sdcard/AndroLua/IDE/tieba/"
+local f=File(luapath)
+local errbuffer={}
+local mainpath
+if f.isDirectory() then
+    mainpath=luapath.."main.lua"
+    local ls=f.listFiles()
+    for n=0,#ls-1 do
+        local name=ls[n].getName()
+        if name:find("%.lua$") and not name:find("main%.lua$") then
+            local path,err=console.build(luapath..name)
+            if path then
+                entry=ZipEntry("assets/"..name)
+                out. putNextEntry(entry)
+                copy(FileInputStream(File(path)),out)
+                else
+                table.insert(errbuffer,err)
+                end
+            elseif name=="icon.png" then
+            entry=ZipEntry("res/drawable/"..name)
+            out. putNextEntry(entry)
+            copy(FileInputStream(ls[n]),out)
+            reicon=true
+            elseif name=="welcome.png" then
+            entry=ZipEntry("res/drawable/"..name)
+            out. putNextEntry(entry)
+            copy(FileInputStream(ls[n]),out)
+            rewelcome=true
+            elseif name:find("%.png$") or name:find("%.jpg$") or name:find("%.gif$") then
+            entry=ZipEntry("assets/"..name)
+            out. putNextEntry(entry)
+            copy(FileInputStream(ls[n]),out)
+            end
+        end
+    else
+    mainpath=luapath
+    end
+
+while entries. hasMoreElements () do
+    local entry= entries. nextElement ()
+    if reicon and entry.getName():find("icon.png$") then
+        elseif rewelcome and entry.getName():find("welcome.png$") then
+        elseif not entry.getName():find("luadoc") then
+        out. putNextEntry(entry)
+        if entry.getName() == "AndroidManifest.xml" then
+            local list=ArrayList()
+            local xml=AXmlDecoder.read(list, zip.getInputStream(entry))
+            local index=list.indexOf (activity.getPackageName())
+            if index<0 then
+                return "打包出错!"
+                end
+            list.set(index,packagename)
+            index=list.indexOf (info.nonLocalizedLabel)
+            if index<0 then
+                return "打包出错!"
+                end
+            list.set(index,appname)
+            index=list.indexOf (ver)
+            if index<0 then
+                return "打包出错!"
+                end
+            list.set(index,appver)
+            xml.write(list,out)
+            elseif entry.getName() == "assets/main" then
+            local path,err=console.build(mainpath)
+            if path then
+                copy(FileInputStream(File(path)),out)
+                else
+                table.insert(errbuffer,err)
+                end
+            else
+            if not entry.isDirectory() then
+                copy( zip.getInputStream(entry),out)
+                end
+            end
+        end
+    end
+
+out.closeEntry()
+out.close()
+
+if #errbuffer==0 then
+    Signer.sign(tmp,apkpath)
+    os.remove(tmp)
+import "android.net.*"
+import "android.content.*"
+i = Intent(Intent.ACTION_VIEW);
+i.setDataAndType(Uri.parse("file://"..apkpath), "application/vnd.android.package-archive");
+i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+activity.startActivity(i);
+    return "打包成功:"..apkpath
+    else
+    os.remove(tmp)
+    return "打包出错:\n "..table.concat(errbuffer,"\n")
+    end
+]]
+
+function click(s)
+    func[s.getText()]()
+    end
+
+function create()
+    luapath=luadir.. create_e.getText().toString()
+    if not pcall(read,luapath) then
+        f=io.open(luapath,"a")
+        f:write(code)
+        f:close()
+        editor.setText(code)
+        write(luaconf,string.format("luapath=%q",luapath))
+        Toast.makeText(activity, "新建文件."..luapath, Toast.LENGTH_SHORT ).show()
+        else
+        Toast.makeText(activity, "打开文件."..luapath, Toast.LENGTH_SHORT ).show()
+        end
+    write(luaconf,string.format("luapath=%q",luapath))
+    editor.clearHistories()
+    activity.getActionBar().setSubtitle(".."..luapath:match("(/[^/]+/[^/]+)$"))
+    create_dlg.hide()
+    end
+
+function open(s)
+    local p= s.getText()
+    if p== luadir then
+       return nil
+       end
+    if p:find("%.%./") then
+        luadir=luadir:match("(.-)[^/]+/$")
+        list(listview, luadir)
+        elseif p:find("/") then
+        luadir=luadir..p
+        list(listview, luadir)
+        else
+        luapath=luadir..p
+        read(luapath)
+        open_dlg.hide()
+        end
+    end
+
+function list(v,p)
+    local f=File(p)
+    local fs=f.listFiles()
+    fs=fs or String[0]
+    Arrays.sort(fs)
+    local t={}
+    if p~="/" then
+        table.insert(t,"../")
+        end
+    for n=0,#fs-1 do
+        if fs[n].isDirectory() then
+            table.insert(t,fs[n].getName().."/")
+            end
+        end
+    for n=0,#fs-1 do
+        local name=fs[n].getName()
+        if fs[n].isFile() and name:find("lua$") then
+            table.insert(t,name)
+            end
+        end
+    open_title.setText(p)
+    local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(t))
+    v.setAdapter(adapter)
+    end
+
+items={"运行","撤销","恢复","打开","保存","新建","新建工程", "格式化","查错","编译","打包","日志","帮助","手册",}
+function onCreateOptionsMenu(menu)
+    for k,v in ipairs(items) do
+        m=menu.add(v)
+        if k<3 then
+        m.setShowAsActionFlags(1)
+        end
+        end
+    end
+
+function onMenuItemSelected(id,item)
+    func[item.getTitle()]()
+    end
+--[[
+actionBar = activity.getActionBar();
+actionBar.setCustomView( loadlayout(layout.action));
+actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM)
+--actionBar. setHomeButtonEnabled(true)
+--actionBar. setDisplayShowTitleEnabled(true)
+]]
+activity.setContentView(loadlayout(layout.main))
+function addClass(class,classname)
+    local m=class.getMethods()
+    local t,tmp={},{}
+    for n=0,#m-1 do
+        tmp[m[n].getName()]=true
+        end
+    table.foreach(tmp,function(k,v) table.insert(t,k)end)
+    local c=0x88aaff-0x1000000
+    table.sort(t)
+    editor.addPackage(classname or class.getName(),table.concat(t,"|"),c)
+    end
+--addClass(activity.getClass(),"activity")
+
+open_dlg=Dialog(activity)
+open_dlg.setTitle("打开")
+open_title=TextView(activity)
+listview=ListView(activity)
+listview.addHeaderView(open_title)
+listview.setOnItemClickListener(AdapterView.OnItemClickListener{
+    onItemClick=function(parent, v, pos,id)
+        open(v)
+        end
+    })
+
+open_dlg.setContentView(listview)
+
+create_dlg=Dialog(activity)
+create_dlg.setTitle("新建")
+create_dlg.setContentView(loadlayout(layout.create))
+
+help_dlg=Dialog(activity,android.R.style.Theme_Holo_Light)
+help_dlg.setTitle("帮助")
+help_dlg.setContentView(loadlayout(layout.help))
+--help_t.setText(about..help)
+
+build_dlg=Dialog(activity)
+build_dlg.setTitle("打包")
+build_dlg.setContentView(loadlayout(layout.build))
+
+--[[
+doc_dlg=Dialog(activity,android.R.style.Theme_Holo_Light)
+doc_dlg.setTitle("Lua参考手册")
+local doc_layout=LinearLayout(activity)
+doc_layout.setOrientation(1)
+local doc_back=Button(activity)
+doc_back.setText("关闭")
+doc_back.setOnClickListener(View.OnClickListener{
+    onClick=function()
+        doc_dlg.hide()
+        end
+    })
+
+local doc_web=LuaWebView(activity)
+doc_web.loadUrl("file:/android_asset/luadoc/manual.html")
+doc_web.setOnKeyListener(View.OnKeyListener{
+    onKey=function (view,keyCode,event)
+        if ((keyCode == event.KEYCODE_BACK) and view.canGoBack()) then
+            view.goBack();
+            return true;
+            end
+        return false
+        end
+    })
+
+doc_layout.addView(doc_web,LinearLayout.LayoutParams(-1,-1,1))
+doc_layout.addView(doc_back)
+doc_dlg.setContentView(doc_layout)
+
+]]
+if pcall(read,luapath) then
+    last=last or 0
+    if last < editor.getText().length() then
+        editor.setSelection(last)
+        end
+    else
+    luapath=luadir.."new.lua"
+    pcall(read,luapath)
+    end
+    
+function onActivityResult(req,res,intent)
+    if res~=0 then
+        local data=intent.getStringExtra("data")
+        local _,_,line=data:find(":(%d+):")
+        editor.gotoLine (tonumber(line))
+        end
+    end
+
+
+function onStop()
+    save()
+    --Toast.makeText(activity, "文件已保存."..luapath, Toast.LENGTH_SHORT ).show()
+    f=io.open(luaconf,"wb")
+    f:write( string.format("luapath=%q\nlast=%d",luapath, editor. getSelectionEnd() ))
+    f:close()
+    end
