@@ -310,7 +310,7 @@ func["运行"]=function()
 func["撤销"]=function()
     editor.undo()
     end
-func["恢复"]=function()
+func["重做"]=function()
     editor.redo()
     end
 func["格式化"]=function()
@@ -601,7 +601,7 @@ function list(v,p)
     v.setAdapter(adapter)
     end
 
-items={"运行","撤销","恢复","打开","保存","新建","新建工程", "格式化","查错","编译","打包","日志","帮助","手册",}
+items={"运行","撤销","重做","打开","保存","新建","新建工程", "格式化","查错","编译","打包","日志","帮助","手册",}
 function onCreateOptionsMenu(menu)
     for k,v in ipairs(items) do
         m=menu.add(v)

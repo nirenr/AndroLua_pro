@@ -101,8 +101,5 @@
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
-		<!-- 移动云AppX SDK -->
-        <activity android:name="com.baidu.appx.ui.BDInnerBrowser" />
-
 	</application>
 </manifest>

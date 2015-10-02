@@ -95,7 +95,7 @@ button.setOnClickListener(View.OnClickListener {onClick = function(s)
         end
     })
     
-onClick事件可以简写
+控件事件可以简写
 button.onClick=function(v)
     print(v)
     end

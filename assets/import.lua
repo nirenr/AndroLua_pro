@@ -466,10 +466,11 @@ local function env_loadlayout(env)
                 view.setInputType(0x81)
                 elseif type(k)=="string" and not(k:find("layout_")) and not(k:find("padding")) then --设置属性
                 k=string.gsub(k,"^(%w)",function(s)return string.upper(s)end)
-                local st,err=pcall(function(view,k,v)view["set"..k](checkValue(v))end,view,k,v)
+                view["set"..k](checkValue(v))
+                --[[local st,err=pcall(function(view,k,v)view["set"..k](checkValue(v))end,view,k,v)
                 if st==false then
                     os.execute("log -p w -t lua layout table warning "..err)
-                    end
+                    end]]
                 end
             end
         return view

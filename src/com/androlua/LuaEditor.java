@@ -32,7 +32,7 @@ public class LuaEditor extends EditText
 
 	//private final String commentTarget = "\\-\\-\\[(=*)\\[.*\\]\\1\\]|\\-\\-[^\\[][^\\n]*";
 	private final String commentTarget = "\\-\\-[^\\[\\n][^\\n]*";
-	private final String functionTarget   = "_ENV|_G|_VERSION|assert|collectgarbage|coroutine.create|coroutine.isyieldable|coroutine.resume|coroutine.running|coroutine.status|coroutine.wrap|coroutine.yield|debug.debug|debug.gethook|debug.getinfo|debug.getlocal|debug.getmetatable|debug.getregistry|debug.getupvalue|debug.getuservalue|debug.sethook|debug.setlocal|debug.setmetatable|debug.setupvalue|debug.setuservalue|debug.traceback|debug.upvalueid|debug.upvaluejoin|dofile|error|getfenv|getmetatable|io.close|io.flush|io.input|io.lines|io.open|io.output|io.popen|io.read|io.stderr|io.stdin|io.stdout|io.tmpfile|io.type|io.write|ipairs|load|loadfile|loadstring|luajava.bindClass|luajava.clear|luajava.coding|luajava.createArray|luajava.createProxy|luajava.instanceof|luajava.loadLib|luajava.loaded|luajava.luapath|luajava.new|luajava.newInstance|luajava.package|math.abs|math.acos|math.asin|math.atan|math.atan2|math.ceil|math.cos|math.cosh|math.deg|math.exp|math.floor|math.fmod|math.frexp|math.huge|math.ldexp|math.log|math.log10|math.max|math.maxinteger|math.min|math.mininteger|math.modf|math.pi|math.pow|math.rad|math.random|math.randomseed|math.sin|math.sinh|math.sqrt|math.tan|math.tanh|math.tointeger|math.type|math.ult|module|next|os.clock|os.date|os.difftime|os.execute|os.exit|os.getenv|os.remove|os.rename|os.setlocale|os.time|os.tmpname|package.config|package.cpath|package.loaded|package.loaders|package.loadlib|package.path|package.preload|package.searchers|package.searchpath|package.seeall|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setfenv|setmetatable|string.byte|string.char|string.dump|string.find|string.format|string.gfind|string.gmatch|string.gsub|string.len|string.lower|string.match|string.pack|string.packsize|string.rep|string.reverse|string.sub|string.unpack|string.upper|table.concat|table.foreach|table.foreachi|table.insert|table.maxn|table.move|table.pack|table.remove|table.sort|table.unpack|tonumber|tostring|type|unpack|utf8.char|utf8.charpattern|utf8.codepoint|utf8.codes|utf8.len|utf8.offset|xpcall";
+	private final String functionTarget   = "_ENV|_G|_VERSION|assert|collectgarbage|coroutine.create|coroutine.isyieldable|coroutine.resume|coroutine.running|coroutine.status|coroutine.wrap|coroutine.yield|debug.debug|debug.gethook|debug.getinfo|debug.getlocal|debug.getmetatable|debug.getregistry|debug.getupvalue|debug.getuservalue|debug.sethook|debug.setlocal|debug.setmetatable|debug.setupvalue|debug.setuservalue|debug.traceback|debug.upvalueid|debug.upvaluejoin|dofile|error|getmetatable|io.close|io.flush|io.input|io.lines|io.open|io.output|io.popen|io.read|io.stderr|io.stdin|io.stdout|io.tmpfile|io.type|io.write|ipairs|load|loadfile|loadstring|luajava.bindClass|luajava.clear|luajava.coding|luajava.createArray|luajava.createProxy|luajava.instanceof|luajava.loadLib|luajava.loaded|luajava.luapath|luajava.new|luajava.newInstance|luajava.package|math.abs|math.acos|math.asin|math.atan|math.atan2|math.ceil|math.cos|math.cosh|math.deg|math.exp|math.floor|math.fmod|math.frexp|math.huge|math.ldexp|math.log|math.log10|math.max|math.maxinteger|math.min|math.mininteger|math.modf|math.pi|math.pow|math.rad|math.random|math.randomseed|math.sin|math.sinh|math.sqrt|math.tan|math.tanh|math.tointeger|math.type|math.ult|module|next|os.clock|os.date|os.difftime|os.execute|os.exit|os.getenv|os.remove|os.rename|os.setlocale|os.time|os.tmpname|package.config|package.cpath|package.loaded|package.loaders|package.loadlib|package.path|package.preload|package.searchers|package.searchpath|package.seeall|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setmetatable|string.byte|string.char|string.dump|string.find|string.format|string.gfind|string.gmatch|string.gsub|string.len|string.lower|string.match|string.pack|string.packsize|string.rep|string.reverse|string.sub|string.unpack|string.upper|table.concat|table.foreach|table.foreachi|table.insert|table.maxn|table.move|table.pack|table.remove|table.sort|table.unpack|tonumber|tostring|type|unpack|utf8.char|utf8.charpattern|utf8.codepoint|utf8.codes|utf8.len|utf8.offset|xpcall";
 	private final String keywordTarget = "and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while";
 	private final String literalTarget = "\\b([-+]?0x\\p{XDigit}+\\.?\\p{XDigit}*[pP]?[-+]?\\p{Digit}*|[-+]?\\p{Digit}+\\.?\\p{Digit}*[eE]?[-+]?\\p{Digit}*)\\b"; 
 	private final String stringTarget = "(\".*?\"|\'.*?\')";
@@ -72,7 +72,7 @@ public class LuaEditor extends EditText
 	private HashMap <String,String[]> packages = new HashMap<String,String[]>();
 
 
-	private String globalTarget="_ENV|_G|assert|collectgarbage|dofile|double|error|getfenv|getmetatable|ipairs|load|loadfile|loadstring|module|next|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setfenv|setmetatable|tonumber|tostring|type|unpack|xpcall";
+	private String globalTarget="_ENV|_G|assert|collectgarbage|dofile|double|error|getmetatable|ipairs|load|loadfile|loadstring|module|next|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setmetatable|tonumber|tostring|type|unpack|xpcall";
 
 	private String package_coroutine = "create|isyieldable|resume|running|status|wrap|yield";
 	private String package_debug = "debug|gethook|getinfo|getlocal|getmetatable|getregistry|getupvalue|getuservalue|sethook|setlocal|setmetatable|setupvalue|setuservalue|traceback|upvalueid|upvaluejoin";
@@ -818,7 +818,7 @@ public class LuaEditor extends EditText
 				Layout layout=getLayout();
 				int line=layout.getLineForVertical((int)y + getScrollY());
 
-				if (x + getScrollX() - getWidth() / 4 > Math.max(getWidth() / 2, layout.getLineWidth(line)))
+				if (x + getScrollX() - getWidth() / 4 > Math.max(getWidth(), layout.getLineWidth(line)))
 				{
 					touchOut = true;
 					return true;
@@ -840,7 +840,7 @@ public class LuaEditor extends EditText
 				//setCursorVisible(false);
 				if (flingOrientation == FLINGED)
 				{
-					if (Math.abs(deltaX) >= Math.abs(deltaY))
+					if (Math.abs(deltaX) > Math.abs(deltaY))
 						flingOrientation = HORIZONTAL;
 					else
 						flingOrientation = VERTICAL;
@@ -858,7 +858,7 @@ public class LuaEditor extends EditText
 				if ((Math.max(Math.abs(initialVelocityX), Math.abs(initialVelocityY)) > mMinimumVelocity)
 					&& getLineCount() > 0)
 				{
-					fling(-initialVelocityX, -initialVelocityY);
+					fling((int)(-initialVelocityX*2), (int)(-initialVelocityY*2));
 				}
 				releaseVelocityTracker();
 				flingOrientation = FLINGED;
@@ -882,12 +882,12 @@ public class LuaEditor extends EditText
 	{
 		if (mScroller.computeScrollOffset())
 		{
-			scrollTo(mScroller.getCurrX() + 4, mScroller.getCurrY() + 4);
+			scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
 			postInvalidate();
 			return;
 		}
 		if (flingOrientation != HORIZONTAL)
-			if (mScroller.getCurrY() != getScrollY())
+			//if (mScroller.getCurrY() != getScrollY())
 				refreshHightlight();
 
 	}
