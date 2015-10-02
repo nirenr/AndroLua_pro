@@ -19,5 +19,4 @@
 //#define CONFIG_TCC_BACKTRACE 1 /* enabled by default */
 #undef CONFIG_TCC_BCHECK /* not supported for anything but x86 yet */
 
-#include "manifest.h"
 

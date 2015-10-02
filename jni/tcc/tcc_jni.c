@@ -1,4 +1,3 @@
-#include "manifest.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +7,8 @@
 
 #include <jni.h>
 #include <android/log.h>
+#define null NULL
+#define countof(a) (sizeof(a) / sizeof((a)[0]))
 
 #if defined __WIN32__ || defined WIN32
 # include <windows.h>
@@ -15,6 +16,7 @@
 #else
 # define _EXPORT
 #endif
+
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,13 +25,6 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-/* this function is called by the generated code */
-int add(int a, int b)
-{
-    trace("a=%d b=%d", a, b);
-    return a + b;
-}
-
 void bar(const char* fmt, ...) {
     va_list vl;
     va_start(vl, fmt);
@@ -37,9 +32,13 @@ void bar(const char* fmt, ...) {
     va_end(vl);
 }
 
+void trace(const char* msg) {
+    __android_log_print(ANDROID_LOG_ERROR, "tcc", "%s", msg);
+}
+
 #define LUAJAVAJNIENVTAG "_JNIEnv"
 
-static inline JNIEnv *checkEnv(lua_State *L) {
+static JNIEnv *checkEnv(lua_State *L) {
   JNIEnv *javaEnv = (JNIEnv *)0;
   lua_pushstring(L, LUAJAVAJNIENVTAG);
   lua_rawget(L, LUA_REGISTRYINDEX);
@@ -52,129 +51,14 @@ static inline JNIEnv *checkEnv(lua_State *L) {
   return javaEnv;
 }
 
-// "#define printf(const char* fmt, ...) __android_log_print(1, \"tcc-exec\", fmt, __VA_ARGS__)\n"
-
-char my_program[] =
-"int fib(int n)\n"
-"{\n"
-"    if (n <= 2)\n"
-"        return 1;\n"
-"    else\n"
-"        return fib(n-1) + fib(n-2);\n"
-"}\n"
-"extern int env;\n"
-"int main(int argc, const char** argv)\n"
-"{\n"
-"    printf(\"main!\\n\");\n"
-"    printf(\"argc=%d\", env);\n"
-"    printf(\"argv[0]=%s\", argv[0]);\n"
-"    printf(\"argv[1]=%s\", argv[1]);\n"
-/*
-"    char* bad = 0x0;\n"
-"    *bad = 1;\n"
-*/
-"    return 0;\n"
-"}\n"
-"\n"
-" int foo(int n)\n"
-"{\n"
-"    printf(\"Hello World!\\n\");\n"
-"    printf(\"fib(%d) = %d\\n\", n, fib(n));\n"
-"    printf(\"add(%d, %d) = %d\\n\", n, 2 * n, add(n, 2 * n));\n"
-"    return 0;\n"
-"}\n";
-
 static void error_func(void *opaque, const char *msg) {
-   bar("%s", msg);
-	trace("%s", msg);
+	trace(msg);
 }
 
-int test(lua_State * L)
-{
-    TCCState *s;
-    int (*func)(int);
-
-    s = tcc_new();
-    if (!s) {
-        trace("Could not create tcc state");
-        return -1;
-    }
-
-    tcc_set_error_func(s, null, error_func);
-
-    /* if tcclib.h and libtcc1.a are not installed, where can we find them */
-
-    tcc_set_lib_path(s, "/system/lib"); // libc.so
-
-    /* MUST BE CALLED before any compilation */
-    tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
-
-/*
-http://bellard.org/tcc/tcc-doc.html
-`-g'
-Generate run time debug information so that you get clear run time error messages: test.c:68: in function 'test5()': dereferencing invalid pointer instead of the laconic Segmentation fault.
-`-b'
-Generate additional support code to check memory allocations and array/pointer bounds. `-g' is implied. Note that the generated code is slower and bigger in this case.
-`-bt N'
-Display N callers in stack traces. This is useful with `-g' or `-b'.
-*/
-    //tcc_set_options(s, "g");
-    //tcc_set_options(s, "b");
-    //tcc_set_options(s, "bt 30");
-
-    if (tcc_compile_string(s, my_program) == -1) {
-        trace("Could not tcc_compile_string");
-        return -1;
-    }
-int n=123;
-    /* as a test, we add a symbol that the compiled program can use.
-       You may also open a dll with tcc_add_dll() and use symbols from that */
-    tcc_add_symbol(s, "add", add);
-	tcc_add_symbol(s, "env", &n);
-
-//  tcc_add_file(s, "/system/lib/liblog.so");
-    tcc_add_symbol(s, "printf", bar);
-
-    if (0) {
-        /* relocate the code */
-        if (tcc_relocate(s, TCC_RELOCATE_AUTO) < 0) {
-            trace("Could not tcc_relocate");
-            return -1;
-        }
-        /* get entry symbol */
-        func = tcc_get_symbol(s, "foo");
-        if (!func) {
-            trace("Could not tcc_get_symbol");
-            return -1;
-        }
-        /* run the code */
-        clock_t c = clock();
-        func(33);
-        c = clock() - c;
-        bar("time=%f", ((float)c)/CLOCKS_PER_SEC);
-    } else {
-        char* args[] = {"arg1", "arg2"};
-        tcc_run(s, countof(args), args);
-    }
-    /* delete the state */
-    tcc_delete(s);
-
-    trace("done");
-    return 0;
-}
-
-static lua_State * gL;
-
-static lua_State * getL()
-{
-	return gL;
-}
 
 int l_tcc_new(lua_State * L)
 {
     TCCState *s;
-    gL=L;
-	//JNIEnv *env=checkEnv(L) ;
     s = tcc_new();
     if (!s) {
         trace("Could not create tcc state");
@@ -186,7 +70,6 @@ int l_tcc_new(lua_State * L)
     tcc_set_error_func(s, null, error_func);
 	tcc_set_lib_path(s, "/system/lib"); // libc.so
     tcc_add_symbol(s, "printf", bar);
-	tcc_add_symbol(s, "getL", getL);
 
     /* MUST BE CALLED before any compilation */
     tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
@@ -359,15 +242,41 @@ int l_tcc_get_symbol(lua_State * L)
 	return 1;
 }
 
+int l_tcc_get_function(lua_State * L)
+{
+	TCCState *s;
+	int (*func)(lua_State * );
+	s=*(TCCState**)lua_touserdata(L,1);
+	const char *str=lua_tostring(L,2);
+    func=tcc_get_symbol(s, str);
+	lua_pushcfunction(L,func);
+	return 1;
+}
+
 int l_tcc_call(lua_State * L)
 {
-	//void* (*func)(void*);
-	int (*func)(int);
-
-	func=*(void**)lua_touserdata(L,1);
-	int i=(int)lua_tonumber(L,2);
-		
-	int ret=(*func)(i);
+	TCCState *s;
+	int (*func)(void *);
+	s=*(TCCState**)lua_touserdata(L,1);
+    func = tcc_get_symbol(s, "foo");
+    void * arg;
+	switch(lua_type(L,2)){
+		case LUA_TNUMBER:
+		{
+			lua_Number n=lua_tonumber(L,2);
+			arg=&n;
+			break;}
+		case LUA_TSTRING:
+		{
+			const char *str=lua_tostring(L,2);
+			arg=&str;
+			break;}
+		case LUA_TUSERDATA:
+			arg=lua_touserdata(L,2);
+			break;
+	}
+	
+	int ret=func(arg);
 	lua_pushinteger(L,ret);
 	return 1;
 
@@ -408,8 +317,8 @@ int _EXPORT luaopen_tcc(lua_State * L)
 	{"output_file", l_tcc_output_file},
 	{"run", l_tcc_run},
 	{"get_symbol", l_tcc_get_symbol},
-	{"call", l_tcc_call},
-	{"test", test},
+	{"get_function", l_tcc_get_function},
+    {"call", l_tcc_call},
 	{NULL, NULL}
 	};
 	luaL_newlib(L, funcs);
