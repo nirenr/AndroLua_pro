@@ -267,21 +267,6 @@ static void init(JNIEnv *javaEnv, lua_State *L) {
   checkError(javaEnv, L);
 }
 
-int getsubtableu(lua_State *L, int idx, jobject obj) {
-  lua_pushlightuserdata(L, obj);
-  lua_rawget(L, idx);
-  if (lua_type(L, -1) == LUA_TTABLE)
-    return 1; /* table already there */
-  else {
-    lua_pop(L, 1); /* remove previous result */
-    lua_newtable(L);
-    lua_pushlightuserdata(L, obj);
-    lua_pushvalue(L, -2); /* copy to be left at top */
-    lua_rawset(L, idx);   /* assign new table to field */
-    return 0;             /* false, because did not find table there */
-  }
-}
-
 #define NAME "__name"
 static inline const char *getObjectName(lua_State *L, JNIEnv *env,
                                         jobject obj) {
@@ -290,6 +275,7 @@ static inline const char *getObjectName(lua_State *L, JNIEnv *env,
   lua_pushstring(L, NAME);
   lua_rawget(L, -2);
   if (lua_isnil(L, -1)) {
+    lua_pop(L, 1);
     jclass cls;
     char c;
     if ((*env)->IsInstanceOf(env, obj, java_lang_class) == JNI_TRUE) {
@@ -300,16 +286,21 @@ static inline const char *getObjectName(lua_State *L, JNIEnv *env,
       cls = (*env)->GetObjectClass(env, obj);
       checkError(env, L);
     }
-
-    lua_pop(L, 1);
+	
+	lua_pushstring(L, "class");
+    pushJavaObject(L,cls);
+	lua_rawset(L, -3);
+	
     jstring jstr = (*env)->CallObjectMethod(env, cls, class_getname_method);
     checkError(env, L);
     const char *cStr = (*env)->GetStringUTFChars(env, jstr, NULL);
     lua_pushstring(L, NAME);
     name = lua_pushfstring(L, "%c %s", c, cStr);
     lua_rawset(L, -3);
+	
     (*env)->ReleaseStringUTFChars(env, jstr, cStr);
     (*env)->DeleteLocalRef(env, jstr);
+	
     if (c == '@')
       (*env)->DeleteLocalRef(env, cls);
   } else {
@@ -357,9 +348,9 @@ int objectIndex(lua_State *L) {
     return 1;
   } else if (lua_type(L, 2) == LUA_TSTRING) {
     key = lua_tostring(L, 2);
-
     lua_getmetatable(L, 1);
     /* lua stack：1,object;2,key;3,metatable */
+    const char *name = getObjectName(L, javaEnv, *obj);
 
     lua_pushvalue(L, 2);
     lua_rawget(L, -2);
@@ -369,7 +360,6 @@ int objectIndex(lua_State *L) {
       return 1;
 
     lua_pop(L, 1);
-    const char *name = getObjectName(L, javaEnv, *obj);
     luaL_getsubtable(L, LUA_REGISTRYINDEX, "_CACHE");
     tag = lua_pushfstring(L, "%s %s", name, key);
 	/* lua stack：1,object;2,key;3,metatable;4,cache;5,tag */
