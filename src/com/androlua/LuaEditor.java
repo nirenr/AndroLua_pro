@@ -72,7 +72,7 @@ public class LuaEditor extends EditText
 	private HashMap <String,String[]> packages = new HashMap<String,String[]>();
 
 
-	private String globalTarget="_ENV|_G|assert|collectgarbage|dofile|double|error|getmetatable|ipairs|load|loadfile|loadstring|module|next|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setmetatable|tonumber|tostring|type|unpack|xpcall";
+	private String globalTarget="_ENV|_G|assert|collectgarbage|dofile|error|getmetatable|ipairs|load|loadfile|loadstring|module|next|pairs|pcall|print|rawequal|rawget|rawlen|rawset|require|select|setmetatable|tonumber|tostring|type|unpack|xpcall";
 
 	private String package_coroutine = "create|isyieldable|resume|running|status|wrap|yield";
 	private String package_debug = "debug|gethook|getinfo|getlocal|getmetatable|getregistry|getupvalue|getuservalue|sethook|setlocal|setmetatable|setupvalue|setuservalue|traceback|upvalueid|upvaluejoin";
@@ -84,7 +84,7 @@ public class LuaEditor extends EditText
 	private String package_string = "byte|char|dump|find|format|gfind|gmatch|gsub|len|lower|match|pack|packsize|rep|reverse|sub|unpack|upper";
 	private String package_table = "concat|foreach|foreachi|insert|maxn|move|pack|remove|sort|unpack";
 	private String package_utf8 = "char|charpattern|codepoint|codes|len|offset";
-	private String extFunctionTarget="activity|call|dump|each|enum|import|loadbitmap|loadlayout|new_env|set|task|thread";
+	private String extFunctionTarget="activity|call|dump|each|enum|import|loadbitmap|loadlayout|new_env|set|task|timer|thread";
 
 	private int subIndex;
 
@@ -425,6 +425,8 @@ public class LuaEditor extends EditText
 					if (lss != -1)
 					{
 						int s=lss - start;
+						if(text.length()<1)
+							break;
 						String t=text.substring(s, text.length() - 1);
 						highlight(t, lss, idx );
 						lss = -1;
