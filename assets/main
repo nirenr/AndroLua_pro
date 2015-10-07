@@ -50,7 +50,12 @@ layout={
         },
     }
 ]]
-
+upcode=[[
+user_permission={
+    "INTERNET",
+    "WRITE_EXTERNAL_STORAGE",
+    }
+]]
 about=[[
 AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
 官方QQ群：236938279
@@ -277,7 +282,7 @@ function create_project()
         return
         end
         luadir=luaprojectdir..appname.."/"
-        write(luadir.."init.lua",string.format("appname=\"%s\"\nappver=\"1.0\"\npackagename=\"%s\"",appname,packagename))
+        write(luadir.."init.lua",string.format("appname=\"%s\"\nappver=\"1.0\"\npackagename=\"%s\"\n%s",appname,packagename,upcode))
         write(luadir.."main.lua",pcode)
         write(luadir.."layout.lua",lcode)
         project_dlg.hide()
@@ -333,6 +338,22 @@ func["查错"]= function ()
         Toast.makeText(activity, "没有语法错误", Toast.LENGTH_SHORT ).show()
         end
     end
+    
+func["导航"]=function ()
+    local str=editor.getText().toString()
+    local fs={}
+    indexs={}
+    for s,i in str:gmatch("([%w%._]* *=? *function *[%w%._]*%b())()") do
+        i=utf8.len(str,1,i)-1
+        s=s:gsub("^ +","")
+        table.insert(fs,s)
+        table.insert(indexs,i)
+        fs[s]=i
+        end
+    local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(fs))
+    navi_list.setAdapter(adapter)
+    navi_dlg.show()
+    end
 
 func["编译"]=function()
     save()
@@ -368,7 +389,7 @@ func["打包"]=function()
     end
 func["确定"]=function()
     Toast.makeText(activity, "正在打包..", Toast.LENGTH_SHORT ).show()
-    task(bin,luaPath.getText().toString(),appName.getText().toString(),appVer.getText().toString(),packageName.getText().toString(),apkPath.getText().toString(),function(s)status.setText(s)end)
+    task(bin,luaPath.getText().toString(),appName.getText().toString(),appVer.getText().toString(),packageName.getText().toString(),apkPath.getText().toString(),function(s)status.setText(s or "打包出错!")end)
     end
 
 func["日志"]=function()
@@ -415,7 +436,7 @@ function save()
     return src
     end
 
-bin=[[luapath,appname,appver,packagename,apkpath=...
+bin=[==[luapath,appname,appver,packagename,apkpath=...
 require "import"
 require "console"
 
@@ -444,7 +465,12 @@ local f=File(luapath)
 local errbuffer={}
 local mainpath
 if f.isDirectory() then
+    require "permission"
     mainpath=luapath.."main.lua"
+    dofile(luapath.."init.lua")
+    for k,v in ipairs(user_permission or permission) do
+        permission[v]=false
+        end
     local ls=f.listFiles()
     for n=0,#ls-1 do
         local name=ls[n].getName()
@@ -486,7 +512,24 @@ while entries. hasMoreElements () do
         if entry.getName() == "AndroidManifest.xml" then
             local list=ArrayList()
             local xml=AXmlDecoder.read(list, zip.getInputStream(entry))
-            local index=list.indexOf (activity.getPackageName())
+            local req={
+                [activity.getPackageName()]=packagename,
+                [info.nonLocalizedLabel]=appname,
+                [ver]=appver,
+                [".*\\.lua"]="",
+                [".*\\.luac"]="",
+                }
+            for n=0,list.size()-1 do
+                local v=list.get(n)
+                if req[v] then
+                    list.set(n,req[v])
+                    end
+                if permission and permission[v:match("([%w_]+)$")] then
+                    list.set(n,"")
+                    end
+                    
+                end
+            --[[local index=list.indexOf (activity.getPackageName())
             if index<0 then
                 return "打包出错!"
                 end
@@ -500,7 +543,7 @@ while entries. hasMoreElements () do
             if index<0 then
                 return "打包出错!"
                 end
-            list.set(index,appver)
+            list.set(index,appver)]]
             xml.write(list,out)
             elseif entry.getName() == "assets/main" then
             local path,err=console.build(mainpath)
@@ -534,7 +577,7 @@ activity.startActivity(i);
     os.remove(tmp)
     return "打包出错:\n "..table.concat(errbuffer,"\n")
     end
-]]
+]==]
 
 function click(s)
     func[s.getText()]()
@@ -600,8 +643,17 @@ function list(v,p)
     local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(t))
     v.setAdapter(adapter)
     end
+    
+navi_dlg=Dialog(activity)
+navi_dlg.setTitle("导航")
+navi_list=ListView(activity)
+navi_list.onItemClick=function(parent, v, pos,id)
+    editor.setSelection(indexs[pos+1])
+    navi_dlg.hide()
+    end
+navi_dlg.setContentView(navi_list)
 
-items={"运行","撤销","重做","打开","保存","新建","新建工程", "格式化","查错","编译","打包","日志","帮助","手册",}
+items={"运行","撤销","重做","打开","保存","新建","新建工程", "格式化","查错","导航","编译","打包","日志","帮助","手册",}
 function onCreateOptionsMenu(menu)
     for k,v in ipairs(items) do
         m=menu.add(v)
