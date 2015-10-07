@@ -24,7 +24,6 @@
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 	<uses-permission android:name="android.permission.BLUETOOTH"/>
-	<uses-permission android:name="android.permission.CALL_PHONE"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
 	<uses-permission android:name="android.permission.WRITE_CONTACTS"/>
 	<uses-permission android:name="android.permission.MODIFY_PHONE_STATE"/>
@@ -34,7 +33,6 @@
 	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 	<uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
 	<uses-permission android:name="android.permission.VIBRATE"/>
-	<uses-permission android:name="android.permission.SEND_SMS"/>
 	<uses-permission android:name="android.permission.GET_TASKS"/>
 	<uses-permission android:name="android.permission.READ_LOGS"/>
 	<uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -52,7 +50,7 @@
 		android:largeHeap="true"
 		android:persistent="true"
 		android:name="com.androlua.CrashApplication">
-		<activity android:label="@string/app_name"
+		<activity 
 			android:name="com.androlua.Main"
 			android:theme="@android:style/Theme.Holo.Wallpaper.NoTitleBar"
 			android:screenOrientation="portrait"
