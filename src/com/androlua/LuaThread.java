@@ -9,7 +9,7 @@ import java.util.regex.*;
 public class LuaThread extends Thread implements Runnable
 {
 	private LuaState L;
-	private Handler thandler;
+	private Handler handler;
 	public boolean isRun = false;
 	private String luaDir;
 	private Main mMain;
@@ -109,7 +109,7 @@ public class LuaThread extends Thread implements Runnable
 		if (mIsLoop)
 		{
 			Looper.prepare();
-			thandler = new ThreadHandler();
+			handler = new ThreadHandler();
 			isRun = true;
 			Looper.loop();
 			isRun = false;
@@ -146,7 +146,7 @@ public class LuaThread extends Thread implements Runnable
 	public void quit()
 	{
 		if (isRun)
-			thandler.getLooper().quit();
+			handler.getLooper().quit();
 	}
 
 	public void push(int what, String s)
@@ -163,7 +163,7 @@ public class LuaThread extends Thread implements Runnable
 		message.setData(bundle);  
 		message.what = what;
 
-		thandler.sendMessage(message);
+		handler.sendMessage(message);
 
 	}
 
@@ -182,7 +182,7 @@ public class LuaThread extends Thread implements Runnable
 		message.setData(bundle);  
 		message.what = what;
 
-		thandler.sendMessage(message);
+		handler.sendMessage(message);
 
 	}
 

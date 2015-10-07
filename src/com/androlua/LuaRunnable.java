@@ -8,10 +8,9 @@ import java.util.regex.*;
 
 public class LuaRunnable implements Runnable
 {
-	protected LuaState L;
-	private Handler thandler;
-	private boolean isRun = false;
-	private StringBuilder output = new StringBuilder();
+	private LuaState L;
+	private Handler handler;
+	public boolean isRun = false;
 	private String luaDir;
 	private Main mMain;
 
@@ -21,46 +20,99 @@ public class LuaRunnable implements Runnable
 
 	private Object[] mArg=new Object[0];
 
+	private byte[] mBuffer;
+
 	private String luaCpath;
 
 	public LuaRunnable(Main main, String src) throws LuaException
 	{
-		this(main,src,new Object[0],false);
+		this(main, src, false,null);
 	}
-	
-	public LuaRunnable(Main main, String src,Object[] arg) throws LuaException
+
+	public LuaRunnable(Main main, String src, Object[] arg) throws LuaException
 	{
-		this(main,src,arg,false);
+		this(main, src, false, arg);
 	}
-	
+
 	public LuaRunnable(Main main, String src, boolean isLoop) throws LuaException
 	{
-		this(main,src,new Object[0],isLoop);
+		this(main, src, isLoop, null);
 	}
-	
-	public LuaRunnable(Main main, String src,Object[] arg, boolean isLoop) throws LuaException
+
+	public LuaRunnable(Main main, String src, boolean isLoop, Object[] arg) throws LuaException
 	{
 		mMain = main;
 		luaDir = mMain.luaDir;
 		luaCpath=mMain.luaCpath;
 		mSrc = src;
 		mIsLoop = isLoop;
-		mArg=arg;
-		L = LuaStateFactory.newLuaState();
-		L.openLibs();
-		L.pushJavaObject(mMain);
-		L.setGlobal("activity");
-		initJavaFunction();
+		if (arg != null)
+			mArg = arg;
 	}
 	
+	public LuaRunnable(Main main, LuaObject func) throws LuaException
+	{
+		this(main, func, false,null);
+	}
+	
+	public LuaRunnable(Main main, LuaObject func, Object[] arg) throws LuaException
+	{
+		this(main, func, false,arg);
+	}
+	
+	public LuaRunnable(Main main, LuaObject func, boolean isLoop) throws LuaException
+	{
+		this(main, func, false,null);
+	}
+
+	public LuaRunnable(Main main, LuaObject func, boolean isLoop, Object[] arg) throws LuaException
+	{
+		mMain = main;
+		luaDir = mMain.luaDir;
+		luaCpath=mMain.luaCpath;
+		if (arg != null)
+			mArg = arg;
+		mIsLoop = isLoop;
+		mBuffer = func.dump();
+	}
+
 	@Override
 	public void run()
 	{
-		newLuaThread(mSrc,mArg);
+		try
+		{
+			if (L == null)
+			{
+				initLua();
+
+				if (mBuffer != null)
+					newLuaThread(mBuffer, mArg);
+				else
+					newLuaThread(mSrc, mArg);
+			}
+			else
+			{
+				L.getGlobal("run");
+				if (!L.isNil(-1))
+					runFunc("run");
+				else
+				{
+					if (mBuffer != null)
+						newLuaThread(mBuffer, mArg);
+					else
+						newLuaThread(mSrc, mArg);
+				}
+			}
+		}
+		catch (LuaException e)
+		{
+			mMain.sendMsg(e.getMessage());
+			return;
+		}
 		if (mIsLoop)
 		{
 			Looper.prepare();
-			thandler = new ThreadHandler();
+			handler = new ThreadHandler();
 			isRun = true;
 			Looper.loop();
 			isRun = false;
@@ -97,7 +149,7 @@ public class LuaRunnable implements Runnable
 	public void quit()
 	{
 		if (isRun)
-			thandler.getLooper().quit();
+			handler.getLooper().quit();
 	}
 
 	public void push(int what, String s)
@@ -114,7 +166,7 @@ public class LuaRunnable implements Runnable
 		message.setData(bundle);  
 		message.what = what;
 
-		thandler.sendMessage(message);
+		handler.sendMessage(message);
 
 	}
 
@@ -133,7 +185,7 @@ public class LuaRunnable implements Runnable
 		message.setData(bundle);  
 		message.what = what;
 
-		thandler.sendMessage(message);
+		handler.sendMessage(message);
 
 	}
 
@@ -153,12 +205,19 @@ public class LuaRunnable implements Runnable
 		return "Unknown error " + error;
 	}
 
-	private void initJavaFunction() throws LuaException
-	{
-		JavaFunction print = new LuaPrint(L);
+	private void initLua() throws LuaException
+	{		
+		L = LuaStateFactory.newLuaState();
+		L.openLibs();
+		L.pushJavaObject(mMain);
+		L.setGlobal("activity");
+		L.pushJavaObject(this);
+		L.setGlobal("thread");
+
+		JavaFunction print = new LuaPrint(mMain,L);
 		print.register("print");
 
-		JavaFunction assetLoader = new LuaAssetLoader(L); 
+		JavaFunction assetLoader = new LuaAssetLoader(mMain,L); 
 
 		L.getGlobal("package"); 
 		L.getField(-1, "loaders");
@@ -219,7 +278,7 @@ public class LuaRunnable implements Runnable
 	{
 		try
 		{
-			
+
 			if (Pattern.matches("^\\w+$", str))
 			{
 				doAsset(str + ".lua", args);
@@ -247,6 +306,31 @@ public class LuaRunnable implements Runnable
 			quit();
 		}
 
+	}
+	private void newLuaThread(byte[] buf, Object...args) throws LuaException 
+	{
+		int ok = 0;
+		L.setTop(0);
+		ok = L.LloadBuffer(buf, "TimerTask");
+
+		if (ok == 0)
+		{
+			L.getGlobal("debug");
+			L.getField(-1, "traceback");
+			L.remove(-2);
+			L.insert(-2);
+			int l=args.length;
+			for (int i=0;i < l;i++)
+			{
+				L.pushObjectValue(args[i]);
+			}
+			ok = L.pcall(l, 0, -2 - l);
+			if (ok == 0)
+			{				
+				return;
+			}
+		}
+		throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 	}
 
 	private void doFile(String filePath, Object...args) throws LuaException 
@@ -404,87 +488,5 @@ public class LuaRunnable implements Runnable
 			}
 		}
 	};
-	public class LuaAssetLoader extends JavaFunction
-	{
-
-		protected LuaState L;
-
-		public LuaAssetLoader(LuaState L)
-		{
-			super(L);
-			this.L = L;
-		}
-
-		@Override
-		public int execute() throws LuaException
-		{
-			String name = L.toString(-1);
-			name = name.replace('.', '/') + ".lua";
-			try
-			{
-				byte[] bytes = mMain.readAsset(name);
-				int ok=L.LloadBuffer(bytes, name);
-				if (ok != 0)
-					L.pushString("\n\t" + L.toString(-1));
-				return 1;
-			}
-			catch (IOException e)
-			{
-				L.pushString("\n\tno file \'/assets/" + name + "\'");
-				return 1;
-			}
-		}
-
-	}
-
-	public class LuaPrint extends JavaFunction
-	{
-
-		protected LuaState L;
-
-		public LuaPrint(LuaState L)
-		{
-			super(L);
-			this.L = L;
-		}
-
-		@Override
-		public int execute() throws LuaException
-		{
-			if (L.getTop() < 2)
-			{
-				mMain.sendMsg("");
-				return 0;
-			}
-			for (int i = 2; i <= L.getTop(); i++)
-			{
-				int type = L.type(i);
-				String val = null;
-				String stype = L.typeName(type);
-				if (stype.equals("userdata"))
-				{
-					Object obj = L.toJavaObject(i);
-					if (obj != null)
-						val = obj.toString();
-				}
-				else if (stype.equals("boolean"))
-				{
-					val = L.toBoolean(i) ? "true" : "false";
-				}
-				else
-				{
-					val = L.toString(i);
-				}
-				if (val == null)
-					val = stype;						
-				output.append("\t");
-				output.append(val);
-				output.append("\t");
-			}
-			mMain.sendMsg(output.toString().substring(1, output.length() - 1));
-			output.setLength(0);
-			return 0;
-		}
-	}
 
 };
