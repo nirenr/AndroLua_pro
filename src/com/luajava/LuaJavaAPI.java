@@ -334,7 +334,7 @@ public final class LuaJavaAPI
 					for (int i=0;i <= n - 1 ;i++)
 					{
 						L.pushObjectValue(Array.get(obj, i));
-						L.rawSetI(-2, i);
+						L.rawSetI(-2, i+1);
 					}
 				}
 				else if (obj instanceof ArrayList)
@@ -344,7 +344,7 @@ public final class LuaJavaAPI
 					for (int i=0;i <= n - 1 ;i++)
 					{
 						L.pushObjectValue(al.get(i));
-						L.rawSetI(-2, i);
+						L.rawSetI(-2, i+1);
 					}
 				}
 				else if (obj instanceof HashMap)
