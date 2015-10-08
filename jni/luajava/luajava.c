@@ -319,7 +319,7 @@ int objectIndex(lua_State *L) {
   lua_Number stateIndex;
   const char *key;
   const char *tag;
-  jint ret;
+  jint ret=0;
   jobject *obj;
   jstring str;
   JNIEnv *javaEnv;
@@ -350,7 +350,6 @@ int objectIndex(lua_State *L) {
     key = lua_tostring(L, 2);
     lua_getmetatable(L, 1);
     /* lua stack：1,object;2,key;3,metatable */
-    const char *name = getObjectName(L, javaEnv, *obj);
 
     lua_pushvalue(L, 2);
     lua_rawget(L, -2);
@@ -360,6 +359,7 @@ int objectIndex(lua_State *L) {
       return 1;
 
     lua_pop(L, 1);
+    const char *name = getObjectName(L, javaEnv, *obj);
     luaL_getsubtable(L, LUA_REGISTRYINDEX, "_CACHE");
     tag = lua_pushfstring(L, "%s %s", name, key);
 	/* lua stack：1,object;2,key;3,metatable;4,cache;5,tag */
@@ -374,7 +374,7 @@ int objectIndex(lua_State *L) {
     lua_pop(L, 1);
     //lua_pushstring(L, tag);
 
-    if (type != 2) {
+    if ( ctype == LUA_TNIL || (type != 2 && type != 0)) {
       str = (*javaEnv)->NewStringUTF(javaEnv, key);
       ret = (*javaEnv)->CallStaticIntMethod(javaEnv, luajava_api_class,
                                             object_index_method,
@@ -385,7 +385,6 @@ int objectIndex(lua_State *L) {
 
     if (ctype == LUA_TNIL) {
       lua_pushvalue(L, 5);
-	  //lua_pushstring(L, tag);
       lua_pushinteger(L, ret);
       lua_rawset(L, 4);
     }
@@ -401,6 +400,17 @@ int objectIndex(lua_State *L) {
       lua_pushvalue(L, -2);
       lua_rawset(L, 3);
     } else if (ret == 0) {
+      if(strcmp(key,"class")==0){
+		  lua_pushvalue(L, 2);
+          lua_rawget(L, 3);
+          return 1;
+      }else if(strcmp(key,"length")==0){
+		  jsize len = (*javaEnv)->GetArrayLength(javaEnv, *obj);
+		  checkError(javaEnv, L);
+		  lua_pushinteger(L,(lua_Integer)len);
+		  return 1;
+	  }
+
       luaL_error(L, "%s is not a field or mothod", key);
     }
 
