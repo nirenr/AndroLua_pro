@@ -113,7 +113,7 @@ function dump (t)
     return t
     end
 
-local content=activity
+local context=activity
 local ViewGroup=bindClass("android.view.ViewGroup")
 local String=bindClass("java.lang.String")
 local Gravity=bindClass("android.view.Gravity")
@@ -127,7 +127,7 @@ local scaleTypes=ScaleType.values()
 local android_R=bindClass("android.R")
 android={R=android_R}
 
-local dm=content.getResources().getDisplayMetrics()
+local dm=context.getResources().getDisplayMetrics()
 local id=0x7f000000
 local toint={
     --android:drawingCacheQuality
@@ -407,7 +407,7 @@ local function setattribute(view,params,k,v,ids)
         elseif rules[k] then
         params.addRule(rules[k],ids[v])
         elseif k=="items" and type(v)=="table" then --创建列表项目
-        local adapter=ArrayAdapter(content,android_R.layout.simple_list_item_1, String(v))
+        local adapter=ArrayAdapter(context,android_R.layout.simple_list_item_1, String(v))
         view.setAdapter(adapter)
         elseif k=="text" then
         view.setText(v)
@@ -425,7 +425,7 @@ local function setattribute(view,params,k,v,ids)
             view.setTextSize(v)
             end
         elseif k=="textAppearance" then
-        view.setTextAppearance(content,checkattr(v))
+        view.setTextAppearance(context,checkattr(v))
         elseif k=="src" then
         task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setImageBitmap(bmp)end)
         elseif k=="scaleType" then
@@ -448,9 +448,9 @@ local function env_loadlayout(env)
             style=checkattr(t.style)
             end
         if style then
-            view = t[1](content,nil,style)
+            view = t[1](context,nil,style)
             else
-            view = t[1](content) --创建view
+            view = t[1](context) --创建view
             end
         
         local params=ViewGroup.LayoutParams(checkValue(t.layout_width) or -2,checkValue(t.layout_height) or -2) --设置layout属性
@@ -602,9 +602,9 @@ function thread(src,...)
         end
     local luaThread
     if ... then
-        luaThread=LuaThread(content,src,true,Object{...})
+        luaThread=LuaThread(context,src,true,Object{...})
         else
-        luaThread=LuaThread(content,src,true)
+        luaThread=LuaThread(context,src,true)
         end
     luaThread.start()
     --setmetamethod(luaThread,"__call",__call)
@@ -617,12 +617,12 @@ function task(src,...)
     local args={...}
     local callback=args[select("#",...)]
     args[select("#",...)]=nil
-    local luaAsyncTask=LuaAsyncTask(content,src,callback)
+    local luaAsyncTask=LuaAsyncTask(context,src,callback)
     luaAsyncTask.execute(args)
     end
 
 function timer(f,d,p,...)
-    local luaTimer=LuaTimer(content,f,Object{...})
+    local luaTimer=LuaTimer(context,f,Object{...})
     if p==0 then
         luaTimer.start(d)
         else
@@ -641,7 +641,7 @@ function loadbitmap(path)
         if not activity.isInAsset() then
             return LuaBitmap.getLoacalBitmap(string.format("%s/%s",activity.luaDir,path))
             else
-            return LuaBitmap.getAssetBitmap(content,path)
+            return LuaBitmap.getAssetBitmap(context,path)
             end
         elseif path:find("^https*://") then
         return LuaBitmap.getHttpBitmap(path)
@@ -663,7 +663,7 @@ import 'java.util.*'
 
 function new_env()
     local _env={
-        activity=content,
+        activity=context,
         require=require,
         dump=dump,
         each=each,
