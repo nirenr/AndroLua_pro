@@ -44,3 +44,4 @@ permission={
     READ_FRAME_BUFFER=true,
     PERSISTENT_ACTIVITY=true,
     }
+    
