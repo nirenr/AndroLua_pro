@@ -5,10 +5,14 @@ import android.content.*;
 import android.content.res.*;
 import android.graphics.*;
 import java.io.*;
+import java.lang.ref.*;
 import java.net.*;
+import java.util.*;
 
 public class LuaBitmap
 {
+	static WeakHashMap<String, WeakReference<Bitmap>> cache = new WeakHashMap<String, WeakReference<Bitmap>>();
+	
 	public static Bitmap getLoacalBitmap(String url) throws FileNotFoundException, IOException
 	{
 
@@ -42,7 +46,34 @@ public class LuaBitmap
 		return bitmap;
 	}
 
+    public static Bitmap getBitmap(LuaContext LuaContext, String path) throws IOException
+	{
+		
+		WeakReference<Bitmap> wRef=cache.get(path);
+		if (wRef != null)
+		{
+			Bitmap bt = wRef.get();
+			if(bt!=null)
+				return bt;
+		}
 
+		Bitmap bitmap;
+		if(path.indexOf("http://")==0)
+		{
+			bitmap = getHttpBitmap(path);
+		}
+		else if(path.charAt(0)!='/')
+		{
+			bitmap = getLoacalBitmap(LuaContext.getLuaDir()+"/"+path);
+		}
+		else
+		{
+			bitmap = getLoacalBitmap(path);
+		}
+		
+		cache.put(path,new WeakReference<Bitmap>(bitmap));
+		return bitmap;
+	}
 
 	private static Bitmap decodeScale(InputStream fis)
 	{ 
@@ -133,4 +164,36 @@ public class LuaBitmap
 			return upperBound;
 		}
 	} 
+	
+	public static Bitmap getBitmapFromFile(File file, int width, int height) {
+
+		BitmapFactory.Options opts = null;
+		if (null != file && file.exists()) {
+
+			if (width > 0 && height > 0) {
+				opts = new BitmapFactory.Options();
+				// 只是返回的是图片的宽和高，并不是返回一个Bitmap对象
+				opts.inJustDecodeBounds = true;
+				// 信息没有保存在bitmap里面，而是保存在options里面
+				BitmapFactory.decodeFile(file.getPath(), opts);
+				// 计算图片缩放比例
+				final int minSideLength = Math.min(width, height);
+				// 缩略图大小为原始图片大小的几分之一。根据业务需求来做。
+				opts.inSampleSize = computeSampleSize(opts, minSideLength,
+													  width * height);
+				// 重新读入图片，注意此时已经把options.inJustDecodeBounds设回false
+				opts.inJustDecodeBounds = false;
+				// 设置是否深拷贝，与inPurgeable结合使用
+				opts.inInputShareable = true;
+				// 设置为True时，表示系统内存不足时可以被回 收，设置为False时，表示不能被回收。
+				opts.inPurgeable = true;
+			}
+			try {
+				return BitmapFactory.decodeFile(file.getPath(), opts);
+			} catch (OutOfMemoryError e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
 }

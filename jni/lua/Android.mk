@@ -4,6 +4,12 @@ LOCAL_PATH := $(call my-dir)
 # compiled as static library to embed in liblua-activity.so
 include $(CLEAR_VARS)
 LOCAL_MODULE := lua
+CAL_ARM_MODE := arm
+TARGET_PLATFORM := armeabi-v7a
+TARGET_ABI := android-14-armeabi
+LOCAL_CFLAGS += -std=c99
+
+
 LOCAL_SRC_FILES := \
 	lapi.c \
 	lauxlib.c \

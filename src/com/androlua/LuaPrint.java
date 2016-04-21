@@ -6,14 +6,14 @@ public class LuaPrint extends JavaFunction
 {
 
 	private LuaState L;
-	private Main mMain;
+	private LuaContext mLuaContext;
 	private StringBuilder output = new StringBuilder();
 	
-	public LuaPrint(Main main, LuaState L)
+	public LuaPrint(LuaContext luaContext, LuaState L)
 	{
 		super(L);
 		this.L = L;
-		mMain=main;
+		mLuaContext=luaContext;
 	}
 
 	@Override
@@ -21,7 +21,7 @@ public class LuaPrint extends JavaFunction
 	{
 		if (L.getTop() < 2)
 		{
-			mMain.sendMsg("");
+			mLuaContext.sendMsg("");
 			return 0;
 		}
 		for (int i = 2; i <= L.getTop(); i++)
@@ -49,7 +49,7 @@ public class LuaPrint extends JavaFunction
 			output.append(val);
 			output.append("\t");
 		}
-		mMain.sendMsg(output.toString().substring(1, output.length() - 1));
+		mLuaContext.sendMsg(output.toString().substring(1, output.length() - 1));
 		output.setLength(0);
 		return 0;
 	}

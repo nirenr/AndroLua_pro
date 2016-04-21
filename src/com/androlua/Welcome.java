@@ -10,7 +10,6 @@ public class Welcome extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-		setTheme(android.R.style.Theme_Wallpaper_NoTitleBar);
 		
         super.onCreate(savedInstanceState);
 
@@ -20,7 +19,7 @@ public class Welcome extends Activity {
         标题是属于View的，所以窗口所有的修饰部分被隐藏后标题依然有效,需要去掉标题
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 */
-        setContentView(R.layout.welcome);
+        //setContentView(R.layout.welcome);
         Handler handler = new Handler();
         //使用pastDelayed方法延时
         handler.postDelayed(new Runnable() {

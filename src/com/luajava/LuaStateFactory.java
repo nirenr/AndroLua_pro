@@ -41,7 +41,7 @@ public final class LuaStateFactory
 	/**
 	 * Array with all luaState's instances
 	 */
-	private static final List states = new ArrayList();
+	private static final List<LuaState> states = new ArrayList<LuaState>();
 	
 	/**
 	 * Non-public constructor. 
@@ -70,7 +70,7 @@ public final class LuaStateFactory
 	 */
 	public synchronized static LuaState getExistingState(int index)
 	{
-		return (LuaState) states.get(index);
+		return states.get(index);
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public final class LuaStateFactory
 		int i;
 		for (i = 0 ; i < states.size() ; i++)
 		{
-			LuaState state = (LuaState) states.get(i);
+			LuaState state = states.get(i);
 			
 			if (state != null)
 			{

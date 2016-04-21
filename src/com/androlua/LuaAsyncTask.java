@@ -9,41 +9,63 @@ public class LuaAsyncTask extends AsyncTask
 {
 
 	private LuaState L;
-		
-	private Main mMain;
 
-	private String luaDir;
+	private LuaContext mLuaContext;
 
 	private byte[] mBuffer;
 
 	private LuaObject mCallback;
 
-	private String luaCpath;
+	private LuaObject mUpdate;
 
-	public LuaAsyncTask(Main main,String src,LuaObject callback) throws LuaException
+	public LuaAsyncTask(LuaContext luaContext,String src,LuaObject callback) throws LuaException
 	{
-		mMain=main;
-		luaDir=main.luaDir;
-		luaCpath=mMain.luaCpath;
+		mLuaContext=luaContext;
 		mBuffer=src.getBytes();
 		mCallback=callback;
 	}
 	
 	
-	public LuaAsyncTask(Main main,LuaObject func,LuaObject callback) throws LuaException
+	public LuaAsyncTask(LuaContext luaContext,LuaObject func,LuaObject callback) throws LuaException
 	{
-		mMain=main;
-		luaDir=main.luaDir;
-		luaCpath=mMain.luaCpath;
+		mLuaContext=luaContext;
 		mBuffer=func.dump();
 		mCallback=callback;
 	}
 
-
-	public void execute(LuaObject params) throws IllegalArgumentException, ArrayIndexOutOfBoundsException, LuaException
+	public LuaAsyncTask(LuaContext luaContext,LuaObject func,LuaObject update,LuaObject callback) throws LuaException
+	{
+		mLuaContext=luaContext;
+		mBuffer=func.dump();
+		mUpdate=update;
+		mCallback=callback;
+	}
+	
+	/*public void execute(Object[] params) throws IllegalArgumentException, ArrayIndexOutOfBoundsException, LuaException
 	{
 		// TODO: Implement this method
-		super.execute(params.asArray());
+		super.execute(params);
+	}
+	*/
+	public void execute() throws IllegalArgumentException, ArrayIndexOutOfBoundsException, LuaException
+	{
+		// TODO: Implement this method
+		super.execute();
+	}
+	
+	public void update(Object msg)
+	{
+		publishProgress(msg);
+	}
+	
+	public void update(String msg)
+	{
+		publishProgress(msg);
+	}
+	
+	public void update(int msg)
+	{
+		publishProgress(msg);
 	}
 	
 	@Override
@@ -51,43 +73,53 @@ public class LuaAsyncTask extends AsyncTask
 	{
 		L = LuaStateFactory.newLuaState();
 		L.openLibs();
-		L.pushJavaObject(mMain);
-		L.setGlobal("activity");
-
+		L.pushJavaObject(mLuaContext);
+		if(mLuaContext instanceof LuaActivity)
+		{
+			L.setGlobal("activity");
+		}
+		else if(mLuaContext instanceof LuaService)
+		{
+			L.setGlobal("service");
+		}
+		L.pushJavaObject(this);
+		L.setGlobal("this");
+		L.pushContext(mLuaContext.getContext());
+		
 		L.getGlobal("luajava");
-		L.pushString(luaDir);
+		L.pushString(mLuaContext.getLuaDir());
 		L.setField(-2, "luadir"); 
 		L.pop(1);
 
 		try
 		{
-			JavaFunction print = new LuaPrint(mMain,L);
+			JavaFunction print = new LuaPrint(mLuaContext,L);
 			print.register("print");
 
-			JavaFunction assetLoader = new LuaAssetLoader(mMain,L); 
+			JavaFunction update = new JavaFunction(L){
 
-			L.getGlobal("package");  
-			L.getField(-1, "loaders");
-			int nLoaders = L.objLen(-1);
-			for (int i=nLoaders;i >= 2;i--)
-			{
-				L.rawGetI(-1, i);
-				L.rawSetI(-2, i + 1);
-			}
-			L.pushJavaFunction(assetLoader); 
-			L.rawSetI(-2, 2);
-
-			L.pop(1);
-
-			L.pushString("./?.lua;" + luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;");
+				@Override
+				public int execute() throws LuaException
+				{
+					// TODO: Implement this method
+					update(L.toJavaObject(2));
+					return 0;
+				}
+			};
+			
+			update.register("update");
+			
+			L.getGlobal("package");       
+			
+			L.pushString(mLuaContext.getLuaLpath());
 			L.setField(-2, "path");
-			L.pushString(luaCpath);
+			L.pushString(mLuaContext.getLuaCpath());
 			L.setField(-2, "cpath");
 			L.pop(1); 
 		}
 		catch (LuaException e)
 		{
-			mMain.sendMsg(e.getMessage());
+			mLuaContext.sendMsg(e.getMessage());
 		}
 		try
 		{
@@ -105,17 +137,21 @@ public class LuaAsyncTask extends AsyncTask
 				{
 					L.pushObjectValue(args[i]);
 				}
-				ok = L.pcall(l, 1, -2 - l);
+				ok = L.pcall(l, LuaState.LUA_MULTRET, -2 - l);
 				if (ok == 0)
-				{				
-					return L.toJavaObject(-1);
+				{
+					int n=L.getTop()-1;
+					Object[] ret=new Object[n];
+					for(int i=0;i<n;i++)
+						ret[i]=L.toJavaObject(i+2);
+					return ret;
 				}
 			}
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
 		catch (LuaException e)
 		{			
-			mMain.sendMsg(e.getMessage());
+			mLuaContext.sendMsg(e.getMessage());
 		}
 
 
@@ -129,11 +165,12 @@ public class LuaAsyncTask extends AsyncTask
 
 		try
 		{
-			mCallback.call(result);
+			if(mCallback!=null)
+				mCallback.call((Object[])result);
 		}
 		catch (LuaException e)
 		{
-			mMain.sendMsg(e.getMessage());
+			mLuaContext.sendMsg(e.getMessage());
 		}
 		super.onPostExecute(result);
 		L.gc(LuaState.LUA_GCCOLLECT, 1);
@@ -141,10 +178,30 @@ public class LuaAsyncTask extends AsyncTask
 		//L.close();
 	}
 	
+	@Override
+	protected void onProgressUpdate(Object[] values)
+	{
+		// TODO: Implement this method
+		try
+		{
+			if (mUpdate != null)
+				mUpdate.call(values);
+		}
+		catch (LuaException e)
+		{
+			mLuaContext.sendMsg(e.getMessage());
+		}
+		super.onProgressUpdate(values);
+	}
+	
 	private String errorReason(int error)
 	{
 		switch (error)
 		{
+			case 6:
+				return "error error";
+			case 5:
+				return "GC error";
 			case 4:
 				return "Out of memory";
 			case 3:

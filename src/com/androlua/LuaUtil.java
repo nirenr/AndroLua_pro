@@ -2,6 +2,7 @@ package com.androlua;
 
 import android.app.*;
 import android.content.*;
+import android.content.res.*;
 import android.graphics.*;
 import android.util.*;
 import android.view.*;
@@ -67,4 +68,109 @@ public class LuaUtil
 											Bitmap.Config.ARGB_8888);
 		return bitmap;
 	}
+	
+	//读取asset文件
+
+	public static byte[] readAsset(Context context,String name) throws IOException 
+	{
+		AssetManager am = context.getAssets();
+		InputStream is = am.open(name);
+		byte[] ret= readAll(is);
+		is.close();
+		//am.close();
+		return ret;
+	}
+
+	private static byte[] readAll(InputStream input) throws IOException 
+	{
+		ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
+		byte[] buffer = new byte[4096];
+		int n = 0;
+		while (-1 != (n = input.read(buffer)))
+		{
+			output.write(buffer, 0, n);
+		}
+		byte[] ret= output.toByteArray();
+		output.close();
+		return ret;
+	}
+
+//复制asset文件到sd卡
+	public static void assetsToSD(Context context,String InFileName, String OutFileName) throws IOException 
+	{  
+		InputStream myInput;  
+		OutputStream myOutput = new FileOutputStream(OutFileName);  
+		myInput = context.getAssets().open(InFileName);  
+		byte[] buffer = new byte[8192];  
+		int length = myInput.read(buffer);
+        while (length > 0)
+        {
+			myOutput.write(buffer, 0, length); 
+			length = myInput.read(buffer);
+		}
+
+        myOutput.flush();  
+		myInput.close();  
+		myOutput.close();        
+	}  
+	
+	public static void copyFile(String oldPath, String newPath)
+	{ 
+		try
+		{ 
+			int bytesum = 0; 
+			int byteread = 0; 
+			File oldfile = new File(oldPath); 
+			if (oldfile.exists())
+			{ //文件存在时 
+				InputStream inStream = new FileInputStream(oldPath); //读入原文件 
+				FileOutputStream fs = new FileOutputStream(newPath); 
+				byte[] buffer = new byte[4096]; 
+				int length; 
+				while ((byteread = inStream.read(buffer)) != -1)
+				{ 
+					bytesum += byteread; //字节数 文件大小 
+					System.out.println(bytesum); 
+					fs.write(buffer, 0, byteread); 
+				} 
+				inStream.close(); 
+			} 
+		} 
+		catch (Exception e)
+		{ 
+			System.out.println("复制文件操作出错"); 
+			e.printStackTrace(); 
+
+		} 
+
+	} 
+	
+	
+	public static void rmDir(File dir)
+	{
+		File[] fs=dir.listFiles();
+		for(File f:fs)
+		{
+			if(f.isDirectory())
+				rmDir(f);
+			else
+				f.delete();
+		}
+		dir.delete();
+	}
+	
+	public static void rmDir(File dir,String ext)
+	{
+		File[] fs=dir.listFiles();
+		for(File f:fs)
+		{
+			if(f.isDirectory())
+				rmDir(f);
+			else
+				if(f.getName().endsWith(ext))
+					f.delete();
+		}
+		//dir.delete();
+	}
+	
 }

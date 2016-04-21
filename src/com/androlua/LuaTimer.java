@@ -3,26 +3,26 @@ package com.androlua;
 import com.luajava.*;
 import java.util.*;
 
-public class LuaTimer extends Timer
+public class LuaTimer extends TimerX
 {
 
 	private LuaTimerTask task;
 	
-	public LuaTimer(Main main,String src) throws LuaException
+	public LuaTimer(LuaContext main,String src) throws LuaException
 	{
 		this(main,src,null);
 	}
-	public LuaTimer(Main main,String src,Object[] arg) throws LuaException
+	public LuaTimer(LuaContext main,String src,Object[] arg) throws LuaException
 	{
 		super("LuaTimer");
 		task= new LuaTimerTask(main, src,arg);
 	}
 	
-	public LuaTimer(Main main,LuaObject func) throws LuaException
+	public LuaTimer(LuaContext main,LuaObject func) throws LuaException
 	{
 		this(main,func,null);
 	}
-	public LuaTimer(Main main,LuaObject func,Object[] arg) throws LuaException
+	public LuaTimer(LuaContext main,LuaObject func,Object[] arg) throws LuaException
 	{
 		super("LuaTimer");
 		task= new LuaTimerTask(main, func, arg);
@@ -48,9 +48,23 @@ public class LuaTimer extends Timer
 		task.setEnabled(enabled);
 	}
 
-	public boolean getEnabled()
+	public boolean isEnabled()
 	{
-		return task.getEnabled();
+		return task.isEnabled();
 	}
 	
+	public boolean getEnabled()
+	{
+		return task.isEnabled();
+	}
+	
+	public void setPeriod(long period)
+	{
+		task.setPeriod(period);
+	}
+
+	public long getPeriod()
+	{
+		return task.getPeriod();
+	}
 }

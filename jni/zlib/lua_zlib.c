@@ -8,19 +8,12 @@
 /*
  * ** compatibility with Lua 5.2
  * */
-#if (LUA_VERSION_NUM >= 502)
+#if (LUA_VERSION_NUM == 502)
 #undef luaL_register
 #define luaL_register(L,n,f) \
                { if ((n) == NULL) luaL_setfuncs(L,f,0); else luaL_newlib(L,f); }
 
 #endif
-
-#if (LUA_VERSION_NUM >= 503)
-#undef luaL_optint
-#define luaL_optint(L,n,d)  ((int)luaL_optinteger(L,(n),(d)))
-#endif
-
-#define DEF_MEM_LEVEL 8
 
 typedef uLong (*checksum_t)        (uLong crc, const Bytef *buf, uInt len);
 typedef uLong (*checksum_combine_t)(uLong crc1, uLong crc2, z_off_t len2);
@@ -37,7 +30,7 @@ static int lz_crc32(lua_State *L);
 
 static int lz_version(lua_State *L) {
     const char* version = zlibVersion();
-    int         count   = strlen(version) + 1;
+    int         count   = (int)strlen(version) + 1;
     char*       cur     = (char*)memcpy(lua_newuserdata(L, count),
                                         version, count);
 
@@ -109,7 +102,7 @@ static int lz_filter_impl(lua_State *L, int (*filter)(z_streamp, int), int (*end
     int flush = Z_NO_FLUSH, result;
     z_stream* stream;
     luaL_Buffer buff;
-    size_t avail_in;
+    size_t avail_in = 0;
 
     if ( filter == deflate ) {
         const char *const opts[] = { "none", "sync", "full", "finish", NULL };
@@ -146,13 +139,10 @@ static int lz_filter_impl(lua_State *L, int (*filter)(z_streamp, int), int (*end
     }
 
     /*  Do the actual deflate'ing: */
-    if (lua_gettop(L) > 0) {
-        stream->next_in = (unsigned char*)lua_tolstring(L, -1, &avail_in);
-    } else {
-        stream->next_in = NULL;
-        avail_in = 0;
-    }
-    stream->avail_in = avail_in;
+    stream->next_in = lua_gettop(L) > 0 ?
+        (unsigned char*)lua_tolstring(L, -1, &avail_in) :
+        NULL;
+    stream->avail_in = (uInt)avail_in;
 
     if ( ! stream->avail_in && ! flush ) {
         /*  Passed empty string, make it a noop instead of erroring out. */
@@ -219,20 +209,15 @@ static void lz_create_deflate_mt(lua_State *L) {
 
 static int lz_deflate_new(lua_State *L) {
     int level = luaL_optint(L, 1, Z_DEFAULT_COMPRESSION);
-    int window_size = luaL_optint(L, 2, MAX_WBITS);
 
     /*  Allocate the stream: */
     z_stream* stream = (z_stream*)lua_newuserdata(L, sizeof(z_stream));
 
     stream->zalloc = Z_NULL;
     stream->zfree  = Z_NULL;
+    lz_assert(L, deflateInit(stream, level), stream, __FILE__, __LINE__);
 
-    int result = deflateInit2(stream, level, Z_DEFLATED, window_size,
-                              DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
-
-    lz_assert(L, result, stream, __FILE__, __LINE__);
-
-    /*  Don't allow destructor to execute unless deflateInit2 was successful: */
+    /*  Don't allow destructor to execute unless deflateInit was successful: */
     luaL_getmetatable(L, "lz.deflate.meta");
     lua_setmetatable(L, -2);
 
@@ -269,7 +254,7 @@ static int lz_inflate_new(lua_State *L) {
     z_stream* stream = (z_stream*)lua_newuserdata(L, sizeof(z_stream));
 
     /*  By default, we will do gzip header detection w/ max window size */
-    int window_size = lua_isnumber(L, 1) ? lua_tointeger(L, 1) : MAX_WBITS + 32;
+    lua_Integer window_size = lua_isnumber(L, 1) ? lua_tointeger(L, 1) : MAX_WBITS + 32;
 
     stream->zalloc   = Z_NULL;
     stream->zfree    = Z_NULL;
@@ -339,7 +324,7 @@ static int lz_checksum(lua_State *L) {
         lua_pushnumber(L,
                        checksum((uLong)lua_tonumber(L, lua_upvalueindex(3)),
                                 str,
-                                len));
+                                (int)len));
         lua_pushvalue(L, -1);
         lua_replace(L, lua_upvalueindex(3));
         
@@ -385,14 +370,14 @@ LUALIB_API int luaopen_zlib(lua_State * const L) {
     lz_create_deflate_mt(L);
     lz_create_inflate_mt(L);
 
-    luaL_newlib(L, zlib_functions);
+    luaL_register(L, "zlib", zlib_functions);
 
     SETINT("BEST_SPEED", Z_BEST_SPEED);
     SETINT("BEST_COMPRESSION", Z_BEST_COMPRESSION);
 
     SETLITERAL("_COPYRIGHT", "Copyright (c) 2009-2010 Brian Maher");
     SETLITERAL("_DESCRIPTION", "Yet another binding to the zlib library");
-    SETLITERAL("_VERSION", "lua-zlib $Id: 9d1f4a541bfa8de087140a835943ca0c812bf2a5 $  (HEAD, master)");
+    SETLITERAL("_VERSION", "lua-zlib $Id: c9f86792ac86380927af9b2393a874e0a2c3f9e5 $  (HEAD, master)");
 
     /* Expose this to lua so we can do a test: */
     SETINT("_TEST_BUFSIZ", LUAL_BUFFERSIZE);

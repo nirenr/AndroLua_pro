@@ -612,6 +612,34 @@ static void dooptions (lua_State *L, int n) {
       lua_pushvalue(L, -2);  /* module */
       lua_call(L, 1, 0);
     }
+	else if (lua_isstring(L, i)) {
+      if (lua_getglobal(L, lua_tostring(L, i))!=LUA_TNIL){
+		lua_setfield(L, -2, lua_tostring(L, i));
+        continue;
+      }
+	  else{
+		  lua_pop(L,1);
+	  }
+      lua_getglobal(L, "require");
+      lua_pushvalue(L, i);
+	  lua_call(L, 1, 1);
+	  if (lua_istable(L, -1)) {
+        lua_setfield(L, -2, lua_tostring(L, i));
+      }
+	  else {
+        lua_pop(L, 1);
+      }
+    }
+	else if (lua_istable(L, i)) {
+  if (!lua_getmetatable(L, -1)) {
+    lua_createtable(L, 0, 1); 
+    lua_pushvalue(L, -1);
+    lua_setmetatable(L, -3);
+  }
+  lua_pushvalue(L, i);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L,1);
+    }
   }
 }
 
@@ -629,6 +657,42 @@ static void modinit (lua_State *L, const char *modname) {
   lua_pushlstring(L, modname, dot - modname);
   lua_setfield(L, -2, "_PACKAGE");
 }
+  static const char *const mod_eventname[] = {
+    //"__index", "__newindex",
+    "__gc", "__mode", "__len", "__eq",
+    "__add", "__sub", "__mul", "__mod", "__pow",
+    "__div", "__idiv",
+    "__band", "__bor", "__bxor", "__shl", "__shr",
+    "__unm", "__bnot", "__lt", "__le",
+    "__concat", "__tostring"
+  };
+
+
+static int modcall (lua_State *L) {
+  int n = lua_gettop(L);
+  lua_getfield(L, 1, "new");
+  lua_insert(L, 2);
+  lua_newtable(L);
+  lua_pushvalue(L, -1);
+  lua_insert(L, 3);
+  lua_insert(L, 2);
+  lua_call(L, n, 0);
+  if (!lua_getmetatable(L, 2)) {
+    lua_createtable(L, 0, 1);
+    lua_pushvalue(L, -1);
+    lua_setmetatable(L, 2);
+  }
+  int i;
+  for(i=0;i<22;i++){
+    lua_getfield(L, 1, mod_eventname[i]);
+    lua_setfield(L, -2, mod_eventname[i]);
+  }
+  
+  lua_pushvalue(L, 1);
+  lua_setfield(L, -2, "__index");
+  lua_pop(L, 1);
+  return 1;
+}
 
 
 static int ll_module (lua_State *L) {
@@ -644,6 +708,13 @@ static int ll_module (lua_State *L) {
   }
   lua_pushvalue(L, -1);
   set_env(L);
+  if (!lua_getmetatable(L, -1)) {
+    lua_pushvalue(L, -1);
+    lua_setmetatable(L, -2);
+  }
+  lua_pushcfunction(L, &modcall);
+  lua_setfield(L, -2, "__call");
+  lua_pop(L, 1);
   dooptions(L, lastarg);
   return 1;
 }

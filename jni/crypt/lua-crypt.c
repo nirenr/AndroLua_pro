@@ -1188,6 +1188,35 @@ lb64decode(lua_State *L) {
 int lsha1(lua_State *L);
 int lhmac_sha1(lua_State *L);
 
+
+static int
+ldesdump(lua_State *L) {
+	lua_pushcfunction(L, ldesencode);
+	lua_pushstring(L, "12345678");
+	lua_pushvalue(L, 1);
+	lua_call(L, 2, 1);
+	
+	lua_pushcfunction(L, lb64encode);
+	lua_pushvalue(L, -2);
+	lua_call(L, 1, 1);
+	return 1;
+}
+
+static int
+ldesload(lua_State *L) {
+	lua_pushcfunction(L, lb64decode);
+	lua_pushvalue(L, 1);
+	lua_call(L, 1, 1);
+
+	lua_pushcfunction(L, ldesdecode);
+	lua_pushstring(L, "12345678");
+	lua_pushvalue(L, -3);
+	lua_call(L, 2, 1);
+	luaL_loadstring(L, lua_tostring(L, -1));
+	return 1;
+}
+
+
 int
 luaopen_crypt(lua_State *L) {
 	luaL_checkversion(L);
@@ -1197,6 +1226,8 @@ luaopen_crypt(lua_State *L) {
 		{ "randomkey", lrandomkey },
 		{ "desencode", ldesencode },
 		{ "desdecode", ldesdecode },
+		{ "desdump", ldesdump },
+		{ "desload", ldesload },
 		{ "hexencode", ltohex },
 		{ "hexdecode", lfromhex },
 		{ "hmac64", lhmac64 },

@@ -194,7 +194,8 @@ typedef struct luaL_Stream {
 
 /* compatibility with old module system */
 #if defined(LUA_COMPAT_MODULE)
-
+LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
+                                   const char *fname, int szhint);
 LUALIB_API void (luaL_pushmodule) (lua_State *L, const char *modname,
                                    int sizehint);
 LUALIB_API void (luaL_openlib) (lua_State *L, const char *libname,

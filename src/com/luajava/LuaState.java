@@ -86,7 +86,8 @@ public class LuaState
 	/**
 	 * error while running the error handler function.
 	 */
-	final public static int LUA_ERRERR    = 5;
+	final public static int LUA_ERRGCMM	= 5;
+	final public static int LUA_ERRERR    = 6;
 
 	final public static int LUA_OPEQ      = 0;
 	final public static int LUA_OPLT  = 1;
@@ -159,7 +160,17 @@ public class LuaState
 		return (luaState != null) ? luaState.getPeer() : 0;
 	}
 
+	private android.content.Context mContext;
+	public void pushContext(android.content.Context context)
+	{
+		mContext=context;
+	}
 
+	public android.content.Context getContext()
+	{
+		return mContext;
+	}
+	
 	/********************* Lua Native Interface *************************/
 
 	private synchronized native CPtr _newstate();
@@ -1015,6 +1026,18 @@ public class LuaState
 		{
 			pushInteger(((Integer) obj).intValue());
 		}
+		else if (obj instanceof Short)
+		{
+			pushInteger(((Short) obj).shortValue());
+		}
+		else if (obj instanceof Character)
+		{
+			pushInteger(((Character) obj).charValue());
+		}
+		else if (obj instanceof Byte)
+		{
+			pushInteger(((Byte) obj).byteValue());
+		}
 		else if (obj instanceof Number)
 		{
 			pushNumber(((Number) obj).doubleValue());
@@ -1033,10 +1056,6 @@ public class LuaState
 			LuaObject ref = (LuaObject) obj;
 			ref.push();
 		}
-	/*	else if (obj instanceof byte[])
-		{
-			pushString((byte[]) obj);
-		}*/
 		else
 		{
 			pushJavaObject(obj);
@@ -1174,7 +1193,7 @@ public class LuaState
 	 * @param retType type to convert to
 	 * @return The converted number
 	 */
-	public static Number convertLuaNumber(Double db, Class retType)
+	public static Number convertLuaNumber(Double db, Class<?> retType)
 	{
 		// checks if retType is a primitive type
 		if (retType.isPrimitive())
@@ -1237,7 +1256,7 @@ public class LuaState
 		return null;	  
 	}
 
-	public static Number convertLuaNumber(Long lg, Class retType)
+	public static Number convertLuaNumber(Long lg, Class<?> retType)
 	{
 		// checks if retType is a primitive type
 		if (retType.isPrimitive())
@@ -1318,6 +1337,9 @@ public class LuaState
 		setGlobal("float");
 		pushJavaObject(double.class);
 		setGlobal("double");
+		Object obj=null;
+		pushJavaObject(obj);
+		setGlobal("null");
 	}
 
 }

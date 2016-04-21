@@ -329,6 +329,8 @@
 #define	LUA_COMPAT_FOREACH
 #define LUA_COMPAT_MATHLIB
 #define LUA_COMPAT_APIINTCASTS
+#define LUA_COMPAT_BITLIB
+#define LUA_COMPAT_IPAIRS
 
 /*
 @@ LUA_COMPAT_UNPACK controls the presence of global 'unpack'.
@@ -367,7 +369,7 @@
 /*
 @@ LUA_COMPAT_MAXN defines the function 'maxn' in the table library.
 */
-#define LUA_COMPAT_MAXN
+//#define LUA_COMPAT_MAXN
 
 /*
 @@ The following macros supply trivial compatibility for some

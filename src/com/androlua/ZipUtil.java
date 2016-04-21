@@ -153,6 +153,12 @@ public class ZipUtil
 			}
 		}
 	}
+	
+	public static boolean unzip(String zipPath, String destPath)
+	{
+		return unzip(new File(zipPath),destPath);
+	}
+	
 	/**
 	 * 将zip文件解压到指定的目录，该zip文件必须是使用该类的zip方法压缩的文件
 	 * @param zipFile
@@ -176,13 +182,13 @@ public class ZipUtil
                 return result;
             }
         }
-        String mainFileName=zipFile.getName().replace(".zip", "");
+        /*String mainFileName=zipFile.getName().replace(".zip", "");
         File targetFile=new File(destPath + "/" + mainFileName);
         if (targetFile.exists())
 		{
             logger.info(targetFile.getName() + " already exist.");
             return result;
-        }
+        }*/
         ZipInputStream zis =null;
         logger.info("start unzip file ...");
         try
@@ -196,8 +202,8 @@ public class ZipUtil
                 int count;
 //                byte data[] = new byte[BUFFER];
                 String entryName=entry.getName();
-                int index=entryName.indexOf(mainFileName);
-                String newEntryName=destPath + "/" + entryName.substring(index);
+                
+                String newEntryName=destPath + "/" + entryName;
                 System.out.println(newEntryName);
                 File temp=new File(newEntryName).getParentFile();
                 if (!temp.exists())

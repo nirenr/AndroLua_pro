@@ -191,7 +191,7 @@ public class LuaObject
 	 * @param index
 	 *            of the object on the lua stack
 	 */
-	private void registerValue(int index)
+	protected void registerValue(int index)
 	{
 		synchronized (L)
 		{
@@ -388,6 +388,41 @@ public class LuaObject
 		return L.getLuaObject(this, field);
 	}
 
+	public void setField(String field,Object obj)
+	{
+		push();
+		try
+		{
+			L.pushObjectValue(obj);
+		}
+		catch (LuaException e)
+		{
+			L.pushNil();
+		}
+		L.setField(-2, field);
+		L.pop(1);
+	}
+	
+	public LuaObject getI(long idx) throws LuaException
+	{
+		return L.getLuaObject(this, idx);
+	}
+
+	public void setI(long idx,Object obj)
+	{
+		push();
+		try
+		{
+			L.pushObjectValue(obj);
+		}
+		catch (LuaException e)
+		{
+			L.pushNil();
+		}
+		L.setI(-2, idx);
+		L.pop(1);
+	}
+	
 	/**
 	 * Calls the object represented by <code>this</code> using Lua function pcall.
 	 * 
@@ -509,7 +544,7 @@ public class LuaObject
 			Object array = Array.newInstance(Object.class, n);
 			for (int i = 1;i <= n;i++)
 			{
-				L.pushNumber(i);
+				L.pushInteger(i);
 				L.getTable(-2);
 				Array.set(array, i - 1, L.toJavaObject(-1));
 				L.pop(1);

@@ -59,7 +59,7 @@ public class Signer
 
 
     public static final String[] DEFAULT_KEYS={
-        "media","platform","shared","testkey"};
+        "platform","testkey"};
     static PrivateKey privateKey;
 
     static X509Certificate publicKey;

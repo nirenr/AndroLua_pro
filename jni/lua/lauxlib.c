@@ -784,7 +784,7 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
 */
 #if defined(LUA_COMPAT_MODULE)
 
-static const char *luaL_findtable (lua_State *L, int idx,
+LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
                                    const char *fname, int szhint) {
   const char *e;
   if (idx) lua_pushvalue(L, idx);
@@ -832,9 +832,10 @@ LUALIB_API void luaL_pushmodule (lua_State *L, const char *modname,
   if (lua_getfield(L, -1, modname) != LUA_TTABLE) {  /* no _LOADED[modname]? */
     lua_pop(L, 1);  /* remove previous result */
     /* try global variable (and create one if it does not exist) */
-    lua_pushglobaltable(L);
+    /*lua_pushglobaltable(L);
     if (luaL_findtable(L, 0, modname, sizehint) != NULL)
-      luaL_error(L, "name conflict for module '%s'", modname);
+      luaL_error(L, "name conflict for module '%s'", modname);*/
+	lua_newtable(L);
     lua_pushvalue(L, -1);
     lua_setfield(L, -3, modname);  /* _LOADED[modname] = new table */
   }

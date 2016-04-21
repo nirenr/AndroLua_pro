@@ -209,6 +209,8 @@ public class CrashHandler implements UncaughtExceptionHandler
 				FileOutputStream fos = new FileOutputStream(path + fileName);
 //				FileOutputStream fos = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
 				fos.write(sb.toString().getBytes());
+				Log.e("crash",sb.toString());
+				
 				fos.close();
 			}
 			return fileName;

@@ -19,11 +19,25 @@ https://qr.alipay.com/apt7ujjb4jngmu3z9a
 
 本程序使用了以下开源项目部分代码
 
-bson,crypt,lua-md5
+bson,crypt,md5
 https://github.com/cloudwu/skynet
 
-cjson,filesystem,lsqlite3,zlib,xml
+cjson
+https://sourceforge.net/projects/cjson/
+
+zlib
+https://github.com/brimworks/lua-zlib
+
+xml
 https://github.com/chukong/quick-cocos2d-x
+
+luv
+https://github.com/luvit/luv
+https://github.com/clibs/uv
+
+zip
+https://github.com/brimworks/lua-zip
+https://github.com/julienr/libzip-android
 
 luagl
 http://luagl.sourceforge.net/
@@ -39,6 +53,13 @@ canvas
 
 jni
 由nirenr开发
+
+@
+@与标准Lua5.3.1的不同@
+@打开了部分兼容选项，module，unpack，bit32
+添加string.gfind函数，用于递归返回匹配位置
+增加tointeger函数，强制将数值转为整数
+修改tonumber支持转换Java对象
 @
 @1，参考链接@
 @关于lua的语法和Android API请参考以下网页。
@@ -48,7 +69,7 @@ Android 中文API：
 http://android.toolib.net/reference/packages.html
 @
 @2，导入模块@
-@在每个脚本程序的开头应该写上 require "import" 以导入import模块，简化写代码的难度。目前程序内置bson,canvas,cjson,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zlib。
+@在每个脚本程序的开头应该写上 require "import" 以导入import模块，简化写代码的难度。目前程序内置bson,canvas,cjson,crypt,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zip,zlib。
 @
 @3，导入包或类@
 @可以导入包或者类
@@ -95,7 +116,7 @@ button.setOnClickListener(View.OnClickListener {onClick = function(s)
         end
     })
     
-控件事件可以简写
+onxxx事件可以简写
 button.onClick=function(v)
     print(v)
     end
@@ -130,7 +151,7 @@ a=array[0]
 array[0]=4
 @
 @10，使用线程@
-@需导入import模块，参看thread与task函数说明
+@需导入import模块，参看thread,timer与task函数说明
 任务
 
 task(str,args,callback)
@@ -230,7 +251,21 @@ holder=sureface.getHolder()
 holder.addCallback(callback)
 activity.setContentView(sureface)
 @
-@13，部分模块@
+@13，Lua类型与Java类型@
+@在大多数情况下androlua可以很好的处理Lua与Java类型之间的自动转换，但是Java的数值类型有多种(double,float,long,int,short,byte)，而Lua只有number，在必要的情况下可以使用类型的强制转换。
+i=int(10)
+i就是一个Java的int类型数据
+d=double(10)
+d是一个Java的double类型
+在调用Java方法时androlua可以自动将Lua的table转换成Java的array，Map或interface
+Map类型可以像使用Lua表一样简便。
+map=HashMap{a=1,b=2}
+print(map.a)
+map.a=3
+取长度运算符#可以获取Java中array，List,Map,Set，String的长度。
+
+@
+@14，部分模块@
 @(1) canvas模块
 require "import"
 import "canvas"
@@ -328,7 +363,23 @@ activity.setContentView(glSurefaceView);
 (3) http模块
 body,cookie,code,headers=http.get(url [,cookie])
 body,cookie,code,headers=http.post(url ,postdata [,cookie])
+code,headers=http.download(url [,cookie])
+body,cookie,code,headers=http.upload(url ,datas ,files [,cookie])
 
+require "import"
+import "http"
+
+--get函数以get请求获取网页，参数为请求的网址与cookie
+body,cookie,code,headers=http.get("http://www.androlua.com")
+
+--post函数以post请求获取网页，通常用于提交表单，参数为请求的网址，要发送的内容与cookie
+body,cookie,code,headers=http.post("http://androlua.com/Login.Asp?Login=Login&Url=http://androlua.com/bbs/index.asp","name=用户名&pass=密码&ki=1")
+
+--download函数和get函数类似，用于下载文件，参数为请求的网址，保存文件的路径与cookie
+http.download("http://androlua.com","/sdcard/a.txt")
+
+--upload用于上传文件，参数是请求的网址，请求内容字符串部分，格式为以key=value形式的表，请求文件部分，格式为key=文件路径的表，最后一个参数为cookie
+http.upload("http://androlua.com",{title="标题",msg="内容"},{file1="/sdcard/1.txt",file2="/sdcard/2.txt"})
 
 (4) import模块
 
@@ -375,7 +426,7 @@ s 表示string类型，i 表示整数类型，n 表示浮点数或整数类型�
 --表示注释。
 
 each(o)
-参数：o 实现Iterator接口的Java对象
+参数：o 实现Iterable接口的Java对象
 返回：用于Lua迭代的闭包
 作用：Java集合迭代器
 
@@ -408,7 +459,7 @@ layout={
         }
     }
 main={}
-activity.setContentView(loadlayout(layout,lay))
+activity.setContentView(loadlayout(layout,main))
 print(main.tv.getText())
 
 loadbitmap(s)
@@ -518,14 +569,46 @@ luajava.clear(o)
 luajava.astable(o)
 参数：o Java对象
 返回：Lua表
-作用：转换Java的Array ArrayList或HashMap为Lua表
+作用：转换Java的Array List或Map为Lua表
 
 luajava.tostring(o)
 参数：o Java对象
 返回：Lua字符串
 作用：相当于 o.toString()
 @
-
+@activity部分API参考@
+@setContentView(layout, env)
+设置布局表layout为当前activity的主视图，env是保存视图ID的表，默认是_G
+getLuaDir()
+返回脚本当前目录
+getLuaDir(name)
+返回脚本当前目录的子目录
+getLuaExtDir()
+返回Androlua在SD的工作目录
+getLuaExtDir(name)
+返回Androlua在SD的工作目录的子目录
+getWidth()
+返回屏幕宽度
+getHeight()
+返回屏幕高度，不包括状态栏与导航栏
+loadDex(path)
+加载当前目录dex或jar，返回DexClassLoader
+loadLib(path)
+加载当前目录c模块，返回载入后模块的返回值(通常是包含模块函数的包)
+registerReceiver(filter)
+注册一个广播接收者，当再次调用该方法时将移除上次注册的过滤器
+newActivity(req, path, arg)
+打开一个新activity，运行路径为path的Lua文件，其他两个参数为可选，arg为表，接受脚本为变长参数
+newTask(func, update, callback)
+新建一个Task异步任务，在线程中执行func函数，其他两个参数可选，执行结束回调callback，在任务调用update函数时在UI线程回调该函数
+新建的Task在调用execute{}时通过表传入参数，在func以unpack形式接收，执行func可以返回多个值，
+newThread(func, arg)
+新建一个线程，在线程中运行func函数，可以以表的形式传入arg，在func以unpack形式接收
+新建的线程调用start()方法运行，线程为含有loop线程，在当前activity结束后自动结束loop
+newTimer(func, arg)
+新建一个定时器，在线程中运行func函数，可以以表的形式传入arg，在func以unpack形式接收
+调用定时器的start(delay, period)开始定时器，stop()停止定时器，Enabled暂停恢复定时器，Period属性改变定时器间隔
+@
 @布局表字符串常量@
 @布局表支持属性字符串常量
     -- android:drawingCacheQuality

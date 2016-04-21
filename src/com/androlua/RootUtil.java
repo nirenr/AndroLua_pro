@@ -65,7 +65,6 @@ import java.io.*;
 				dos.flush();
 				String line = null;
 				while ((line = dis.readLine()) != null) {
-					Log.d("result", line);
 					result += line+"\n";
 				}
 				p.waitFor();
