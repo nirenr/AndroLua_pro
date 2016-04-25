@@ -332,7 +332,7 @@ local function setattribute(_env,view,params,k,v,ids)
       if (not v:find("^/")) and luadir then
         v=luadir..v
       end
-  --task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setImageBitmap(bmp)end)
+      --task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setImageBitmap(bmp)end)
       view.setImageBitmap(loadbitmap(v))
     end
   elseif k=="scaleType" then
@@ -352,9 +352,9 @@ local function setattribute(_env,view,params,k,v,ids)
         end
       else
         if (not v:find("^/")) and luadir then
-           v=luadir..v
+          v=luadir..v
         end
-          --,task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setBackground(BitmapDrawable(bmp))end)
+        --,task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setBackground(BitmapDrawable(bmp))end)
         view.setBackground(BitmapDrawable(loadbitmap(v)))
       end
     elseif type(v)=="userdata" then
@@ -412,7 +412,11 @@ local function env_loadlayout(env)
       view = t[1](context) --创建view
     end
     view.setTag(t)
-    view.onTouch=onTouch
+    if group and group==AbsoluteLayout then
+      view.onTouch=move
+    else
+      view.onTouch=onTouch
+    end
     local vgw,vgh
     pcall(setMiniSize,view)
 

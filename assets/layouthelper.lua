@@ -14,7 +14,7 @@ layout={
     orientation="vertical",
   },
 
-  
+
   ck={
     LinearLayout;
     {
@@ -48,6 +48,74 @@ function onTouch(v,e)
   end
 end
 
+local TypedValue=luajava.bindClass("android.util.TypedValue")
+local dm=activity.getResources().getDisplayMetrics()
+function dp(n)
+  return TypedValue.applyDimension(1,n,dm)
+end
+
+function to(n)
+  return string.format("%ddp",n//dn)
+end
+
+dn=dp(1)
+lastX=0
+lastY=0
+vx=0
+vy=0
+vw=0
+vh=0
+zoomX=false
+zoomY=false
+function move(v,e)
+  curr=v.Tag
+  currView=v
+  ry=e.getRawY()--获取触摸绝对Y位置
+  rx=e.getRawX()--获取触摸绝对X位置
+  if e.getAction() == MotionEvent.ACTION_DOWN then
+    lp=v.getLayoutParams()
+    vy=v.getY()--获取视图的Y位置
+    vx=v.getX()--获取视图的X位置
+    lastY=ry--记录按下的Y位置
+    lastX=rx--记录按下的X位置
+    vw=v.getWidth()--记录控件宽度
+    vh=v.getHeight()--记录控件高度
+    if vw-e.getX()<20 then
+      zoomX=true--如果触摸右边缘启动缩放宽度模式
+    elseif vh-e.getY()<20 then
+      zoomY=true--如果触摸下边缘启动缩放高度模式
+    end
+
+  elseif e.getAction() == MotionEvent.ACTION_MOVE then
+    --lp.gravity=Gravity.LEFT|Gravity.TOP --调整控件至左上角
+    if zoomX then
+      lp.width=(vw+(rx-lastX))--调整控件宽度
+    elseif zoomY then
+      lp.height=(vh+(ry-lastY))--调整控件高度
+    else
+      lp.x=(vx+(rx-lastX))--移动的相对位置
+      lp.y=(vy+(ry-lastY))--移动的相对位置
+    end
+    v.setLayoutParams(lp)--调整控件到指定的位置
+    --v.Parent.invalidate()
+  elseif e.getAction() == MotionEvent.ACTION_UP then
+    if (rx-lastX)^2<100 and (ry-lastY)^2<100 then
+      getCurr(v)
+    else
+      curr.layout_x=to(v.getX())
+      curr.layout_y=to(v.getY())
+      if zoomX then
+        curr.layout_width=to(v.getWidth())
+      elseif zoomY then
+        curr.layout_height=to(v.getHeight())
+      end
+    end
+    zoomX=false--初始化状态
+    zoomY=false--初始化状态
+  end
+  return true
+end
+
 function getCurr(v)
   curr=v.Tag
   currView=v
@@ -68,6 +136,9 @@ function getCurr(v)
   end
   if luajava.instanceof(v.Parent,LinearLayout) then
     fd_list.getAdapter().add("layout_weight")
+  elseif luajava.instanceof(v.Parent,AbsoluteLayout) then
+    fd_list.getAdapter().insert(5,"layout_x")
+    fd_list.getAdapter().insert(6,"layout_y")
   end
   fd_dlg.show()
 end
@@ -353,13 +424,22 @@ sfd_dlg.setView(fld)
 sfd_dlg.setPositiveButton("确定",{onClick=ok})
 sfd_dlg.setNegativeButton("取消",nil)
 sfd_dlg.setNeutralButton("无",{onClick=none})
-
-
+function dumparray(arr)
+  local ret={}
+  table.insert(ret,"{")
+  for k,v in ipairs(arr) do
+    table.insert(ret,string.format("\"%s\";",v))
+  end
+  table.insert(ret,"};")
+  return table.concat(ret,"\n")
+end
 function dumplayout(t)
   table.insert(ret,"{")
   for k,v in pairs(t) do
-    if type(v)=="table" then
+    if type(k)=="number" and type(v)=="table" then
       dumplayout(v)
+    elseif type(v)=="table" then
+      table.insert(ret,k.."="..dumparray(v))
     elseif type(k)=="number" then
       table.insert(ret,tostring(v.getSimpleName()..";"))
     elseif type(v)=="string" then
