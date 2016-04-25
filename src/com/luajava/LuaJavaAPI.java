@@ -1466,17 +1466,21 @@ public final class LuaJavaAPI
 					if (L.isObject(idx))
 					{
 						Object userObj = L.getObjectFromUserdata(idx);
-						if (parameter.isPrimitive() && Number.class.isAssignableFrom(userObj.getClass()))
+						if (userObj==null)
+						{
+							obj = null;
+						}
+						else if (parameter.isPrimitive() && (Number.class.isAssignableFrom(userObj.getClass()) || Character.class.isAssignableFrom(userObj.getClass())))
 						{
 							obj = userObj;
 						}
-						else if (!parameter.isAssignableFrom(userObj.getClass()))
+						else if (parameter.isAssignableFrom(userObj.getClass()))
 						{
-							okType = false;
+							obj = userObj;
 						}
 						else
 						{
-							obj = userObj;
+							okType = false;
 						}
 					}
 					else
