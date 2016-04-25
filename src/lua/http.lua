@@ -446,10 +446,11 @@ function _M.download(u,p,cok)
    url = u,
    method = "GET",
    headers = {
-    ["Content-Type"] = "application/x-www-form-urlencoded",
-    ["Accept-Language"] = "zh-cn,zh;q=0.5",
-    ["Accept-Charset"] = "utf-8",
-    ["Range:bytes"]=range or "0-",
+    ["Content-Type"] = "application/x-download",
+    --["Accept-Language"] = "zh-cn,zh;q=0.5",
+    --["Accept-Charset"] = "utf-8",
+    --["Range:bytes"]=range or "0-",
+    ["Referer"]=u:find('(http://[^/]+)'),
     ['Cookie']=cok or _M.cookie,
    },
    sink = ltn12.sink.file(f)}
