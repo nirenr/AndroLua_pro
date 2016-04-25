@@ -1,0 +1,20 @@
+{
+  LinearLayout;
+  {
+    LinearLayout;
+    {
+      EditText;
+      id="medit";
+      singleLine=true;
+      layout_weight="1";
+      layout_width="fill";
+    };
+    layout_width="fill";
+  };
+  {
+    ListView;
+    id="mlist";
+    layout_width="fill";
+  };
+  orientation="vertical";
+};
