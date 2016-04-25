@@ -128,7 +128,7 @@ local function env_import(env)
       return import_pacckage(package:sub(1,-2))
     else
       local classname = package:match('([%w_]+)$')
-      local class = import_require(package) or import_class(classname,package)
+      local class = import_require(package) or import_class(classname,package) or import_dex_class(classname,package)
       if class then
         if class ~= true then
           --findtable(package)=class
