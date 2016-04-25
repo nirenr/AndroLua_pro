@@ -18,13 +18,13 @@ activity.setTitle('AndroLua+')
 local version = Build.VERSION.SDK_INT;
 local h=tonumber(os.date("%H"))
 if version >= 21 then
-  if h<6 or h>22 then
+  if h<=6 or h>=22 then
     activity.setTheme(android.R.style.Theme_Material)
   else
     activity.setTheme(android.R.style.Theme_Material_Light)
   end
 else
-  if h<6 or h>22 then
+  if h<=6 or h>=22 then
     activity.setTheme(android.R.style.Theme_Holo)
   else
     activity.setTheme(android.R.style.Theme_Holo_Light)
@@ -161,6 +161,9 @@ m={
     {MenuItem,
       title="日志",
       id="more_logcat",},
+    {MenuItem,
+      title="Java浏览器",
+      id="more_java",},
     {MenuItem,
       title="帮助",
       id="more_help",},
@@ -746,6 +749,9 @@ func.save=function()
 end
 
 func.play=function()
+  if func.check(true) then
+    return
+  end
   save()
   local p={}
   local e=pcall(loadfile(luadir.."init.lua","bt",p))
@@ -764,15 +770,20 @@ end
 func.format=function()
   editor.format()
 end
-func.check= function ()
+func.check= function (b)
   local src=editor.getText()
   src=src.toString()
+  if luapath:find("%.aly$") then
+    src="return "..src
+  end
   local _,data=loadstring(src)
 
   if data then
     local _,_,line,data=data:find(".(%d+).(.+)")
     editor.gotoLine(tonumber(line))
     Toast.makeText(activity,line..":".. data, Toast.LENGTH_SHORT ).show()
+    return true
+  elseif b then
   else
     Toast.makeText(activity, "没有语法错误", Toast.LENGTH_SHORT ).show()
   end
@@ -849,12 +860,17 @@ func.help=function()
   activity.newActivity("help")
 end
 
+func.java=function()
+  activity.newActivity("java")
+end
+
 func.manual=function()
   activity.newActivity("luadoc")
 end
 
 func.helper=function()
   save()
+  update=true
   activity.newActivity("layouthelper",{luadir,luapath})
 end
 
@@ -896,6 +912,7 @@ function onMenuItemSelected(id,item)
     [optmenu.goto_seach]=func.seach,
     [optmenu.more_helper]=func.helper,
     [optmenu.more_logcat]=func.logcat,
+    [optmenu.more_java]=func.java,
     [optmenu.more_help]=func.help,
     [optmenu.more_manual]=func.manual,
     [optmenu.more_donation]=func.donation,
@@ -948,7 +965,35 @@ function onActivityResult(req,res,intent)
     local data=intent.getStringExtra("data")
     local _,_,line=data:find(":(%d+):")
     editor.gotoLine (tonumber(line))
+local classes=require "android"
+local c=data:match("attempt to call a nil value %(global '(%w+)'%)")
+if c then
+  local cls={}
+  c="%."..c.."$"
+  for k,v in ipairs(classes) do
+    if v:find(c) then
+      table.insert(cls,string.format("import %q",v))
+    end
   end
+  if #cls>0 then
+    local import_dlg=AlertDialogBuilder(activity)
+    import_dlg.Title="可能需要导入的类"
+    adp=LuaArrayAdapter(activity,{EditText,layout_width="fill"},String(cls))
+    import_dlg.setAdapter(adp)
+    import_dlg.setPositiveButton("确定",nil)
+    import_dlg.show()
+  end
+end
+
+  end
+end
+
+function onStart()
+if update then
+    read(luapath)
+    editor.format()
+end
+update=false
 end
 
 function onStop()
@@ -958,6 +1003,7 @@ function onStop()
   f:write( string.format("luapath=%q\nlast=%d",luapath, editor. getSelectionEnd() ))
   f:close()
 end
+
 --创建对话框
 navi_dlg=Dialog(activity)
 navi_dlg.setTitle("导航")
@@ -1062,7 +1108,7 @@ function newButton(text)
   btn.onClick=click
   return btn
 end
-local ps={"(",")","[","]","{","}","\"","=",":",".",",","+","-","*","/","\\","%","#","^","$","<",">","~"};
+local ps={"(",")","[","]","{","}","\"","=",":",".",",","_","+","-","*","/","\\","%","#","^","$","<",">","~"};
 for k,v in ipairs(ps) do
   ps_bar.addView(newButton(v))
 end
