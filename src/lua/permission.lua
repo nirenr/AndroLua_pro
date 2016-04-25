@@ -42,6 +42,7 @@ permission={
   CAMERA=true,
   READ_FRAME_BUFFER=true,
   PERSISTENT_ACTIVITY=true,
+  DOWNLOAD_WITHOUT_NOTIFICATION=true,
 }
 
 permission_info={
@@ -86,6 +87,7 @@ permission_info={
   PERSISTENT_ACTIVITY="永久活动",
   INSTALL_SHORTCUT="安装快捷方式",
   ACCESS_SUPERUSER="超级用户",
+  DOWNLOAD_WITHOUT_NOTIFICATION="直接下载",
 }
 
 
