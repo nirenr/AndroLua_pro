@@ -1,7 +1,6 @@
 package com.androlua;
 
-import android.view.*;
-import android.widget.*;
+import android.content.*;
 
 public class Main extends LuaActivity
 {
@@ -19,6 +18,5 @@ public class Main extends LuaActivity
 		// TODO: Implement this method
 		return getLocalDir()+"/main.lua";
 	}
-	
-	
+
 }
