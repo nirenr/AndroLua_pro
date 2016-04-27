@@ -488,6 +488,7 @@ function onMenuItemSelected(id,item)
     save(dumplayout2(layout.main))
     Toast.makeText(activity,"已保存",1000).show()
     activity.setResult(10000,Intent());
+    activity.finish()
   end
 end
 
