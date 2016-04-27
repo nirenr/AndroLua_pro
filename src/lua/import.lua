@@ -847,6 +847,40 @@ function new_env()
   return _env
 end
 
+
+local os_mt={}
+os_mt.__index=function(t,k)
+  local _t={}
+  _t.__cmd=(rawget(t,"__cmd") or "")..k.." "
+  setmetatable(_t,os_mt)
+  return _t
+end
+os_mt.__call=function(t,...)
+  local cmd=t.__cmd..table.concat({...}," ")
+  local p=io.popen(cmd)
+  local s=p:read("a")
+  p:close()
+  return s
+end
+setmetatable(os,os_mt)
+
+
+local luajava_mt={}
+luajava_mt.__index=function(t,k)
+  local b,ret=xpcall(function()
+    return luajava.bindClass((rawget(t,"__name") or "")..k)
+  end,
+  function()
+    local p={}
+    p.__name=(rawget(t,"__name") or "")..k.."."
+    setmetatable(p,luajava_mt)
+    return p
+  end)
+  rawset(t,k,ret)
+  return ret
+end
+setmetatable(luajava,luajava_mt)
+
 return _G
 
 
