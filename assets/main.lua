@@ -34,9 +34,21 @@ end
 --activity.getActionBar().show()
 luadir=luajava.luaextdir.."/" or "/sdcard/androlua/"
 luaconf=luajava.luadir.."/lua.conf"
+luaproj=luajava.luadir.."/lua.proj"
 pcall(dofile,luaconf)
 luapath=luapath or luadir.."new.lua"
 luadir=luapath:match("^(.-)[^/]+$")
+pcall(dofile,luaproj)
+luaproject=luaproject
+if luaproject then
+  local p={}
+  local e=pcall(loadfile(luaproject.."init.lua","bt",p))
+  if e then
+    activity.setTitle(p.appname)
+    Toast.makeText(activity, "打开工程."..p.appname, Toast.LENGTH_SHORT ).show()
+  end
+end
+
 activity.getActionBar().setDisplayShowHomeEnabled(false)
 luabindir=luajava.luaextdir.."/bin/"
 code=[===[
@@ -173,13 +185,13 @@ m={
     {MenuItem,
       title="支持作者",
       id="more_donation",},
-   {MenuItem,
+    {MenuItem,
       title="联系作者",
       id="more_qq",},
-  {MenuItem,
+    {MenuItem,
       title="论坛",
       id="more_bbs",},
- }
+  }
 }
 optmenu={}
 items={"运行","撤销","重做","打开","保存","新建","新建工程", "格式化","查错","导航","转到","搜索","编译","打包","日志","帮助","手册",}
@@ -240,21 +252,32 @@ function callback(s)
     bin_dlg.hide()
   end
 end
+
 function read(path)
   local f=io.open(path,"r")
   editor.setText(f:read("*all"))
   f:close()
   activity.getActionBar().setSubtitle(".."..path:match("(/[^/]+/[^/]+)$"))
+  luapath=path
+  write(luaconf,string.format("luapath=%q",path))
+  if luaproject and path:find(luaproject) then
+    --Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
+    return
+  end
+
   local p={}
   local e=pcall(loadfile(luadir.."init.lua","bt",p))
   if e then
     activity.setTitle(p.appname)
+    luaproject=luadir
+    write(luaproj,string.format("luaproject=%q",luaproject))
+    Toast.makeText(activity, "打开工程."..p.appname, Toast.LENGTH_SHORT ).show()
   else
     activity.setTitle("AndroLua+")
+    luaproject=nil
+    write(luaproj,"luaproject=nil")
+    --Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
   end
-  luapath=path
-  write(luaconf,string.format("luapath=%q",path))
-  --Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
 end
 
 function write(path,str)
@@ -326,12 +349,11 @@ function open(p)
     luadir=imports(luadir..p)
     luapath=luadir.."main.lua"
     read(luapath)
-    Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
+    --    Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
     open_dlg.hide()
   else
     luapath=luadir..p
     read(luapath)
-    Toast.makeText(activity, "打开文件."..luapath, Toast.LENGTH_SHORT ).show()
     open_dlg.hide()
   end
 end
@@ -402,7 +424,7 @@ function list2(v,p)
     local name=fs[n].getName()
     if fs[n].isDirectory() then
       table.insert(td,name)
-    --elseif name:find("%.lua$") or name:find("%.aly$") or name:find("%.alp$") then
+      --elseif name:find("%.lua$") or name:find("%.aly$") or name:find("%.alp$") then
       --table.insert(tf,name)
     end
   end
@@ -438,8 +460,8 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       error("create file " .. temp.getName() .. " fail");
     end
   end
-  
-  
+
+
   local tmp=luajava.luadir.."/tmp.apk"
   local info=activity.getApplicationInfo()
   local ver=activity.getPackageManager().getPackageInfo(activity.getPackageName(),0).versionName
@@ -739,8 +761,12 @@ end
 
 func.export=function()
   save()
-  local name=export(luadir)
+  if luaproject then
+  local name=export(luaproject)
   Toast.makeText(activity, "工程已导出."..name, Toast.LENGTH_SHORT ).show()
+  else
+  Toast.makeText(activity, "仅支持工程导出.", Toast.LENGTH_SHORT ).show()
+  end
 end
 
 func.save=function()
@@ -753,10 +779,8 @@ func.play=function()
     return
   end
   save()
-  local p={}
-  local e=pcall(loadfile(luadir.."init.lua","bt",p))
-  if e then
-    activity.newActivity(luadir.."main.lua")
+  if luaproject then
+    activity.newActivity(luaproject.."main.lua")
   else
     activity.newActivity(luapath)
   end
@@ -825,26 +849,19 @@ end
 
 func.build=function()
   save()
+  if not luaproject then
+    Toast.makeText(activity, "仅支持工程打包.", Toast.LENGTH_SHORT ).show()
+    return
+  end
+
   local p={}
-  local e=pcall(loadfile(luadir.."init.lua","bt",p))
+  local e,s=pcall(loadfile(luadir.."init.lua","bt",p))
   if e then
-    --Toast.makeText(activity, "正在打包..", Toast.LENGTH_SHORT ).show()
     activity.newTask(bin,update,callback).execute{luadir,p.appname,p.appver,p.packagename,luabindir..p.appname.."_"..p.appver..".apk"}
     bin_dlg.show()
-    return nil
+  else
+    Toast.makeText(activity, "工程配置文件错误."..s, Toast.LENGTH_SHORT ).show()
   end
-  apkname=luapath:match("(%w+)%.lua$")
-  apkname=apkname or "demo"
-  packagename="com.androlua."..apkname
-  local luadir="/sdcard/androlua/"
-  apkpath=luadir..apkname..".apk"
-
-  luaPath.setText(luapath)
-  appName.setText(apkname)
-  appVer.setText("1.0")
-  packageName.setText(packagename)
-  apkPath.setText(apkpath)
-  build_dlg.show()
 end
 
 buildfile=function()
@@ -870,7 +887,7 @@ end
 
 func.helper=function()
   save()
-  update=true
+  isupdate=true
   activity.newActivity("layouthelper",{luadir,luapath})
 end
 
@@ -965,35 +982,35 @@ function onActivityResult(req,res,intent)
     local data=intent.getStringExtra("data")
     local _,_,line=data:find(":(%d+):")
     editor.gotoLine (tonumber(line))
-local classes=require "android"
-local c=data:match("attempt to call a nil value %(global '(%w+)'%)")
-if c then
-  local cls={}
-  c="%."..c.."$"
-  for k,v in ipairs(classes) do
-    if v:find(c) then
-      table.insert(cls,string.format("import %q",v))
+    local classes=require "android"
+    local c=data:match("attempt to call a nil value %(global '(%w+)'%)")
+    if c then
+      local cls={}
+      c="%."..c.."$"
+      for k,v in ipairs(classes) do
+        if v:find(c) then
+          table.insert(cls,string.format("import %q",v))
+        end
+      end
+      if #cls>0 then
+        local import_dlg=AlertDialogBuilder(activity)
+        import_dlg.Title="可能需要导入的类"
+        adp=LuaArrayAdapter(activity,{EditText,layout_width="fill"},String(cls))
+        import_dlg.setAdapter(adp)
+        import_dlg.setPositiveButton("确定",nil)
+        import_dlg.show()
+      end
     end
-  end
-  if #cls>0 then
-    local import_dlg=AlertDialogBuilder(activity)
-    import_dlg.Title="可能需要导入的类"
-    adp=LuaArrayAdapter(activity,{EditText,layout_width="fill"},String(cls))
-    import_dlg.setAdapter(adp)
-    import_dlg.setPositiveButton("确定",nil)
-    import_dlg.show()
-  end
-end
 
   end
 end
 
 function onStart()
-if update then
+  if isupdate then
     read(luapath)
     editor.format()
-end
-update=false
+  end
+  isupdate=false
 end
 
 function onStop()
