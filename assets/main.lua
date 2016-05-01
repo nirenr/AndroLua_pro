@@ -983,7 +983,7 @@ function onActivityResult(req,res,intent)
     local _,_,line=data:find(":(%d+):")
     editor.gotoLine (tonumber(line))
     local classes=require "android"
-    local c=data:match("attempt to call a nil value %(global '(%w+)'%)")
+    local c=data:match("a nil value %(global '(%w+)'%)")
     if c then
       local cls={}
       c="%."..c.."$"
