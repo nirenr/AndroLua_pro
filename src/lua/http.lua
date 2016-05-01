@@ -353,6 +353,18 @@ _M.request = socket.protect(function(reqt, body)
 end)
 
 
+local function formatdata(t)
+  local buf={}
+  for k,v in pairs(t) do
+    if type(k)=="number" then
+      table.insert(buf,v)
+    else
+      table.insert(buf,string.format("%s=%s",k,v))
+    end
+  end
+  return table.concat(buf,"&")
+end
+
 local function checkcookie(headers)
   if not  headers then
       return nil
@@ -368,23 +380,36 @@ local function checkcookie(headers)
   return cok
 end
 
+local function copy(t,...)
+  for _,f in pairs{...} do
+    for k,v in pairs(f) do
+      t[k]=v
+    end
+  end
+return t
+end
+
+
 _M.cookie=""
-function _M.post(u,d,cok)
+_M.header={}
+_M.ua=""
+
+function _M.post(u,d,cok,ua,hdr)
   local t = {}
   d=d or ""
   if type(d)=="table" then
-    d=table.concat(d,"&")
+    d=formatdata(d)
     end
   local r, c, h = _M.request{
    url = u,
    method = "POST",
-   headers = {
+   headers = copy({
     ["Content-Type"] = "application/x-www-form-urlencoded",
     ["Accept-Language"] = "zh-cn,zh;q=0.5",
     ["Accept-Charset"] = "utf-8",
     ["Content-Length"] = #d,
     ['Cookie']=cok or _M.cookie,
-   },
+   },hdr or _M.header),
    source = ltn12.source.string(d),
    sink = ltn12.sink.table(t)}
   return table.concat(t),checkcookie(h), c, h
@@ -407,52 +432,55 @@ local function formatmultidata(d,t)
   return table.concat(buf)
 end
 
-function _M.upload(u,d,f,cok)
+function _M.upload(u,d,f,cok,ua,hdr)
   local t = {}
   local data=formatmultidata(d,f)
   local r, c, h = _M.request{
     url = u,
     method = "POST",
-    headers = {
+    headers = copy({
       ["Content-Type"] = "multipart/form-data;boundary="..boundary,
       ["Accept-Language"] = "zh-cn,zh;q=0.5",
       ["Accept-Charset"] = "utf-8",
       ["Content-Length"] = #data,
       ['Cookie']=cok or _M.cookie,
-    },
+      ["User-Agent"]=ua or _M.ua,
+    },hdr or _M.header),
     source = ltn12.source.string(data),
     sink = ltn12.sink.table(t)}
   return table.concat(t),checkcookie(h), c, h
 end
 
-function _M.get(u,cok)
+function _M.get(u,cok,ua,hdr)
   local t = {}
   local r, c, h = _M.request{
    url = u,
    method = "GET",
-   headers = {
+   headers = copy({
     ["Content-Type"] = "application/x-www-form-urlencoded",
     ["Accept-Language"] = "zh-cn,zh;q=0.5",
     ["Accept-Charset"] = "utf-8",
     ['Cookie']=cok or _M.cookie,
-   },
+    ["User-Agent"]=ua or _M.ua,
+  },hdr or _M.header),
    sink = ltn12.sink.table(t)}
   return table.concat(t),checkcookie(h), c, h
  end
 
-function _M.download(u,p,cok)
+function _M.download(u,p,cok,ua,ref,hdr)
   local f = io.open(p,"w")
   local r, c, h = _M.request{
    url = u,
    method = "GET",
-   headers = {
+   headers = copy({
     ["Content-Type"] = "application/x-download",
     --["Accept-Language"] = "zh-cn,zh;q=0.5",
     --["Accept-Charset"] = "utf-8",
     --["Range:bytes"]=range or "0-",
-    ["Referer"]=u:find('(http://[^/]+)'),
+    ["Referer"]=ref or u:find('(http://[^/]+)'),
     ['Cookie']=cok or _M.cookie,
-   },
+    ["User-Agent"]=ua or _M.ua,
+   },hdr or _M.header),
    sink = ltn12.sink.file(f)}
   return c, h
  end
