@@ -142,7 +142,7 @@ public class AlertDialogBuilder extends AlertDialog
 		super.hide();
 	}
 	
-	@Override
+	
 	public void close()
 	{
 		super.dismiss();
