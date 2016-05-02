@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-package java.util;
+package com.androlua;
 
 /**
  * Timers schedule one-shot or recurring {@link TimerTask tasks} for execution.
@@ -49,7 +49,10 @@ package java.util;
  * scheduling. Multiple threads can share a single timer without
  * synchronization.
  */
-public class TimerX {
+import java.util.*;
+
+public class TimerX
+ {
 
     private static final class TimerImpl extends Thread {
 
