@@ -192,14 +192,14 @@ public class LuaWebView extends WebView
 		super.setOnKeyListener(l);
 	}
 
-	@Override
+	
 	public void addJSInterface(JsInterface object, String name)
 	{
 		// TODO: Implement this method
 		super.addJavascriptInterface(new JsObject(object), name);
 	}
 
-	@Override
+	
 	public void addJsInterface(JsInterface object, String name)
 	{
 		// TODO: Implement this method

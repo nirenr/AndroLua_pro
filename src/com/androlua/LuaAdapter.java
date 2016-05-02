@@ -152,11 +152,12 @@ public class LuaAdapter extends BaseAdapter
 		{
 			Map hm=mData.get(position);
 			//Set<Map.Entry> sets =hm.entrySet(); 
-			for (Map.Entry entry : hm.entrySet())
+			for (Object ety: hm.entrySet())
 			{ 
 
 				try
 				{
+					Map.Entry entry =(Map.Entry) ety;
 					String key=(String)entry.getKey();
 					Object value = entry.getValue();
 					LuaObject obj=holder.getField(key);

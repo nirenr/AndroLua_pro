@@ -10,21 +10,21 @@ public class ReadTask extends AsyncTask
 {
 	private ProgressDialog _dlg;
 
-	@Override
+	
 	public int getMin()
 	{//new Future;
 		// TODO: Implement this method
 		return 0;
 	}
 
-	@Override
+	
 	public int getMax()
 	{
 		// TODO: Implement this method
 		return (int)_len;
 	}
 
-	@Override
+	
 	public int getCurrent()
 	{
 		// TODO: Implement this method

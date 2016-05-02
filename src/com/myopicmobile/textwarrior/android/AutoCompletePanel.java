@@ -167,7 +167,7 @@ public class AutoCompletePanel
 			_abort.set();
 		}
 
-		@Override
+		
 		public void restart()
 		{
 			// TODO: Implement this method

@@ -11,7 +11,7 @@ import com.myopicmobile.textwarrior.android.*;
 import com.myopicmobile.textwarrior.common.*;
 import java.io.*;
 
-public class LuaEditor extends FreeScrollingTextField implements View.OnClickListener
+public class LuaEditor extends FreeScrollingTextField
 {
 
 	private Document _inputingDoc;
@@ -23,10 +23,6 @@ public class LuaEditor extends FreeScrollingTextField implements View.OnClickLis
 	private String _lastSelectedFile;
 
 	private String fontDir="/sdcard/androlua/fonts/";
-
-	private PopupWindow panel;
-
-	private int height;
 
 	public LuaEditor(Context context)
 	{
@@ -59,8 +55,6 @@ public class LuaEditor extends FreeScrollingTextField implements View.OnClickLis
 		int textColor = array.getColor(1, 0xFF00FF); 
 		array.recycle();
 		setTextColor(textColor);
-		//init();
-		//setDark(true);
 	}
 
 	public void setDark(boolean isDark)
@@ -108,74 +102,10 @@ public class LuaEditor extends FreeScrollingTextField implements View.OnClickLis
 	}
 	
 	
-	@Override
-	public void onClick(View p1)
-	{
-		// TODO: Implement this method
-		//p1.setBackgroundColor(Color.argb(255, 0x88, 0x88, 0x88));
-		paste(((TextView)p1).getText().toString());
-		//p1.setBackgroundColor(Color.WHITE);
-	}
+
 	
-	private void init(){
-		LinearLayout layout= new LinearLayout(getContext());
-		layout.setOrientation(1);
+	
 		
-		HorizontalScrollView ps_sv=new HorizontalScrollView(getContext());
-		ps_sv.setFillViewport(true);
-		ps_sv.setBackgroundColor(Color.BLACK);
-		ps_sv.setPadding(0, 2, 0, 0);
-		ps_sv.setFadingEdgeLength(0);
-		ps_sv.setHorizontalScrollBarEnabled(false);
-		LinearLayout ps_ll= new LinearLayout(getContext());
-		ps_ll.setBackgroundColor(Color.argb(255, 0x88, 0x88, 0x88));
-		String[] ps= new String[]{"(",")","[","]","{","}","\"","=",":",".",",","+","-","*","/","\\","%","#","^","$","<",">","~"};
-		LinearLayout.LayoutParams pm=new LinearLayout.LayoutParams(-2, -2, 1);
-		pm.setMargins(1, 0, 1, 0);
-		for (String s:ps)
-		{
-			TextView tv=new TextView(getContext());
-			tv.setText(s);
-			tv.setPadding(40, 0, 40, 0);
-			tv.setBackgroundColor(Color.WHITE);
-			//tv.setBackgroundResource(android.R.drawable.bottom_bar);
-			tv.setOnClickListener(this);
-			tv.setTextSize(0,(int)(tv.getTextSize()*1.6));
-			//tv.setPadding(-40,-40,-40,-40);
-			ps_ll.addView(tv, pm);
-		}
-
-		ps_sv.addView(ps_ll);
-		layout.addView(ps_sv);
-		panel=new PopupWindow(layout,-2,-2);
-		layout.measure(0,0);
-		height = layout.getMeasuredHeight();
-	}
-
-	
-	
-	@Override
-	protected void onLayout2(boolean changed, int left, int top, int right, int bottom)
-	{
-		// TODO: Implement this method
-		super.onLayout(changed, left, top, right, bottom);
-		if(changed)
-		{
-			panel.dismiss();
-			panel.showAsDropDown(this,0,-height);
-	}
-	}
-
-	@Override
-	protected void onSizeChanged2(int w, int h, int oldw, int oldh)
-	{
-		// TODO: Implement this method
-		super.onSizeChanged(w, h, oldw, oldh);
-		
-		panel.dismiss();
-		panel.showAsDropDown(this,0,-height);
-	}
-	
 	public void gotoLine()
 	{
 		// TODO: Implement this method

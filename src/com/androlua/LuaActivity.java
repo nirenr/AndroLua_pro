@@ -75,13 +75,17 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
+		//setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 		//s=android.R.style.Theme_Holo_Wallpaper_NoTitleBar;
 		//设置主题
 //		Intent intent=getIntent();
 //		int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
-//		setTheme(theme);
-
+		
+        //透明状态栏
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        //透明导航栏
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+		
 		StrictMode.ThreadPolicy policy=new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		//设置print界面
@@ -475,7 +479,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			try
 			{
 				Object ret=mOnKeyDown.call(keyCode, event);
-				if (ret != null && ret.getClass() == Boolean.class && (boolean)ret)
+				if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
 					return true;
 			}
 			catch (LuaException e)
@@ -494,7 +498,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			try
 			{
 				Object ret=mOnKeyUp.call(keyCode, event);
-				if (ret != null && ret.getClass() == Boolean.class && (boolean)ret)
+				if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
 					return true;
 			}
 			catch (LuaException e)
@@ -513,7 +517,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			try
 			{
 				Object ret=mOnKeyLongPress.call(keyCode, event);
-				if (ret != null && ret.getClass() == Boolean.class && (boolean)ret)
+				if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
 					return true;
 			}
 			catch (LuaException e)
@@ -532,7 +536,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			try
 			{
 				Object ret=mOnTouchEvent.call(event);
-				if (ret != null && ret.getClass() == Boolean.class && (boolean)ret)
+				if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
 					return true;
 			}
 			catch (LuaException e)
@@ -559,7 +563,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		Object ret = null;
 		if (!item.hasSubMenu())
 			ret = runFunc("onOptionsItemSelected", item);
-		if (ret != null && ret.getClass() == Boolean.class && (boolean)ret)
+		if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
 			return true;
 		return super.onOptionsItemSelected(item);
 	}
