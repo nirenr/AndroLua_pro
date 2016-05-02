@@ -44,15 +44,6 @@ public class LuaWebView extends WebView
 			}
 		);
 
-		//mContext.requestWindowFeature(Window.FEATURE_PROGRESS);
-		//mContext.requestWindowFeature(1000);
-		//mContext.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-		//mContext.setProgressBarVisibility(true);
-		
-		//mContext.requestWindowFeature(Window.FEATURE_PROGRESS); 
-		//mContext.setProgressBarVisibility(true);
-		
-		//mContext.setSecondaryProgress(progressHorizontal.getSecondaryProgress()* 100); 
 		dm=context.getResources().getDisplayMetrics();
 		int top=(int) TypedValue.applyDimension(1,8,dm);
 		
@@ -82,7 +73,7 @@ public class LuaWebView extends WebView
 
 	public interface onDownloadStartListener
 	{
-		public abstract void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength)
+		public abstract void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength);
 	}
 
 
@@ -377,25 +368,25 @@ public class LuaWebView extends WebView
 	public interface LuaWebViewClient
 	{
 
-		public boolean shouldOverrideUrlLoading(WebView view, String url)
+		public boolean shouldOverrideUrlLoading(WebView view, String url);
 
 
-		public void onPageStarted(WebView view, String url, Bitmap favicon)
+		public void onPageStarted(WebView view, String url, Bitmap favicon);
 
 
-		public void onPageFinished(WebView view, String url)
+		public void onPageFinished(WebView view, String url);
 
 
-		public void onLoadResource(WebView view, String url)
+		public void onLoadResource(WebView view, String url);
 
 
 		public WebResourceResponse shouldInterceptRequest(WebView view,
-														  String url)
+														  String url);
 
 
 		@Deprecated
 		public void onTooManyRedirects(WebView view, Message cancelMsg,
-									   Message continueMsg)
+									   Message continueMsg);
 
 
 		// These ints must match up to the hidden values in EventHandler.
@@ -431,43 +422,43 @@ public class LuaWebView extends WebView
 		public static final int ERROR_TOO_MANY_REQUESTS = -15;
 
 		public void onReceivedError(WebView view, int errorCode,
-									String description, String failingUrl)
+									String description, String failingUrl);
 
 
 		public void onFormResubmission(WebView view, Message dontResend,
-									   Message resend)
+									   Message resend);
 
 
 		public void doUpdateVisitedHistory(WebView view, String url,
-										   boolean isReload)
+										   boolean isReload);
 
 
 		public void onReceivedSslError(WebView view, SslErrorHandler handler,
-									   SslError error)
+									   SslError error);
 
 
-		public void onProceededAfterSslError(WebView view, SslError error)
+		public void onProceededAfterSslError(WebView view, SslError error);
 
 
 		public void onReceivedClientCertRequest(WebView view,
-												ClientCertRequest handler, String host_and_port)
+												ClientCertRequest handler, String host_and_port);
 
 
 		public void onReceivedHttpAuthRequest(WebView view,
-											  HttpAuthHandler handler, String host, String realm)
+											  HttpAuthHandler handler, String host, String realm);
 
 
-		public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event)
+		public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event);
 
 
-		public void onUnhandledKeyEvent(WebView view, KeyEvent event)
+		public void onUnhandledKeyEvent(WebView view, KeyEvent event);
 
 
-		public void onScaleChanged(WebView view, float oldScale, float newScale)
+		public void onScaleChanged(WebView view, float oldScale, float newScale);
 
 
 		public void onReceivedLoginRequest(WebView view, String realm,
-										   String account, String args)
+										   String account, String args);
 
 	}
 

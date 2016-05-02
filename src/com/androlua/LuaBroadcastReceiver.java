@@ -22,6 +22,6 @@ public class LuaBroadcastReceiver extends BroadcastReceiver
 	
 	public interface OnReceiveListerer
 	{
-		public abstract void onReceive(android.content.Context context, android.content.Intent intent)
+		public abstract void onReceive(android.content.Context context, android.content.Intent intent);
 	}
 }
