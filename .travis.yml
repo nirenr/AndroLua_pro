@@ -3,7 +3,7 @@ android:
   components:
     - platform-tools
     - tools
-    - build-tools-21.0.3
+    - build-tools-22.0.0
     - android-21
   # if you need to run emulator(s) during your tests
     - sys-img-armeabi-v7a-android-19
