@@ -6,4 +6,10 @@ android:
     - build-tools-21.1.1
     - android-21
     - extra
-
+  # if you need to run emulator(s) during your tests
+    - sys-img-armeabi-v7a-android-19
+    - sys-img-x86-android-17
+  before_install:
+    - gem install fir-cli
+  after_deploy:
+    - fir p /home/travis/build/nirenr/AndroLua_pro/bin/AndroLua-debug.apk -T 55d2a269466dce6d2a40580768f0f391 -c "`git cat-file tag $TRAVIS_TAG`"
