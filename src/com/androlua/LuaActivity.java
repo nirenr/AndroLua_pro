@@ -81,11 +81,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 //		Intent intent=getIntent();
 //		int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
 		
-        //透明状态栏
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        //透明导航栏
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-		
+       
 		StrictMode.ThreadPolicy policy=new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		//设置print界面

@@ -356,7 +356,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 				if(lastDist==0){
 					float x = e.getX(0) - e.getX(1); 
 					float y = e.getY(0) - e.getY(1); 
-					lastDist=FloatMath.sqrt(x * x + y * y);
+					lastDist=(float) Math.sqrt(x * x + y * y);
 					lastX = (e.getX(0) + e.getX(1)) / 2; 
 					lastY = (e.getY(0) + e.getY(1)) / 2; 
 					lastSize=_textField.getTextSize();
