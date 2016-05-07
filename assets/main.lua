@@ -892,8 +892,14 @@ func.helper=function()
 end
 
 func.donation=function()
-  local url="alipayqr://platformapi/startapp?saId=10000007&clientVersion=3.7.0.0718&qrcode=https://qr.alipay.com/apt7ujjb4jngmu3z9a"
-  activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+  xpcall(function()
+    local url="alipayqr://platformapi/startapp?saId=10000007&clientVersion=3.7.0.0718&qrcode=https://qr.alipay.com/apt7ujjb4jngmu3z9a"
+    activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+  end,
+  function()
+    local url = "https://qr.alipay.com/apt7ujjb4jngmu3z9a";
+    activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+  end)
 end
 
 func.qq=function()
@@ -1028,8 +1034,26 @@ navi_list=ListView(activity)
 navi_list.onItemClick=function(parent, v, pos,id)
   editor.setSelection(indexs[pos+1])
   navi_dlg.hide()
-end
+  end
 navi_dlg.setContentView(navi_list)
+
+delete_dlg=AlertDialogBuilder(activity)
+delete_dlg.setMessage(luadir)
+delete_dlg.setTitle("删除")
+delete_dlg.setView(create_e)
+delete_dlg.setPositiveButton("确定",{
+  onClick=function()
+    if luapath:find(delete_dlg.Message) then
+      Toast.makeText(activity, "不能删除正在打开的文件.", Toast.LENGTH_SHORT ).show()
+    elseif LuaUtil.rmDir(File(delete_dlg.Message)) then
+      Toast.makeText(activity, "已删除.", Toast.LENGTH_SHORT ).show()
+      list(listview,luadir)
+    else
+      Toast.makeText(activity, "删除失败.", Toast.LENGTH_SHORT ).show()
+    end
+  end})
+delete_dlg.setNegativeButton("取消",nil)
+
 
 open_dlg=AlertDialogBuilder(activity)
 open_dlg.setTitle("打开")
@@ -1041,6 +1065,13 @@ listview.setOnItemClickListener(AdapterView.OnItemClickListener{
     open(v.Text)
   end
 })
+
+listview.onItemLongClick=function(parent, v, pos,id)
+    delete_dlg.setMessage(luadir..v.Text)
+    delete_dlg.show()
+    return true
+  end
+  
 --open_dlg.setItems{"空"}
 --open_dlg.setContentView(listview)
 
