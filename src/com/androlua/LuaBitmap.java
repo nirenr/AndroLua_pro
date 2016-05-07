@@ -22,6 +22,11 @@ public class LuaBitmap
 		return bitmap;
 	}
 
+	public static Bitmap getLoacalBitmap(LuaContext context,String url)
+	{
+		return decodeScale(((LuaActivity)context.getContext()).getWidth(),new File(url));
+	}
+	
 	public static Bitmap getHttpBitmap(String url) throws IOException
 	{
 		//Log.d(TAG, url);
@@ -32,11 +37,28 @@ public class LuaBitmap
 		conn.connect();
 		InputStream is = conn.getInputStream();
 		Bitmap bitmap = BitmapFactory.decodeStream(is);
-		///Bitmap bitmap =decodeScale(is);
 		is.close();
 		return bitmap;
 	}
 
+	public static Bitmap getHttpBitmap(LuaContext context,String url) throws IOException
+	{
+		//Log.d(TAG, url);
+		URL myFileUrl = new URL(url);
+		HttpURLConnection conn = (HttpURLConnection) myFileUrl.openConnection();
+		//conn.setConnectTimeout(0);
+		conn.setDoInput(true);
+		conn.connect();
+		InputStream is = conn.getInputStream();
+		String path=context.getLuaExtDir("cache") + url.hashCode() + ".jpg";
+		FileOutputStream out=new FileOutputStream(path);
+		LuaUtil.copyFile(is, out);
+		//Bitmap bitmap = BitmapFactory.decodeStream(is);
+		Bitmap bitmap =decodeScale(((LuaActivity)context.getContext()).getWidth(),new File(path));
+		is.close();
+		return bitmap;
+	}
+	
 	public static Bitmap getAssetBitmap(Context context, String name) throws IOException 
 	{
 		AssetManager am = context.getAssets();
@@ -46,7 +68,7 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-    public static Bitmap getBitmap(LuaContext LuaContext, String path) throws IOException
+    public static Bitmap getBitmap(LuaContext context, String path) throws IOException
 	{
 		
 		WeakReference<Bitmap> wRef=cache.get(path);
@@ -60,30 +82,29 @@ public class LuaBitmap
 		Bitmap bitmap;
 		if(path.indexOf("http://")==0)
 		{
-			bitmap = getHttpBitmap(path);
+			bitmap = getHttpBitmap(context,path);
 		}
 		else if(path.charAt(0)!='/')
 		{
-			bitmap = getLoacalBitmap(LuaContext.getLuaDir()+"/"+path);
+			bitmap = getLoacalBitmap(context,context.getLuaDir()+"/"+path);
 		}
 		else
 		{
-			bitmap = getLoacalBitmap(path);
+			bitmap = getLoacalBitmap(context,path);
 		}
 		
 		cache.put(path,new WeakReference<Bitmap>(bitmap));
 		return bitmap;
 	}
 
-	private static Bitmap decodeScale(InputStream fis)
+	private static Bitmap decodeScale(int IMAGE_MAX_SIZE,File fis)
 	{ 
 		Bitmap b = null; 
 
 		BitmapFactory.Options o = new BitmapFactory.Options();
 		o.inJustDecodeBounds = true; 
-		BitmapFactory.decodeStream(fis, null, o); 
+		BitmapFactory.decodeFile(fis.getAbsolutePath(), o); 
 		int scale = 1; 
-		int IMAGE_MAX_SIZE = 720;
 		if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE)
 		{ 
 			scale = (int)Math.pow(2, (int) Math.round(Math.log(IMAGE_MAX_SIZE / (double) Math.max(o.outHeight, o.outWidth)) / Math.log(0.5)));
@@ -91,7 +112,7 @@ public class LuaBitmap
 		BitmapFactory.Options o2 = new BitmapFactory.Options(); 
 		o2.inSampleSize = scale;
 
-		b = BitmapFactory.decodeStream(fis, null, o2); 
+		b = BitmapFactory.decodeFile(fis.getAbsolutePath(), o2); 
 
 
 		return b; 
