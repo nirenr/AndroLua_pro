@@ -13,7 +13,11 @@ public interface LuaContext
 
 	public String getLuaDir();
 	
+	public String getLuaDir(String dir);
+	
 	public String getLuaExtDir();
+	
+	public String getLuaExtDir(String dir);
 	
 	public String getLuaLpath();
 	
@@ -26,4 +30,9 @@ public interface LuaContext
 	public Object doFile(String path,Object...arg);
 	
 	public void sendMsg(String msg);
+	
+	public int getWidth();
+	
+	public int getHeight();
+	
 }

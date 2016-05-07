@@ -30,7 +30,7 @@ import android.view.animation.*;
  *
  * @hide
  */
-class CircleImageView extends ImageView {
+public class CircleImageView extends ImageView {
 
     private static final int KEY_SHADOW_COLOR = 0x1E000000;
     private static final int FILL_SHADOW_COLOR = 0x3D000000;

@@ -525,7 +525,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 * @throws LuaException
 	 */
-	public static int javaNew(int luaState, Class clazz) throws LuaException
+	public static int javaNew(int luaState, Class<?> clazz) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -1519,7 +1519,7 @@ public final class LuaJavaAPI
 	{
 		Object obj=null;
 
-		if (type == char.class && L.isString(idx))
+		if (type == char.class && L.type(idx)==LuaState.LUA_TSTRING)
 		{
 			String s = L.toString(idx);
 			if (s.length() == 1)

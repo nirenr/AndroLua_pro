@@ -68,10 +68,10 @@ public class LuaUtil
 											Bitmap.Config.ARGB_8888);
 		return bitmap;
 	}
-	
+
 	//读取asset文件
 
-	public static byte[] readAsset(Context context,String name) throws IOException 
+	public static byte[] readAsset(Context context, String name) throws IOException 
 	{
 		AssetManager am = context.getAssets();
 		InputStream is = am.open(name);
@@ -96,7 +96,7 @@ public class LuaUtil
 	}
 
 //复制asset文件到sd卡
-	public static void assetsToSD(Context context,String InFileName, String OutFileName) throws IOException 
+	public static void assetsToSD(Context context, String InFileName, String OutFileName) throws IOException 
 	{  
 		InputStream myInput;  
 		OutputStream myOutput = new FileOutputStream(OutFileName);  
@@ -113,7 +113,7 @@ public class LuaUtil
 		myInput.close();  
 		myOutput.close();        
 	}  
-	
+
 	public static void copyFile(String oldPath, String newPath)
 	{ 
 		try
@@ -125,7 +125,7 @@ public class LuaUtil
 			{ //文件存在时 
 				InputStream inStream = new FileInputStream(oldPath); //读入原文件 
 				FileOutputStream fs = new FileOutputStream(newPath); 
-				byte[] buffer = new byte[4096]; 
+				byte[] buffer = new byte[2 ^ 32]; 
 				int length; 
 				while ((byteread = inStream.read(buffer)) != -1)
 				{ 
@@ -144,33 +144,54 @@ public class LuaUtil
 		} 
 
 	} 
-	
-	
-	public static void rmDir(File dir)
+
+	public static void copyFile(InputStream inStream, OutputStream fs)
+	{ 
+		try
+		{ 
+			int bytesum = 0; 
+			int byteread = 0; 
+			byte[] buffer = new byte[4096]; 
+			while ((byteread = inStream.read(buffer)) != -1)
+			{ 
+				fs.write(buffer, 0, byteread); 
+			} 
+			inStream.close(); 
+		} 
+		catch (Exception e)
+		{ 
+			System.out.println("复制文件操作出错"); 
+			e.printStackTrace(); 
+
+		} 
+
+	} 
+
+	public static boolean rmDir(File dir)
 	{
 		File[] fs=dir.listFiles();
-		for(File f:fs)
-		{
-			if(f.isDirectory())
-				rmDir(f);
-			else
-				f.delete();
-		}
-		dir.delete();
-	}
-	
-	public static void rmDir(File dir,String ext)
-	{
-		File[] fs=dir.listFiles();
-		for(File f:fs)
-		{
-			if(f.isDirectory())
-				rmDir(f);
-			else
-				if(f.getName().endsWith(ext))
+		if (fs != null)
+			for (File f:fs)
+				if (f.isDirectory())
+					rmDir(f);
+				else
 					f.delete();
+
+		return dir.delete();
+	}
+
+	public static void rmDir(File dir, String ext)
+	{
+		File[] fs=dir.listFiles();
+		for (File f:fs)
+		{
+			if (f.isDirectory())
+				rmDir(f);
+			else
+			if (f.getName().endsWith(ext))
+				f.delete();
 		}
 		//dir.delete();
 	}
-	
+
 }

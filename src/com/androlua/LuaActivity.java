@@ -75,7 +75,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		//setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
+		setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 		//s=android.R.style.Theme_Holo_Wallpaper_NoTitleBar;
 		//设置主题
 //		Intent intent=getIntent();
@@ -593,6 +593,14 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		// TODO: Implement this method
 		runFunc("onContextItemSelected", item);
 		return super.onContextItemSelected(item);
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig)
+	{
+		// TODO: Implement this method
+		runFunc("onConfigurationChanged",newConfig);
+		//super.onConfigurationChanged(newConfig);
 	}
 
 

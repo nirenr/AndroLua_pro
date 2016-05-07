@@ -16,6 +16,22 @@ import dalvik.system.*;
 public class LuaService extends Service implements LuaContext
 {
 
+	@Override
+	public String getLuaDir(String dir)
+	{
+		// TODO: Implement this method
+		return null;
+	}
+
+
+	@Override
+	public String getLuaExtDir(String dir)
+	{
+		// TODO: Implement this method
+		return null;
+	}
+
+
 	private String luaLpath;
 
 	private LuaService.MainHandler handler;

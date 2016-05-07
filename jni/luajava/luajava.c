@@ -1059,12 +1059,13 @@ int inline isJavaObject(lua_State *L, int idx) {
 *
 *  Function: getStateFromCPtr
 *  ****/
-
+jfieldID CPtr_peer_ID = NULL;
 lua_State *getStateFromCPtr(JNIEnv *env, jobject cptr) {
   lua_State *L;
 
   jclass classPtr = (*env)->GetObjectClass(env, cptr);
-  jfieldID CPtr_peer_ID = (*env)->GetFieldID(env, classPtr, "peer", "J");
+  if (CPtr_peer_ID == NULL)
+    CPtr_peer_ID = (*env)->GetFieldID(env, classPtr, "peer", "J");
   jbyte *peer = (jbyte *)(*env)->GetLongField(env, cptr, CPtr_peer_ID);
 
   L = (lua_State *)peer;

@@ -151,6 +151,7 @@ append(packages,'')
 
 import 'java.lang.*'
 import 'java.util.*'
+import 'com.androlua.*'
 
 function enum(e)
   return function()
@@ -686,11 +687,11 @@ function loadbitmap(path)
     path=path..".png"
   end
  if path:find("^https*://") then
-    return LuaBitmap.getHttpBitmap(path)
+    return LuaBitmap.getHttpBitmap(context,path)
  elseif not path:find("^/") then
-    return LuaBitmap.getLoacalBitmap(string.format("%s/%s",luajava.luadir,path))
+    return LuaBitmap.getLoacalBitmap(context,string.format("%s/%s",luajava.luadir,path))
  else
-    return LuaBitmap.getLoacalBitmap(path)
+    return LuaBitmap.getLoacalBitmap(context,path)
   end
 end
 

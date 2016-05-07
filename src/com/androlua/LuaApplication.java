@@ -19,6 +19,32 @@ import java.util.zip.*;
 public class LuaApplication extends Application implements LuaContext
 {
 
+	public int getWidth()
+	{
+		return getResources().getDisplayMetrics().widthPixels;
+	}
+
+	public int getHeight()
+	{
+		return getResources().getDisplayMetrics().heightPixels;
+	}
+	
+	@Override
+	public String getLuaDir(String dir)
+	{
+		// TODO: Implement this method
+		return null;
+	}
+
+
+	@Override
+	public String getLuaExtDir(String dir)
+	{
+		// TODO: Implement this method
+		return null;
+	}
+
+
 	
 	private boolean isUpdata;
 

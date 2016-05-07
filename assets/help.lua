@@ -361,10 +361,19 @@ activity.setContentView(glSurefaceView);
 
 
 (3) http模块
-body,cookie,code,headers=http.get(url [,cookie])
-body,cookie,code,headers=http.post(url ,postdata [,cookie])
-code,headers=http.download(url [,cookie])
-body,cookie,code,headers=http.upload(url ,datas ,files [,cookie])
+body,cookie,code,headers=http.get(url [,cookie,ua,header])
+body,cookie,code,headers=http.post(url ,postdata [,cookie,ua,header])
+code,headers=http.download(url [,cookie,ua,ref,header])
+body,cookie,code,headers=http.upload(url ,datas ,files [,cookie,ua,header])
+参数说明
+url 网址
+postdata post的字符串或字符串数据组表
+datas upload的字符串数据组表
+files upload的文件名数据表
+cookie 网页要求的cookie
+ua 浏览器识别
+ref 来源页网址
+header http请求头
 
 require "import"
 import "http"

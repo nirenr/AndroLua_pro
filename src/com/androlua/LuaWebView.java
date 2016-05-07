@@ -36,8 +36,12 @@ public class LuaWebView extends WebView
 			{
 				public boolean shouldOverrideUrlLoading(WebView view, String url)
 				{
-					if(!url.substring(0,3).equals("http"))
-						return false;
+					/*if(!url.substring(0,3).equals("http") && !url.substring(0,3).equals("file"))
+					{
+						mContext.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));
+						return true;
+					}*/
+						
 					view.loadUrl(url);  
 					return true;
 				}
