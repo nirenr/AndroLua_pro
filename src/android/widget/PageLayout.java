@@ -9,6 +9,7 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.view.*;
 import android.view.ViewGroup.*;
+import android.widget.PageLayout.*;
 
 
 public class PageLayout extends HorizontalScrollView
@@ -23,6 +24,8 @@ public class PageLayout extends HorizontalScrollView
 	private boolean once;
 
 	private LinearLayout wrapper;
+
+	private PageLayout.OnPageChangeListener mOnPageChangeListener;
 
 	public PageLayout(Context context)
 	{
@@ -117,14 +120,14 @@ public class PageLayout extends HorizontalScrollView
 		int action = ev.getAction();
 		switch (action)
 		{
-				// Up时，进行判断，如果显示区域大于菜单宽度一半则完全显示，否则隐藏
+				// Up时，进行判断，如果显示区域大于页面宽度一半则完全显示
 			case MotionEvent.ACTION_UP:
 				int scrollX = getScrollX();
 				int x=scrollX % mScreenWidth;
 				if (x < mScreenWidth / 2)
-					this.smoothScrollTo(scrollX - x, 0);
+					showPage(scrollX / mScreenWidth);
 				else
-					this.smoothScrollTo(scrollX + mScreenWidth - x, 0);
+					showPage(scrollX / mScreenWidth+1);
 				return true;
 		}
 		return super.onTouchEvent(ev);
@@ -132,8 +135,10 @@ public class PageLayout extends HorizontalScrollView
 
 	public void showPage(int idx)
 	{
-		wrapper.getChildAt(idx);
+		//wrapper.getChildAt(idx);
 		smoothScrollTo(mScreenWidth*idx,0);
+		if(mOnPageChangeListener!=null)
+			mOnPageChangeListener.onPageChange(this,idx);
 	}
 	
 	public void showPage(View v)
@@ -141,8 +146,22 @@ public class PageLayout extends HorizontalScrollView
 		int n=wrapper.getChildCount();
 		for (int i=0;i < n;i++)
 			if(wrapper.getChildAt(i).equals(v))
-				smoothScrollTo(mScreenWidth*i,0);
+				showPage(i);
+	}
+	
+	public View getPage(int idx)
+	{
+		return wrapper.getChildAt(idx);
+	}
+	
+	public void setOnPageChangeListener(OnPageChangeListener ltr)
+	{
+		mOnPageChangeListener=ltr;
 	}
 	
 	
+	public static interface OnPageChangeListener
+	{
+		public void onPageChange(View v, int idx);
+	}
 }
