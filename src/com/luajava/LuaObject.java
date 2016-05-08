@@ -207,7 +207,7 @@ public class LuaObject
 		{
 			synchronized (L)
 			{
-				if (L.getCPtrPeer() != 0)
+				if (L.getPointer() != 0)
 					L.LunRef(LuaState.LUA_REGISTRYINDEX, ref);
 			}
 		}

@@ -56,7 +56,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 */
 
-	public static int objectIndex(int luaState, Object obj, String searchName, int type)
+	public static int objectIndex(long luaState, Object obj, String searchName, int type)
 	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -82,7 +82,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int callMethod(int luaState, Object obj, String cacheName)
+	public static int callMethod(long luaState, Object obj, String cacheName)
 	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -172,7 +172,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 */
 
-	public static int objectNewIndex(int luaState, Object obj, String searchName)
+	public static int objectNewIndex(long luaState, Object obj, String searchName)
 	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -297,7 +297,7 @@ public final class LuaJavaAPI
 	 * @param methodName the name of the method
 	 * @return number of returned objects
 	 */
-	public static int setArrayValue(int luaState, Object obj, int index) throws LuaException
+	public static int setArrayValue(long luaState, Object obj, int index) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -332,7 +332,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int getArrayValue(int luaState, Object obj, int index) throws LuaException
+	public static int getArrayValue(long luaState, Object obj, int index) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -360,7 +360,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int asTable(int luaState, Object obj) throws LuaException
+	public static int asTable(long luaState, Object obj) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -419,7 +419,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int newArray(int luaState, Class<?> clazz, int size) throws LuaException
+	public static int newArray(long luaState, Class<?> clazz, int size) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 		synchronized (L)
@@ -437,7 +437,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int newArray(int luaState, Class<?> clazz) throws LuaException
+	public static int newArray(long luaState, Class<?> clazz) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 		synchronized (L)
@@ -502,7 +502,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 * @throws LuaException
 	 */
-	public static int javaNewInstance(int luaState, String className) throws LuaException
+	public static int javaNewInstance(long luaState, String className) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -525,7 +525,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 * @throws LuaException
 	 */
-	public static int javaNew(int luaState, Class<?> clazz) throws LuaException
+	public static int javaNew(long luaState, Class<?> clazz) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -542,7 +542,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int javaCreate(int luaState, Class<?> clazz) throws LuaException
+	public static int javaCreate(long luaState, Class<?> clazz) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -577,7 +577,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 * @throws LuaException
 	 */
-	public static int createProxy(int luaState, String implem)
+	public static int createProxy(long luaState, String implem)
 	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -587,7 +587,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int createArray(int luaState, String className)
+	public static int createArray(long luaState, String className)
 	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -607,7 +607,7 @@ public final class LuaJavaAPI
 	 * @return number of returned objects
 	 * @throws LuaException
 	 */
-	public static int javaLoadLib(int luaState, String className, String methodName)
+	public static int javaLoadLib(long luaState, String className, String methodName)
   	throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
@@ -643,7 +643,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int javaToString(int luaState, Object obj) throws LuaException
+	public static int javaToString(long luaState, Object obj) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -657,7 +657,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int javaEquals(int luaState, Object obj, Object obj2) throws LuaException
+	public static int javaEquals(long luaState, Object obj, Object obj2) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 
@@ -669,7 +669,7 @@ public final class LuaJavaAPI
 		}
 	}
 
-	public static int javaObjectLength(int luaState, Object obj) throws LuaException
+	public static int javaObjectLength(long luaState, Object obj) throws LuaException
 	{
 		LuaState L = LuaStateFactory.getExistingState(luaState);
 

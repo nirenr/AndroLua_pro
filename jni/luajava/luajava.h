@@ -12,7 +12,7 @@
 
  JNIEnv *checkEnv(lua_State *L);
 
- int checkIndex(lua_State *L);
+ jlong checkIndex(lua_State *L);
 
  jobject *checkJavaObject(lua_State *L, int idx);
 

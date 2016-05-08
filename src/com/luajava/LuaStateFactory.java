@@ -26,6 +26,7 @@ package com.luajava;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 /**
  * This class is responsible for instantiating new LuaStates.
@@ -41,7 +42,7 @@ public final class LuaStateFactory
 	/**
 	 * Array with all luaState's instances
 	 */
-	private static final List<LuaState> states = new ArrayList<LuaState>();
+	private static final Map<Long,LuaState> states = new HashMap<Long,LuaState>();
 	
 	/**
 	 * Non-public constructor. 
@@ -55,10 +56,9 @@ public final class LuaStateFactory
 	 */
 	public synchronized static LuaState newLuaState()
 	{
-		int i = getNextStateIndex();
-		LuaState L = new LuaState(i);
+		LuaState L = new LuaState();
 		
-		states.add(i, L);
+		states.put(L.getPointer(), L);
 		
 		return L;
 	}
@@ -68,56 +68,38 @@ public final class LuaStateFactory
 	 * @param index
 	 * @return LuaState
 	 */
-	public synchronized static LuaState getExistingState(int index)
+	public synchronized static LuaState getExistingState(long index)
 	{
-		return states.get(index);
+		LuaState l= states.get(index);
+		if(l==null)
+		{
+			l=new LuaState(index);
+			states.put(index,l);
+		}
+		return l;
 	}
-	
+
 	/**
 	 * Receives a existing LuaState and checks if it exists in the states list.
 	 * If it doesn't exist adds it to the list.
 	 * @param L
 	 * @return int
 	 */
-	public synchronized static int insertLuaState(LuaState L)
+	public synchronized static long insertLuaState(LuaState L)
 	{
-		int i;
-		for (i = 0 ; i < states.size() ; i++)
-		{
-			LuaState state = states.get(i);
-			
-			if (state != null)
-			{
-				if (state.getCPtrPeer() == L.getCPtrPeer())
-					return i;
-			}
-		}
-
-		i = getNextStateIndex();
+		states.put(L.getPointer(), L);
 		
-		states.set(i, L);
-		
-		return i;
+		return L.getPointer();
 	}
 	
 	/**
 	 * removes the luaState from the states list
 	 * @param idx
 	 */
-	public synchronized static void removeLuaState(int idx)
+	public synchronized static void removeLuaState(long idx)
 	{
-		states.add(idx, null);
+		states.put(idx, null);
 	}
 	
-	/**
-	 * Get next available index
-	 * @return int
-	 */
-	private synchronized static int getNextStateIndex()
-	{
-		int i;
-		for ( i=0 ; i < states.size() && states.get(i) != null ; i++ );
-		
-		return i;
-	}
+
 }
