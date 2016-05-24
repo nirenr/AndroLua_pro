@@ -14,6 +14,7 @@
   {
     ListView;
     id="clist";
+    FastScrollEnabled=true;
     layout_width="fill";
     items=classes;
   };

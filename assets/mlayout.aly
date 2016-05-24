@@ -14,6 +14,7 @@
   {
     ListView;
     id="mlist";
+    FastScrollEnabled=true;
     layout_width="fill";
   };
   orientation="vertical";
