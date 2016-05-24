@@ -249,8 +249,10 @@ implements Document.TextFieldMetrics{
 	}
 	
 	public void replaceText(int from, int charCount, String text){
+		_hDoc.beginBatchEdit();
 		_fieldController.replaceText(from,charCount,text);
 		_fieldController.stopTextComposing();
+		_hDoc.endBatchEdit();
 	}
 	
 	public void format(){
@@ -261,6 +263,11 @@ implements Document.TextFieldMetrics{
 		_hDoc.endBatchEdit();
 		respan();
 		invalidate();
+	}
+	
+	public int getLength()
+	{
+		return _hDoc.docLength();
 	}
 	
 	private void initView(){

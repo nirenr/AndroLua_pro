@@ -66,6 +66,7 @@ public class LuaEditor extends FreeScrollingTextField
 	}
 	
 	
+	
 	public void setKeywordColor(int color)
 	{
 		getColorScheme().setColor(ColorScheme.Colorable.KEYWORD,color);
@@ -327,7 +328,12 @@ public class LuaEditor extends FreeScrollingTextField
 		return createDocumentProvider();
 	}
 
-
+	
+	public void setText(CharSequence c,boolean isRep)
+	{
+		replaceText(0,getLength()-1,c.toString());
+	}
+	
 	public void setText(CharSequence c)
 	{
 		//TextBuffer text=new TextBuffer();
