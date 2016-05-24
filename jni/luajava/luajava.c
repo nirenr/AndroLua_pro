@@ -1585,7 +1585,7 @@ Java_com_luajava_LuaState__1close(JNIEnv *env, jobject jobj, jlong cptr) {
 *      Lua Exported Function
 ************************************************************************/
 
-JNIEXPORT jobject JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_luajava_LuaState__1newthread(JNIEnv *env, jobject jobj, jlong cptr) {
   lua_State *L = getStateFromCPtr(env, cptr);
   lua_State *newThread;
@@ -1716,8 +1716,8 @@ Java_com_luajava_LuaState__1checkStack(JNIEnv *env, jobject jobj, jlong cptr,
 ************************************************************************/
 
 JNIEXPORT void JNICALL
-Java_com_luajava_LuaState__1xmove(JNIEnv *env, jobject jobj, jobject from,
-                                  jobject to, jint n) {
+Java_com_luajava_LuaState__1xmove(JNIEnv *env, jobject jobj, jlong from,
+                                  jlong to, jint n) {
   lua_State *fr = getStateFromCPtr(env, from);
   lua_State *t = getStateFromCPtr(env, to);
 
@@ -2032,7 +2032,7 @@ Java_com_luajava_LuaState__1rawlen(JNIEnv *env, jobject jobj, jlong cptr,
 *      Lua Exported Function
 ************************************************************************/
 
-JNIEXPORT jobject JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_luajava_LuaState__1toThread(JNIEnv *env, jobject jobj, jlong cptr,
                                      jint idx) {
   lua_State *L, *thr;
@@ -2487,6 +2487,18 @@ JNIEXPORT void JNICALL Java_com_luajava_LuaState__1pop(JNIEnv *env,
   lua_State *L = getStateFromCPtr(env, cptr);
 
   lua_pop(L, (int)idx);
+}
+
+/************************************************************************
+*   JNI Called function
+*      Lua Exported Function
+************************************************************************/
+
+JNIEXPORT jint JNICALL
+Java_com_luajava_LuaState__1pushGlobalTable(JNIEnv *env, jobject jobj, jlong cptr) {
+  lua_State *L = getStateFromCPtr(env, cptr);
+
+  return (jint)lua_pushglobaltable(L);
 }
 
 /************************************************************************

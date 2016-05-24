@@ -267,7 +267,7 @@ public class LuaState
 	private synchronized native int  _isThread(long ptr, int idx);
 	private synchronized native int  _isNone(long ptr, int idx);
 	private synchronized native int  _isNoneOrNil(long ptr, int idx);
-
+	private synchronized native int  _pushGlobalTable(long ptr);
 	private synchronized native void _setGlobal(long ptr, String name);
 	private synchronized native int _getGlobal(long ptr, String name);
 
@@ -833,18 +833,19 @@ public class LuaState
 		_pop(luaState, n);
 	}
 
+	
+	public synchronized int pushGlobalTable()
+	{
+		return _pushGlobalTable(luaState);
+	}
+	
 	public synchronized int getGlobal(String global)
 	{
-//    pushString(global);
-//    getTable(LUA_GLOBALSINDEX.intValue());
 		return _getGlobal(luaState, global);
 	}
 
 	public synchronized void setGlobal(String name)
 	{
-		//pushString(name);
-		//insert(-2);
-		//setTable(LUA_GLOBALSINDEX.intValue());
 		_setGlobal(luaState, name);
 	}
 
