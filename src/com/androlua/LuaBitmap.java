@@ -12,7 +12,15 @@ import java.util.*;
 public class LuaBitmap
 {
 	static WeakHashMap<String, WeakReference<Bitmap>> cache = new WeakHashMap<String, WeakReference<Bitmap>>();
-	
+
+	public static boolean checkCache(LuaContext context, String url)
+	{
+		// TODO: Implement this method
+		String path=context.getLuaExtDir("cache") + "/" + url.hashCode();
+		File f=new File(path);
+		return f.exists();
+	}
+
 	public static Bitmap getLoacalBitmap(String url) throws FileNotFoundException, IOException
 	{
 
@@ -22,11 +30,11 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-	public static Bitmap getLoacalBitmap(LuaContext context,String url)
+	public static Bitmap getLoacalBitmap(LuaContext context, String url)
 	{
-		return decodeScale(((LuaActivity)context.getContext()).getWidth(),new File(url));
+		return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(url));
 	}
-	
+
 	public static Bitmap getHttpBitmap(String url) throws IOException
 	{
 		//Log.d(TAG, url);
@@ -41,24 +49,28 @@ public class LuaBitmap
 		return bitmap;
 	}
 
-	public static Bitmap getHttpBitmap(LuaContext context,String url) throws IOException
+	public static Bitmap getHttpBitmap(LuaContext context, String url) throws IOException
 	{
 		//Log.d(TAG, url);
+		String path=context.getLuaExtDir("cache") + "/" + url.hashCode();
+		File f=new File(path);
+		if (f.exists())
+			return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+
 		URL myFileUrl = new URL(url);
 		HttpURLConnection conn = (HttpURLConnection) myFileUrl.openConnection();
 		//conn.setConnectTimeout(0);
 		conn.setDoInput(true);
 		conn.connect();
 		InputStream is = conn.getInputStream();
-		String path=context.getLuaExtDir("cache") + url.hashCode() + ".jpg";
 		FileOutputStream out=new FileOutputStream(path);
 		LuaUtil.copyFile(is, out);
 		//Bitmap bitmap = BitmapFactory.decodeStream(is);
-		Bitmap bitmap =decodeScale(((LuaActivity)context.getContext()).getWidth(),new File(path));
+		Bitmap bitmap =decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
 		is.close();
 		return bitmap;
 	}
-	
+
 	public static Bitmap getAssetBitmap(Context context, String name) throws IOException 
 	{
 		AssetManager am = context.getAssets();
@@ -70,34 +82,34 @@ public class LuaBitmap
 
     public static Bitmap getBitmap(LuaContext context, String path) throws IOException
 	{
-		
+
 		WeakReference<Bitmap> wRef=cache.get(path);
 		if (wRef != null)
 		{
 			Bitmap bt = wRef.get();
-			if(bt!=null)
+			if (bt != null)
 				return bt;
 		}
 
 		Bitmap bitmap;
-		if(path.indexOf("http://")==0)
+		if (path.indexOf("http://") == 0)
 		{
-			bitmap = getHttpBitmap(context,path);
+			bitmap = getHttpBitmap(context, path);
 		}
-		else if(path.charAt(0)!='/')
+		else if (path.charAt(0) != '/')
 		{
-			bitmap = getLoacalBitmap(context,context.getLuaDir()+"/"+path);
+			bitmap = getLoacalBitmap(context, context.getLuaDir() + "/" + path);
 		}
 		else
 		{
-			bitmap = getLoacalBitmap(context,path);
+			bitmap = getLoacalBitmap(context, path);
 		}
-		
-		cache.put(path,new WeakReference<Bitmap>(bitmap));
+
+		cache.put(path, new WeakReference<Bitmap>(bitmap));
 		return bitmap;
 	}
 
-	private static Bitmap decodeScale(int IMAGE_MAX_SIZE,File fis)
+	private static Bitmap decodeScale(int IMAGE_MAX_SIZE, File fis)
 	{ 
 		Bitmap b = null; 
 
@@ -117,22 +129,22 @@ public class LuaBitmap
 
 		return b; 
 	}
-	
-	public static Bitmap getImageFromPath( String filePath )
+
+	public static Bitmap getImageFromPath(String filePath)
 	{  
 
 		Bitmap bitmap = null;  
-		BitmapFactory.Options opts = new BitmapFactory.Options( );  
+		BitmapFactory.Options opts = new BitmapFactory.Options();  
 		opts.inJustDecodeBounds = true;  
-		BitmapFactory.decodeFile( filePath,opts );  
+		BitmapFactory.decodeFile(filePath, opts);  
 
 		//缩放图片，避免内存不足
-		opts.inSampleSize = computeSampleSize( opts,-1,250 * 250 );  
+		opts.inSampleSize = computeSampleSize(opts, -1, 250 * 250);  
 		opts.inJustDecodeBounds = false;  
 
 		try
 		{  
-			bitmap = BitmapFactory.decodeFile( filePath,opts );  
+			bitmap = BitmapFactory.decodeFile(filePath, opts);  
 		}
 		catch (Exception e)
 		{  
@@ -142,9 +154,9 @@ public class LuaBitmap
 	}  
 
 	//缩放图片算法
-	private static int computeSampleSize( BitmapFactory.Options options,int minSideLength,int maxNumOfPixels )
+	private static int computeSampleSize(BitmapFactory.Options options, int minSideLength, int maxNumOfPixels)
 	{
-		int initialSize = computeInitialSampleSize( options,minSideLength,maxNumOfPixels );
+		int initialSize = computeInitialSampleSize(options, minSideLength, maxNumOfPixels);
 		int roundedSize;
 		if (initialSize <= 8)
 		{
@@ -161,12 +173,12 @@ public class LuaBitmap
 		return roundedSize;
 	}
 
-	private static int computeInitialSampleSize( BitmapFactory.Options options,int minSideLength,int maxNumOfPixels )
+	private static int computeInitialSampleSize(BitmapFactory.Options options, int minSideLength, int maxNumOfPixels)
 	{
 		double w = options.outWidth;
 		double h = options.outHeight;
-		int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil( Math.sqrt( w * h / maxNumOfPixels ) );
-		int upperBound = (minSideLength == -1) ? 128 : (int) Math.min( Math.floor( w / minSideLength ),Math.floor( h / minSideLength ) );
+		int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math.sqrt(w * h / maxNumOfPixels));
+		int upperBound = (minSideLength == -1) ? 128 : (int) Math.min(Math.floor(w / minSideLength), Math.floor(h / minSideLength));
 		if (upperBound < lowerBound)
 		{
 			// return the larger one when there is no overlapping zone.
@@ -185,13 +197,16 @@ public class LuaBitmap
 			return upperBound;
 		}
 	} 
-	
-	public static Bitmap getBitmapFromFile(File file, int width, int height) {
+
+	public static Bitmap getBitmapFromFile(File file, int width, int height)
+	{
 
 		BitmapFactory.Options opts = null;
-		if (null != file && file.exists()) {
+		if (null != file && file.exists())
+		{
 
-			if (width > 0 && height > 0) {
+			if (width > 0 && height > 0)
+			{
 				opts = new BitmapFactory.Options();
 				// 只是返回的是图片的宽和高，并不是返回一个Bitmap对象
 				opts.inJustDecodeBounds = true;
@@ -209,9 +224,12 @@ public class LuaBitmap
 				// 设置为True时，表示系统内存不足时可以被回 收，设置为False时，表示不能被回收。
 				opts.inPurgeable = true;
 			}
-			try {
+			try
+			{
 				return BitmapFactory.decodeFile(file.getPath(), opts);
-			} catch (OutOfMemoryError e) {
+			}
+			catch (OutOfMemoryError e)
+			{
 				e.printStackTrace();
 			}
 		}
