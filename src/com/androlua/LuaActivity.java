@@ -20,6 +20,7 @@ import java.util.zip.*;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer,LuaContext
 {
+	private static HashMap<String,DexClassLoader> dexCache=new HashMap<String,DexClassLoader>();
 
 	private LuaState L;
 	private String luaPath;
@@ -306,6 +307,10 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 	public DexClassLoader loadDex(String path) throws LuaException
 	{
+		DexClassLoader dex=dexCache.get(path);
+		if(dex!=null)
+			return dex;
+			
 		if (path.charAt(0) != '/')
 			path = luaDir + "/" + path;
 		if (!new File(path).exists())
@@ -316,7 +321,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 				path += ".jar";
 			else
 				throw new LuaException(path + " not found");
-		return new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
+		dex= new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
+		dexCache.put(path,dex);
+		return dex;
 	}
 
 	public Object loadLib(String name) throws LuaException
