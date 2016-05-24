@@ -30,7 +30,19 @@ else
     activity.setTheme(android.R.style.Theme_Holo_Light)
   end
 end
-
+local theme
+if h<=6 or h>=22 then
+theme=activity.getLuaExtDir("fonts").."/night.lua"
+else
+theme=activity.getLuaExtDir("fonts").."/day.lua"
+end
+local p={}
+local e=pcall(loadfile(theme,"bt",p))
+if e then
+for k,v in pairs(p) do
+layout.main[2][k]=v
+end
+end
 --activity.getActionBar().show()
 luadir=luajava.luaextdir.."/" or "/sdcard/androlua/"
 luaconf=luajava.luadir.."/lua.conf"
@@ -253,6 +265,15 @@ function callback(s)
   end
 end
 
+function reopen(path)
+  local f=io.open(path,"r")
+  local str=f:read("*all")
+  if tostring(editor.getText())~=str then
+  editor.setText(str,true)
+  end
+  f:close()
+end
+
 function read(path)
   local f=io.open(path,"r")
   editor.setText(f:read("*all"))
@@ -271,7 +292,7 @@ function read(path)
     activity.setTitle(p.appname)
     luaproject=luadir
     write(luaproj,string.format("luaproject=%q",luaproject))
-    Toast.makeText(activity, "打开工程."..p.appname, Toast.LENGTH_SHORT ).show()
+    --Toast.makeText(activity, "打开工程."..p.appname, Toast.LENGTH_SHORT ).show()
   else
     activity.setTitle("AndroLua+")
     luaproject=nil
@@ -346,10 +367,7 @@ function open(p)
     luadir=luadir..p
     list(listview, luadir)
   elseif p:find("%.alp$") then
-    luadir=imports(luadir..p)
-    luapath=luadir.."main.lua"
-    read(luapath)
-    --    Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
+    imports(luadir..p)
     open_dlg.hide()
   else
     luapath=luadir..p
@@ -500,9 +518,11 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     f:close()
     for m in s:gmatch("require *\"([%w_]+)") do
       replace[string.format("lib/armeabi/lib%s.so",m)]=nil
+      --replace[string.format("lua/%s.lua",m)]=nil
     end
     for m in s:gmatch("import *\"([%w_]+)") do
       replace[string.format("lib/armeabi/lib%s.so",m)]=nil
+      --replace[string.format("lua/%s.lua",m)]=nil
     end
   end
 
@@ -549,6 +569,60 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     end
   end
 
+local function check(h)
+  local function hash(s)
+    local l=0
+    local b={string.byte(s,1,-1)}
+    for k,v in ipairs(b) do
+      l=l+k+v
+    end
+    return l
+  end
+  require "init"
+  for k,v in pairs(h) do
+    if hash(_G[k])~=v then
+      os.exit(0)
+    end
+  end
+end
+
+local function hash(s)
+  local l=0
+  local b={string.byte(s,1,-1)}
+  for k,v in ipairs(b) do
+    l=l+k+v
+  end
+  return l
+end
+
+local p={}
+local e=pcall(loadfile(luapath.."init.lua","bt",p))
+local t={}
+table.insert(t,"\n\nlocal ____h={")
+for k,v in pairs(p) do
+  if type(v)=="string" then
+    table.insert(t,string.format("%s=%d,",k,hash(v)))
+  end
+end
+table.insert(t,"}\n")
+table.insert(t,string.format("loadstring(%q)(____h)\n\n",string.dump(check,true)))
+local f1=io.open(luapath.."main.lua")
+local s1=f1:read("a")
+f1:close()
+function addcheck()
+  local f=io.open(luapath.."main.lua","w")
+  f:write(s1..table.concat(t))
+  f:close()
+end
+
+function removecheck()
+  local f=io.open(luapath.."main.lua","w")
+  f:write(s1)
+  f:close()
+end
+
+addcheck()
+
   this.update("正在编译...");
   if f.isDirectory() then
     require "permission"
@@ -584,6 +658,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       table.insert(errbuffer,err)
     end
   end
+removecheck()
 
   this.update("正在打包...");
   local entry = zis.getNextEntry();
@@ -660,7 +735,13 @@ function export(pdir)
   end
 
   local f=File(pdir)
-  local tmp=activity.getLuaExtDir("project").."/"..f.Name..".alp"
+  local date=os.date("%y%m%d%H%M%S")
+  local tmp=activity.getLuaExtDir("backup").."/"..f.Name.."_"..date..".alp"
+  local p={}
+  local e,s=pcall(loadfile(luadir.."init.lua","bt",p))
+  if e then
+    tmp=string.format("%s/%s_%s-%s.alp",activity.getLuaExtDir("backup"),p.appname,p.appver:gsub("%.",""),date)
+  end
   local out=ZipOutputStream(FileOutputStream(tmp))
 
   function addDir(out,dir,f)
@@ -686,8 +767,12 @@ function export(pdir)
   return tmp
 end
 
-
 function imports(path)
+imports_dlg.Message=path
+imports_dlg.show()
+end
+
+function importx(path)
   require "import"
   import "java.util.zip.*"
   import "java.io.*"
@@ -702,7 +787,7 @@ function imports(path)
   end
 
   local f=File(path)
-  local s=f.Name:match("^(.+)%.alp$")
+  local s=f.Name:match("^([^%._]+)")
   local out=activity.getLuaExtDir("project").."/"..s
   local d=File(out)
   if autorm then
@@ -734,6 +819,10 @@ function imports(path)
     end
   end
   zip.close()
+  luadir=out
+  luapath=luadir.."main.lua"
+  read(luapath)
+  Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
   return out
 end
 
@@ -950,10 +1039,7 @@ function onCreate(s)
   local intent=activity.getIntent()
   local uri=intent.getData()
   if not s and uri and uri.getPath():find("%.alp$") then
-    luadir=imports(uri.getPath())
-    luapath=luadir.."main.lua"
-    read(luapath)
-    Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
+    imports(uri.getPath())
   else
     if pcall(read,luapath) then
       last=last or 0
@@ -971,10 +1057,7 @@ end
 function onNewIntent(intent)
   local uri=intent.getData()
   if uri and uri.getPath():find("%.alp$") then
-    luadir=imports(uri.getPath())
-    luapath=luadir.."main.lua"
-    read(luapath)
-    Toast.makeText(activity, "导入工程."..luadir, Toast.LENGTH_SHORT ).show()
+    imports(uri.getPath())
   end
 end
 
@@ -999,11 +1082,7 @@ function onActivityResult(req,res,intent)
         end
       end
       if #cls>0 then
-        local import_dlg=AlertDialogBuilder(activity)
-        import_dlg.Title="可能需要导入的类"
-        adp=LuaArrayAdapter(activity,{EditText,layout_width="fill"},String(cls))
-        import_dlg.setAdapter(adp)
-        import_dlg.setPositiveButton("确定",nil)
+        import_dlg.setItems(cls)
         import_dlg.show()
       end
     end
@@ -1012,8 +1091,8 @@ function onActivityResult(req,res,intent)
 end
 
 function onStart()
+  reopen(luapath)
   if isupdate then
-    read(luapath)
     editor.format()
   end
   isupdate=false
@@ -1037,10 +1116,18 @@ navi_list.onItemClick=function(parent, v, pos,id)
   end
 navi_dlg.setContentView(navi_list)
 
+
+imports_dlg=AlertDialogBuilder(activity)
+imports_dlg.setTitle("导入")
+imports_dlg.setPositiveButton("确定",{
+  onClick=function()
+    importx(imports_dlg.Message)
+    end})
+imports_dlg.setNegativeButton("取消",nil)
+
+
 delete_dlg=AlertDialogBuilder(activity)
-delete_dlg.setMessage(luadir)
 delete_dlg.setTitle("删除")
-delete_dlg.setView(create_e)
 delete_dlg.setPositiveButton("确定",{
   onClick=function()
     if luapath:find(delete_dlg.Message) then
@@ -1059,6 +1146,8 @@ open_dlg=AlertDialogBuilder(activity)
 open_dlg.setTitle("打开")
 open_title=TextView(activity)
 listview=open_dlg.ListView
+listview.FastScrollEnabled=true
+
 listview.addHeaderView(open_title)
 listview.setOnItemClickListener(AdapterView.OnItemClickListener{
   onItemClick=function(parent, v, pos,id)
@@ -1067,8 +1156,10 @@ listview.setOnItemClickListener(AdapterView.OnItemClickListener{
 })
 
 listview.onItemLongClick=function(parent, v, pos,id)
+    if v.Text~="../" then
     delete_dlg.setMessage(luadir..v.Text)
     delete_dlg.show()
+    end
     return true
   end
   
@@ -1079,6 +1170,7 @@ listview.onItemLongClick=function(parent, v, pos,id)
 open_dlg2=AlertDialogBuilder(activity)
 open_dlg2.setTitle("打开工程")
 listview2=open_dlg2.ListView
+listview2.FastScrollEnabled=true
 listview2.setOnItemClickListener(AdapterView.OnItemClickListener{
   onItemClick=function(parent, v, pos,id)
     luadir=luaprojectdir..tostring(v.Text).."/"
@@ -1118,6 +1210,24 @@ bin_dlg=ProgressDialog(activity);
 bin_dlg.setTitle("正在打包");
 bin_dlg.setMax(100);
 
+
+import "android.content.*"
+cm=activity.getSystemService(activity.CLIPBOARD_SERVICE)
+
+function copy(str)
+  local cd = ClipData.newPlainText("label",str)
+  cm.setPrimaryClip(cd)
+  Toast.makeText(activity,"已复制到剪切板",1000).show()
+end
+
+import_dlg=AlertDialogBuilder(activity)
+import_dlg.Title="可能需要导入的类"
+import_dlg.setPositiveButton("确定",nil)
+
+import_dlg.ListView.onItemLongClick=function(l,v)
+  copy(v.Text)
+  return true
+end
 
 lastclick=os.time()-2
 function onKeyDown(e)
