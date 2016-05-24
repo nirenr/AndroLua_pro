@@ -186,7 +186,7 @@ public class LuaAdapter extends BaseAdapter
 				if (value instanceof Bitmap)
 					((ImageView)view).setImageBitmap((Bitmap)value);
 				else if (value instanceof String)
-					((ImageView)view).setImageBitmap(LuaBitmap.getBitmap(mContext, (String)value));
+					((ImageView)view).setImageBitmap(new AsyncLoader().getBitmap(mContext, (String)value));
 				else if (value instanceof Drawable)
 					((ImageView)view).setImageDrawable((Drawable)value);
 				else if (value instanceof Number)
@@ -200,6 +200,8 @@ public class LuaAdapter extends BaseAdapter
 		}
 	}
 
+	
+	
 	public LuaAdapter(LuaActivity context, LuaObject resource) throws LuaException
 	{
 		mContext = context;
@@ -254,6 +256,46 @@ public class LuaAdapter extends BaseAdapter
 		L.pop(1);
 	}
 
+	
+	private class AsyncLoader extends AsyncTask
+	{
+		public Bitmap getBitmap(LuaActivity mContext, String path) throws IOException
+		{
+			// TODO: Implement this method
+			if(path.indexOf("http://")!=0)
+				return LuaBitmap.getBitmap(mContext,path);
+			if(LuaBitmap.checkCache(mContext,path))
+				return LuaBitmap.getBitmap(mContext,path);
+			execute(mContext,path);
+			return Bitmap.createBitmap(0,0,Bitmap.Config.RGB_565);
+		}
+		
+		@Override
+		protected Object doInBackground(Object[] p1)
+		{
+			// TODO: Implement this method
+			try
+			{
+				LuaBitmap.getBitmap((LuaContext)p1[0], (String)p1[1]);
+				return true;
+			}
+			catch (IOException e)
+			{
+				return null;
+			}
+			
+		}
+
+		@Override
+		protected void onPostExecute(Object result)
+		{
+			// TODO: Implement this method
+			super.onPostExecute(result);
+			if(result!=null)
+				notifyDataSetChanged();
+		}
+	}
+	
 
 	public class AsyncImageLoader
 	{
