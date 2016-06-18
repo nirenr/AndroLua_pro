@@ -15,13 +15,13 @@ t={
   orientation="vertical" ,
   --backgroundColor="#eeeeff",
   {
-    EditText,
+    LuaEditor,
     id="edit",
-    hint= "XML布局代码转换AndroLua布局表",
+    --hint= "XML布局代码转换AndroLua布局表",
     layout_width="fill",
     layout_height="fill",
     layout_weight=1,
-    gravity="top"
+    --gravity="top"
   },
   {
     LinearLayout,
@@ -122,6 +122,7 @@ dlg2.setContentView(l)
 
 function editlayout(txt)
   edit.Text=txt
+  edit.format()
   dlg2.show()
 end
 

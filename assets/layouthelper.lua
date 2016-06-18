@@ -303,7 +303,7 @@ end
 func["删除"]=function()
   local gp=currView.Parent.Tag
   if gp==nil then
-    print("不可以删除顶部控件")
+    Toast.makeText(activity,"不可以删除顶部控件",1000).show()
     return
   end
   for k,v in ipairs(gp) do
@@ -319,7 +319,7 @@ end
 func["父控件"]=function()
   local p=currView.Parent
   if p.Tag==nil then
-    print("已是顶部控件")
+    Toast.makeText(activity,"已是顶部控件",1000).show()
   else
     getCurr(p)
   end
@@ -426,34 +426,39 @@ sfd_dlg.setNegativeButton("取消",nil)
 sfd_dlg.setNeutralButton("无",{onClick=none})
 function dumparray(arr)
   local ret={}
-  table.insert(ret,"{")
+  table.insert(ret,"{\n")
   for k,v in ipairs(arr) do
-    table.insert(ret,string.format("\"%s\";",v))
+    table.insert(ret,string.format("\"%s\";\n",v))
   end
-  table.insert(ret,"};")
-  return table.concat(ret,"\n")
+  table.insert(ret,"};\n")
+  return table.concat(ret)
 end
 function dumplayout(t)
-  table.insert(ret,"{")
+  table.insert(ret,"{\n")
+  table.insert(ret,tostring(t[1].getSimpleName()..";\n"))
   for k,v in pairs(t) do
-    if type(k)=="number" and type(v)=="table" then
-      dumplayout(v)
+    if type(k)=="number" then
+      --do nothing
     elseif type(v)=="table" then
       table.insert(ret,k.."="..dumparray(v))
-    elseif type(k)=="number" then
-      table.insert(ret,tostring(v.getSimpleName()..";"))
     elseif type(v)=="string" then
-      table.insert(ret,string.format("%s=\"%s\";",k,v))
+      table.insert(ret,string.format("%s=\"%s\";\n",k,v))
     else
-      table.insert(ret,string.format("%s=%s;",k,tostring(v)))
+      table.insert(ret,string.format("%s=%s;\n",k,tostring(v)))
     end
   end
-  table.insert(ret,"};")
+  for k,v in ipairs(t) do
+    if type(v)=="table" then
+      dumplayout(v)
+    end
+  end
+  table.insert(ret,"};\n")
 end
+
 function dumplayout2(t)
   ret={}
   dumplayout(t)
-  return table.concat(ret,"\n")
+  return table.concat(ret)
 end
 
 function onCreateOptionsMenu(menu)
