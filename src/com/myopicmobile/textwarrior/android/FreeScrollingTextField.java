@@ -11,7 +11,7 @@
  *****************************************************************************
  *
  * --------------------------------- row length
- * Hello World(\n)                 | 12
+ * Hello World(\n)      =2           | 12
  * This is a test of the caret(\n) | 28
  * func|t|ions(\n)                 | 10
  * of this program(EOF)            | 16
@@ -313,6 +313,7 @@ implements Document.TextFieldMetrics{
 			public void onDel(CharSequence text, int _caretPosition, int delCount)
 			{
 				// TODO: Implement this method
+				if(delCount<=_caretSpan.getFirst())
 				_caretSpan.setFirst(_caretSpan.getFirst()-1);
 				_autoCompletePanel.dismiss();
 			}
@@ -710,7 +711,9 @@ implements Document.TextFieldMetrics{
 
 	private int drawChar(Canvas canvas, char c, int paintX, int paintY){
 		int originalColor = _brush.getColor();
-		int charWidth = getAdvance(c);
+		int charWidth = getAdvance(c,paintX);
+		if (paintX > getScrollX() || (paintX) < (getScrollX() + getContentWidth()))
+		
 		switch(c){
 			case ' ':
 				if(_showNonPrinting){
@@ -738,8 +741,10 @@ implements Document.TextFieldMetrics{
 					canvas.drawText(Language.GLYPH_TAB, 0, 1, paintX, paintY, _brush);
 					_brush.setColor(originalColor);
 				}
-				int i=(paintX-_leftOffset)/getAdvance(' ')%_tabLength;
-				charWidth-=getAdvance(' ')*i;
+				else{
+					int i=(paintX-_leftOffset)/getAdvance(' ')%_tabLength;
+					charWidth-=getAdvance(' ')*i;
+				}
 				break;
 
 			default:
@@ -835,6 +840,30 @@ implements Document.TextFieldMetrics{
 		return advance;
 	}
 
+	public int getAdvance(char c,int x){
+		int advance;
+
+		switch (c){
+			case ' ':
+				advance = getSpaceAdvance();
+				break;
+			case Language.NEWLINE: // fall-through
+			case Language.EOF:
+				advance = getEOLAdvance();
+				break;
+			case Language.TAB:
+				advance = getTabAdvance(x);
+				break;
+			default:
+				char[] ca = {c};
+				advance = (int) _brush.measureText(ca, 0, 1);
+				break;
+		}
+
+		return advance;
+	}
+	
+	
 	protected int getSpaceAdvance(){
 		if(_showNonPrinting){
 			return (int) _brush.measureText(Language.GLYPH_SPACE,
@@ -865,6 +894,18 @@ implements Document.TextFieldMetrics{
 		}
 	}
 
+	protected int getTabAdvance(int x){
+		if(_showNonPrinting){
+			return _tabLength * (int) _brush.measureText(Language.GLYPH_SPACE,
+														 0, Language.GLYPH_SPACE.length());
+		}
+		else{
+			int i=(x-_leftOffset)/getAdvance(' ')%_tabLength;
+			return (_tabLength-i) * (int) _brush.measureText(" ", 0, 1);
+		}
+	}
+	
+	
 	/**
 	 * Invalidate rows from startRow (inclusive) to endRow (exclusive)
 	 */
@@ -981,7 +1022,7 @@ implements Document.TextFieldMetrics{
 		int charLeft = visibleRange.getFirst();
 		int charRight = visibleRange.getSecond();
 
-		if (charRight > (getScrollX() + getContentWidth())){
+		if (charRight-_leftOffset > (getScrollX() + getContentWidth())){
 			scrollBy = charRight - getScrollX() - getContentWidth();
 		}
 
@@ -1016,7 +1057,7 @@ implements Document.TextFieldMetrics{
 					right += getEOLAdvance();
 					break;
 				case Language.TAB:
-					right += getTabAdvance();
+					right += getTabAdvance(right);
 					break;
 				default:
 					char[] ca = {c};
@@ -1094,6 +1135,7 @@ implements Document.TextFieldMetrics{
 
 		int extent = _leftOffset;
 		int i = 0;
+		x-=getAdvance('a')/2;
 		while(i < rowText.length()){
 			char c = rowText.charAt(i);
 			if (c == Language.NEWLINE || c == Language.EOF){
@@ -1103,7 +1145,7 @@ implements Document.TextFieldMetrics{
 				extent += getSpaceAdvance();
 			}
 			else if (c == Language.TAB){
-				extent += getTabAdvance();
+				extent += getTabAdvance(extent);
 			}
 			else{
 				char[] ca = {c};
@@ -1150,6 +1192,7 @@ implements Document.TextFieldMetrics{
 
 		int extent = 0;
 		int i = 0;
+		x-=getAdvance('a')/2;
 		while(i < rowText.length()){
 			char c = rowText.charAt(i);
 			if (c == Language.NEWLINE || c == Language.EOF){
@@ -1159,7 +1202,7 @@ implements Document.TextFieldMetrics{
 				extent += getSpaceAdvance();
 			}
 			else if (c == Language.TAB){
-				extent += getTabAdvance();
+				extent += getTabAdvance(extent);
 			}
 			else{
 				char[] ca = {c};
@@ -2485,6 +2528,7 @@ implements Document.TextFieldMetrics{
 			int originalRow = _caretRow;
 			int originalOffset = _hDoc.getRowOffset(originalRow);
 			_hDoc.insertBefore(text.toCharArray(), _caretPosition, System.nanoTime());
+			_textLis.onAdd(text,_caretPosition,text.length());
 			_hDoc.endBatchEdit();
 
 			_caretPosition += text.length();
@@ -2532,7 +2576,7 @@ implements Document.TextFieldMetrics{
 				int originalOffset = _hDoc.getRowOffset(originalRow);
 				boolean isSingleRowSel = _hDoc.findRowNumber(_selectionEdge) == originalRow;
 				_hDoc.deleteAt(_selectionAnchor, totalChars, System.nanoTime());
-
+				_textLis.onDel("",_caretPosition,totalChars);
 				_caretPosition = _selectionAnchor;
 				updateCaretRow();
 				setEdited(true);

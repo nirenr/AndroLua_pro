@@ -50,11 +50,14 @@ public class LuaEditor extends FreeScrollingTextField
 		TypedArray array = mContext.getTheme().obtainStyledAttributes(new int[] {  
 																 android.R.attr.colorBackground, 
 																 android.R.attr.textColorPrimary, 
+																 android.R.attr.textColorHighlightInverse,
 															 }); 
 		int backgroundColor = array.getColor(0, 0xFF00FF); 
 		int textColor = array.getColor(1, 0xFF00FF); 
+		int textColorHighlight = array.getColor(1, 0xFF00FF); 
 		array.recycle();
 		setTextColor(textColor);
+		//setTextHighligtColor(textColorHighlight);
 	}
 
 	public void setDark(boolean isDark)
@@ -102,7 +105,10 @@ public class LuaEditor extends FreeScrollingTextField
 		getColorScheme().setColor(ColorScheme.Colorable.FOREGROUND,color);
 	}
 	
-	
+	public void setTextHighligtColor(int color)
+	{
+		getColorScheme().setColor(ColorScheme.Colorable.SELECTION_BACKGROUND,color);
+	}
 
 	
 	
