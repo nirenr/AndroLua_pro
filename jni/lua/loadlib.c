@@ -1,5 +1,5 @@
 /*
-** $Id: loadlib.c,v 1.126 2015/02/16 13:14:33 roberto Exp $
+** $Id: loadlib.c,v 1.127 2015/11/23 11:30:45 roberto Exp $
 ** Dynamic library loader for Lua
 ** See Copyright Notice in lua.h
 **
@@ -604,6 +604,7 @@ static void set_env (lua_State *L) {
 }
 
 
+//mod by nirenr
 static void dooptions (lua_State *L, int n) {
   int i;
   for (i = 2; i <= n; i++) {
@@ -644,6 +645,7 @@ static void dooptions (lua_State *L, int n) {
 }
 
 
+//mod by nirenr
 static void modinit (lua_State *L, const char *modname) {
   const char *dot;
   lua_pushvalue(L, -1);
@@ -657,6 +659,8 @@ static void modinit (lua_State *L, const char *modname) {
   lua_pushlstring(L, modname, dot - modname);
   lua_setfield(L, -2, "_PACKAGE");
 }
+
+//mod by nirenr
   static const char *const mod_eventname[] = {
     //"__index", "__newindex",
     "__gc", "__mode", "__len", "__eq",
@@ -668,6 +672,7 @@ static void modinit (lua_State *L, const char *modname) {
   };
 
 
+//mod by nirenr
 static int modcall (lua_State *L) {
   int n = lua_gettop(L);
   lua_getfield(L, 1, "new");
@@ -695,6 +700,7 @@ static int modcall (lua_State *L) {
 }
 
 
+//mod by nirenr
 static int ll_module (lua_State *L) {
   const char *modname = luaL_checkstring(L, 1);
   int lastarg = lua_gettop(L);  /* last parameter */
@@ -803,7 +809,7 @@ static void createsearcherstable (lua_State *L) {
   int i;
   /* create 'searchers' table */
   lua_createtable(L, sizeof(searchers)/sizeof(searchers[0]) - 1, 0);
-  /* fill it with pre-defined searchers */
+  /* fill it with predefined searchers */
   for (i=0; searchers[i] != NULL; i++) {
     lua_pushvalue(L, -2);  /* set 'package' as upvalue for all searchers */
     lua_pushcclosure(L, searchers[i], 1);

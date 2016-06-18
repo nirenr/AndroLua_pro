@@ -1,5 +1,5 @@
 /*
-** $Id: lauxlib.h,v 1.128 2014/10/29 16:11:17 roberto Exp $
+** $Id: lauxlib.h,v 1.129 2015/11/23 11:29:43 roberto Exp $
 ** Auxiliary functions for building Lua libraries
 ** See Copyright Notice in lua.h
 */
@@ -38,7 +38,6 @@ LUALIB_API const char *(luaL_tolstring) (lua_State *L, int idx, size_t *len);
 LUALIB_API int (luaL_argerror) (lua_State *L, int arg, const char *extramsg);
 LUALIB_API const char *(luaL_checklstring) (lua_State *L, int arg,
                                                           size_t *l);
-LUALIB_API int (luaL_typerror) (lua_State *L, int narg, const char *tname);
 LUALIB_API const char *(luaL_optlstring) (lua_State *L, int arg,
                                           const char *def, size_t *l);
 LUALIB_API lua_Number (luaL_checknumber) (lua_State *L, int arg);
@@ -66,7 +65,7 @@ LUALIB_API int (luaL_checkoption) (lua_State *L, int arg, const char *def,
 LUALIB_API int (luaL_fileresult) (lua_State *L, int stat, const char *fname);
 LUALIB_API int (luaL_execresult) (lua_State *L, int stat);
 
-/* pre-defined references */
+/* predefined references */
 #define LUA_NOREF       (-2)
 #define LUA_REFNIL      (-1)
 
@@ -194,6 +193,8 @@ typedef struct luaL_Stream {
 
 /* compatibility with old module system */
 #if defined(LUA_COMPAT_MODULE)
+//mod by nirenr
+LUALIB_API int (luaL_typerror) (lua_State *L, int narg, const char *tname);
 LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
                                    const char *fname, int szhint);
 LUALIB_API void (luaL_pushmodule) (lua_State *L, const char *modname,
