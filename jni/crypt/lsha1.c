@@ -243,6 +243,8 @@ static void sat_SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
 
 #include <lua.h>
 #include <lauxlib.h>
+#include <lcrypt.h>
+
 
 int
 lsha1(lua_State *L) {
