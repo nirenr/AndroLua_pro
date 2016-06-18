@@ -2,7 +2,6 @@ package com.androlua;
 
 import android.app.*;
 import android.content.*;
-import android.content.pm.*;
 import android.content.res.*;
 import android.graphics.*;
 import android.graphics.drawable.*;
@@ -17,6 +16,7 @@ import dalvik.system.*;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
+import java.math.*;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer,LuaContext
 {
@@ -76,8 +76,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
-		//s=android.R.style.Theme_Holo_Wallpaper_NoTitleBar;
+		setTheme(android.R.style.Theme_Holo_Light);
 		//设置主题
 //		Intent intent=getIntent();
 //		int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
@@ -123,10 +122,13 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			
 			luaLpath = (luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;") + luaLpath;
 			initLua();
+			File icon=new File(luaDir + "/icon.png");
+			if (icon.exists())
+				setIcon(new BitmapDrawable(LuaBitmap.getBitmap(this, luaDir + "/icon.png")));
 
 			doFile(luaPath, arg);
-
 			isCreate = true;
+			runFunc("main",arg);
 			runFunc("onCreate", savedInstanceState);
 			if (!isSetViewed)
 				setContentView(layout);
@@ -150,7 +152,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		mOnTouchEvent = L.getLuaObject("onTouchEvent");
 		if (mOnTouchEvent.isNil())
 			mOnTouchEvent = null;
-
+		
 	}
 
 	public String getLuaPath()
