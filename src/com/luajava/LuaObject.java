@@ -58,6 +58,10 @@ public class LuaObject
 
 	protected LuaState L;
 
+	
+	protected LuaObject(LuaState L)
+	{
+	}
 	/**
 	 * Creates a reference to an object in the variable globalName
 	 * 

@@ -1030,9 +1030,13 @@ public class LuaState
 		{
 			pushInteger(((Byte) obj).byteValue());
 		}
-		else if (obj instanceof Number)
+		else if (obj instanceof Float)
 		{
-			pushNumber(((Number) obj).doubleValue());
+			pushNumber(((Float) obj).floatValue());
+		}
+		else if (obj instanceof Double)
+		{
+			pushNumber(((Double) obj).doubleValue());
 		}
 		else if (obj instanceof String)
 		{
@@ -1046,7 +1050,10 @@ public class LuaState
 		else if (obj instanceof LuaObject)
 		{
 			LuaObject ref = (LuaObject) obj;
-			ref.push();
+			if(ref.getLuaState()==this)
+				ref.push();
+			else
+				pushJavaObject(ref);
 		}
 		else
 		{
@@ -1173,7 +1180,10 @@ public class LuaState
 	 */
 	public LuaObject getLuaObject(int index)
 	{
-		return new LuaObject(this, index);
+		if(isTable(index))
+			return new LuaTable(this, index);
+		else
+			return new LuaObject(this, index);
 	}
 
 	/**
