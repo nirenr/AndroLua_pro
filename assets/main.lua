@@ -32,16 +32,16 @@ else
 end
 local theme
 if h<=6 or h>=22 then
-theme=activity.getLuaExtDir("fonts").."/night.lua"
+  theme=activity.getLuaExtDir("fonts").."/night.lua"
 else
-theme=activity.getLuaExtDir("fonts").."/day.lua"
+  theme=activity.getLuaExtDir("fonts").."/day.lua"
 end
 local p={}
 local e=pcall(loadfile(theme,"bt",p))
 if e then
-for k,v in pairs(p) do
-layout.main[2][k]=v
-end
+  for k,v in pairs(p) do
+    layout.main[2][k]=v
+  end
 end
 --activity.getActionBar().show()
 luadir=luajava.luaextdir.."/" or "/sdcard/androlua/"
@@ -269,7 +269,7 @@ function reopen(path)
   local f=io.open(path,"r")
   local str=f:read("*all")
   if tostring(editor.getText())~=str then
-  editor.setText(str,true)
+    editor.setText(str,true)
   end
   f:close()
 end
@@ -456,7 +456,8 @@ end
 bin=function(luapath,appname,appver,packagename,apkpath)
   require "import"
   import "console"
-
+  compile "mao"
+  compile "sign"
   import "java.util.zip.*"
   import "java.io.*"
   import "mao.res.*"
@@ -569,7 +570,23 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     end
   end
 
-local function check(h)
+  local function check(h)
+    local function hash(s)
+      local l=0
+      local b={string.byte(s,1,-1)}
+      for k,v in ipairs(b) do
+        l=l+k+v
+      end
+      return l
+    end
+    require "init"
+    for k,v in pairs(h) do
+      if hash(_G[k])~=v then
+        os.exit(0)
+      end
+    end
+  end
+
   local function hash(s)
     local l=0
     local b={string.byte(s,1,-1)}
@@ -578,50 +595,34 @@ local function check(h)
     end
     return l
   end
-  require "init"
-  for k,v in pairs(h) do
-    if hash(_G[k])~=v then
-      os.exit(0)
+
+  local p={}
+  local e=pcall(loadfile(luapath.."init.lua","bt",p))
+  local t={}
+  table.insert(t,"\n\nlocal ____h={")
+  for k,v in pairs(p) do
+    if type(v)=="string" then
+      table.insert(t,string.format("%s=%d,",k,hash(v)))
     end
   end
-end
-
-local function hash(s)
-  local l=0
-  local b={string.byte(s,1,-1)}
-  for k,v in ipairs(b) do
-    l=l+k+v
+  table.insert(t,"}\n")
+  table.insert(t,string.format("loadstring(%q)(____h)\n\n",string.dump(check,true)))
+  local f1=io.open(luapath.."main.lua")
+  local s1=f1:read("a")
+  f1:close()
+  function addcheck()
+    local f=io.open(luapath.."main.lua","w")
+    f:write(s1..table.concat(t))
+    f:close()
   end
-  return l
-end
 
-local p={}
-local e=pcall(loadfile(luapath.."init.lua","bt",p))
-local t={}
-table.insert(t,"\n\nlocal ____h={")
-for k,v in pairs(p) do
-  if type(v)=="string" then
-    table.insert(t,string.format("%s=%d,",k,hash(v)))
+  function removecheck()
+    local f=io.open(luapath.."main.lua","w")
+    f:write(s1)
+    f:close()
   end
-end
-table.insert(t,"}\n")
-table.insert(t,string.format("loadstring(%q)(____h)\n\n",string.dump(check,true)))
-local f1=io.open(luapath.."main.lua")
-local s1=f1:read("a")
-f1:close()
-function addcheck()
-  local f=io.open(luapath.."main.lua","w")
-  f:write(s1..table.concat(t))
-  f:close()
-end
 
-function removecheck()
-  local f=io.open(luapath.."main.lua","w")
-  f:write(s1)
-  f:close()
-end
-
-addcheck()
+  addcheck()
 
   this.update("正在编译...");
   if f.isDirectory() then
@@ -658,7 +659,7 @@ addcheck()
       table.insert(errbuffer,err)
     end
   end
-removecheck()
+  removecheck()
 
   this.update("正在打包...");
   local entry = zis.getNextEntry();
@@ -768,8 +769,9 @@ function export(pdir)
 end
 
 function imports(path)
-imports_dlg.Message=path
-imports_dlg.show()
+  create_imports_dlg()
+  imports_dlg.Message=path
+  imports_dlg.show()
 end
 
 function importx(path)
@@ -829,21 +831,25 @@ end
 func={}
 func.open=function()
   save()
+  create_open_dlg()
   list(listview, luadir)
   open_dlg.show()
 end
 func.new=function()
   save()
+  create_create_dlg()
   create_dlg.setMessage(luadir)
   create_dlg.show()
 end
 
 func.create=function()
   save()
+  create_project_dlg()
   project_dlg.show()
 end
 func.openproject=function()
   save()
+  create_open_dlg2()
   list2(listview2, luaprojectdir)
   open_dlg2.show()
 end
@@ -851,10 +857,10 @@ end
 func.export=function()
   save()
   if luaproject then
-  local name=export(luaproject)
-  Toast.makeText(activity, "工程已导出."..name, Toast.LENGTH_SHORT ).show()
+    local name=export(luaproject)
+    Toast.makeText(activity, "工程已导出."..name, Toast.LENGTH_SHORT ).show()
   else
-  Toast.makeText(activity, "仅支持工程导出.", Toast.LENGTH_SHORT ).show()
+    Toast.makeText(activity, "仅支持工程导出.", Toast.LENGTH_SHORT ).show()
   end
 end
 
@@ -903,6 +909,7 @@ func.check= function (b)
 end
 
 func.navi=function ()
+  create_navi_dlg()
   local str=editor.getText().toString()
   local fs={}
   indexs={}
@@ -947,6 +954,7 @@ func.build=function()
   local e,s=pcall(loadfile(luadir.."init.lua","bt",p))
   if e then
     activity.newTask(bin,update,callback).execute{luadir,p.appname,p.appver,p.packagename,luabindir..p.appname.."_"..p.appver..".apk"}
+    create_bin_dlg()
     bin_dlg.show()
   else
     Toast.makeText(activity, "工程配置文件错误."..s, Toast.LENGTH_SHORT ).show()
@@ -1082,6 +1090,7 @@ function onActivityResult(req,res,intent)
         end
       end
       if #cls>0 then
+        create_import_dlg()
         import_dlg.setItems(cls)
         import_dlg.show()
       end
@@ -1107,109 +1116,145 @@ function onStop()
 end
 
 --创建对话框
-navi_dlg=Dialog(activity)
-navi_dlg.setTitle("导航")
-navi_list=ListView(activity)
-navi_list.onItemClick=function(parent, v, pos,id)
-  editor.setSelection(indexs[pos+1])
-  navi_dlg.hide()
+function create_navi_dlg()
+  if navi_dlg then
+    return
   end
-navi_dlg.setContentView(navi_list)
+  navi_dlg=Dialog(activity)
+  navi_dlg.setTitle("导航")
+  navi_list=ListView(activity)
+  navi_list.onItemClick=function(parent, v, pos,id)
+    editor.setSelection(indexs[pos+1])
+    navi_dlg.hide()
+  end
+  navi_dlg.setContentView(navi_list)
+end
 
-
-imports_dlg=AlertDialogBuilder(activity)
-imports_dlg.setTitle("导入")
-imports_dlg.setPositiveButton("确定",{
-  onClick=function()
-    importx(imports_dlg.Message)
+function create_imports_dlg()
+  if imports_dlg then
+    return
+  end
+  imports_dlg=AlertDialogBuilder(activity)
+  imports_dlg.setTitle("导入")
+  imports_dlg.setPositiveButton("确定",{
+    onClick=function()
+      importx(imports_dlg.Message)
     end})
-imports_dlg.setNegativeButton("取消",nil)
+  imports_dlg.setNegativeButton("取消",nil)
+end
 
-
-delete_dlg=AlertDialogBuilder(activity)
-delete_dlg.setTitle("删除")
-delete_dlg.setPositiveButton("确定",{
-  onClick=function()
-    if luapath:find(delete_dlg.Message) then
-      Toast.makeText(activity, "不能删除正在打开的文件.", Toast.LENGTH_SHORT ).show()
-    elseif LuaUtil.rmDir(File(delete_dlg.Message)) then
-      Toast.makeText(activity, "已删除.", Toast.LENGTH_SHORT ).show()
-      list(listview,luadir)
-    else
-      Toast.makeText(activity, "删除失败.", Toast.LENGTH_SHORT ).show()
-    end
-  end})
-delete_dlg.setNegativeButton("取消",nil)
-
-
-open_dlg=AlertDialogBuilder(activity)
-open_dlg.setTitle("打开")
-open_title=TextView(activity)
-listview=open_dlg.ListView
-listview.FastScrollEnabled=true
-
-listview.addHeaderView(open_title)
-listview.setOnItemClickListener(AdapterView.OnItemClickListener{
-  onItemClick=function(parent, v, pos,id)
-    open(v.Text)
+function create_delete_dlg()
+  if delete_dlg then
+    return
   end
-})
+  delete_dlg=AlertDialogBuilder(activity)
+  delete_dlg.setTitle("删除")
+  delete_dlg.setPositiveButton("确定",{
+    onClick=function()
+      if luapath:find(delete_dlg.Message) then
+        Toast.makeText(activity, "不能删除正在打开的文件.", Toast.LENGTH_SHORT ).show()
+      elseif LuaUtil.rmDir(File(delete_dlg.Message)) then
+        Toast.makeText(activity, "已删除.", Toast.LENGTH_SHORT ).show()
+        list(listview,luadir)
+      else
+        Toast.makeText(activity, "删除失败.", Toast.LENGTH_SHORT ).show()
+      end
+    end})
+  delete_dlg.setNegativeButton("取消",nil)
+end
 
-listview.onItemLongClick=function(parent, v, pos,id)
+function create_open_dlg()
+  if open_dlg then
+    return
+  end
+  open_dlg=AlertDialogBuilder(activity)
+  open_dlg.setTitle("打开")
+  open_title=TextView(activity)
+  listview=open_dlg.ListView
+  listview.FastScrollEnabled=true
+
+  listview.addHeaderView(open_title)
+  listview.setOnItemClickListener(AdapterView.OnItemClickListener{
+    onItemClick=function(parent, v, pos,id)
+      open(v.Text)
+    end
+  })
+
+  listview.onItemLongClick=function(parent, v, pos,id)
     if v.Text~="../" then
-    delete_dlg.setMessage(luadir..v.Text)
-    delete_dlg.show()
+      create_delete_dlg()
+      delete_dlg.setMessage(luadir..v.Text)
+      delete_dlg.show()
     end
     return true
   end
-  
---open_dlg.setItems{"空"}
---open_dlg.setContentView(listview)
 
+  --open_dlg.setItems{"空"}
+  --open_dlg.setContentView(listview)
+end
 
-open_dlg2=AlertDialogBuilder(activity)
-open_dlg2.setTitle("打开工程")
-listview2=open_dlg2.ListView
-listview2.FastScrollEnabled=true
-listview2.setOnItemClickListener(AdapterView.OnItemClickListener{
-  onItemClick=function(parent, v, pos,id)
-    luadir=luaprojectdir..tostring(v.Text).."/"
-    read(string.format("%smain.lua",luadir))
-    open_dlg2.hide()
-    Toast.makeText(activity, "打开工程."..tostring(v.Text), Toast.LENGTH_SHORT ).show()
+function create_open_dlg2()
+  if open_dlg2 then
+    return
   end
-})
---open_dlg2.setItems{"空"}
+  open_dlg2=AlertDialogBuilder(activity)
+  open_dlg2.setTitle("打开工程")
+  listview2=open_dlg2.ListView
+  listview2.FastScrollEnabled=true
+  listview2.setOnItemClickListener(AdapterView.OnItemClickListener{
+    onItemClick=function(parent, v, pos,id)
+      luadir=luaprojectdir..tostring(v.Text).."/"
+      read(string.format("%smain.lua",luadir))
+      open_dlg2.hide()
+      Toast.makeText(activity, "打开工程."..tostring(v.Text), Toast.LENGTH_SHORT ).show()
+    end
+  })
+end
 
---open_dlg2.setContentView(listview2)
+function create_create_dlg()
+  if create_dlg then
+    return
+  end
+  create_dlg=AlertDialogBuilder(activity)
+  create_dlg.setMessage(luadir)
+  create_dlg.setTitle("新建")
+  create_e=EditText(activity)
+  create_dlg.setView(create_e)
+  create_dlg.setPositiveButton(".lua",{onClick=create_lua})
+  create_dlg.setNegativeButton("取消",nil)
+  create_dlg.setNeutralButton(".aly",{onClick=create_aly})
+end
 
+function create_project_dlg()
+  if project_dlg then
+    return
+  end
+  project_dlg=AlertDialogBuilder(activity)
+  project_dlg.setTitle("新建工程")
+  project_dlg.setView(loadlayout(layout.project))
+  project_dlg.setPositiveButton("确定",{onClick=create_project})
+  project_dlg.setNegativeButton("取消",nil)
+end
 
-create_dlg=AlertDialogBuilder(activity)
-create_dlg.setMessage(luadir)
-create_dlg.setTitle("新建")
-create_e=EditText(activity)
-create_dlg.setView(create_e)
-create_dlg.setPositiveButton(".lua",{onClick=create_lua})
-create_dlg.setNegativeButton("取消",nil)
-create_dlg.setNeutralButton(".aly",{onClick=create_aly})
+function create_build_dlg()
+  if build_dlg then
+    return
+  end
+  build_dlg=AlertDialogBuilder(activity)
+  build_dlg.setTitle("打包")
+  build_dlg.setView(loadlayout(layout.build))
+  build_dlg.setPositiveButton("确定",{onClick=buildfile})
+  build_dlg.setNegativeButton("取消",nil)
+end
 
-project_dlg=AlertDialogBuilder(activity)
-project_dlg.setTitle("新建工程")
-project_dlg.setView(loadlayout(layout.project))
-project_dlg.setPositiveButton("确定",{onClick=create_project})
-project_dlg.setNegativeButton("取消",nil)
-
-
-build_dlg=AlertDialogBuilder(activity)
-build_dlg.setTitle("打包")
-build_dlg.setView(loadlayout(layout.build))
-build_dlg.setPositiveButton("确定",{onClick=buildfile})
-build_dlg.setNegativeButton("取消",nil)
-
-bin_dlg=ProgressDialog(activity);
-bin_dlg.setTitle("正在打包");
-bin_dlg.setMax(100);
-
+function create_bin_dlg()
+  if bin_dlg then
+    return
+  end
+  bin_dlg=ProgressDialog(activity);
+  bin_dlg.setTitle("正在打包");
+  bin_dlg.setMax(100);
+end
 
 import "android.content.*"
 cm=activity.getSystemService(activity.CLIPBOARD_SERVICE)
@@ -1220,13 +1265,18 @@ function copy(str)
   Toast.makeText(activity,"已复制到剪切板",1000).show()
 end
 
-import_dlg=AlertDialogBuilder(activity)
-import_dlg.Title="可能需要导入的类"
-import_dlg.setPositiveButton("确定",nil)
+function create_import_dlg()
+  if import_dlg then
+    return
+  end
+  import_dlg=AlertDialogBuilder(activity)
+  import_dlg.Title="可能需要导入的类"
+  import_dlg.setPositiveButton("确定",nil)
 
-import_dlg.ListView.onItemLongClick=function(l,v)
-  copy(v.Text)
-  return true
+  import_dlg.ListView.onItemLongClick=function(l,v)
+    copy(v.Text)
+    return true
+  end
 end
 
 lastclick=os.time()-2
