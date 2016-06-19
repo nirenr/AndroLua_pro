@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest android:versionCode="310" android:versionName="3.1.160523" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest android:versionCode="310" android:versionName="3.1.160620" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
 	<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21"/>
 	<uses-permission android:name="android.permission.CALL_PHONE"/>
 	<uses-permission android:name="android.permission.SEND_SMS"/>
@@ -46,6 +46,7 @@
 		android:name="com.androlua.LuaApplication">
 		<activity 
 			android:name="com.androlua.Main"
+			android:label="AndroLua+"
 			android:theme="@style/WelcomeTheme"
 			android:launchMode="singleTask"
 			android:screenOrientation="portrait"
@@ -76,6 +77,7 @@
 		</activity>
 		<activity 
 			android:name="com.androlua.LuaActivity"
+			android:label="AndroLua+"
 			android:theme="@android:style/Theme.Holo.Light.NoActionBar"
 			android:screenOrientation="portrait"
 			android:windowSoftInputMode="adjustResize"

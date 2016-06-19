@@ -76,8 +76,8 @@ typedef struct{
 	uint32_t uri;		/* uri of its namespace */
 	uint32_t name;
 	uint32_t string;	/* attribute value if type == ATTR_STRING */
-	uint32_t type;		/* attribute type, == ATTR_*  Ö¸¶¨ÊôĞÔÖµµÃÀàĞÍ£¬Èçstring, int, floatµÈ*/
-	uint32_t data;		/* attribute value, encoded on type ÊôĞÔµÄÖµ£¬¸ÃÖµ¸ù¾İÊôĞÔµÄ type½øĞĞ±àÂë*/
+	uint32_t type;		/* attribute type, == ATTR_*  æŒ‡å®šå±æ€§å€¼å¾—ç±»å‹ï¼Œå¦‚string, int, floatç­‰*/
+	uint32_t data;		/* attribute value, encoded on type å±æ€§çš„å€¼ï¼Œè¯¥å€¼æ ¹æ®å±æ€§çš„ typeè¿›è¡Œç¼–ç */
 } Attribute_t;
 
 typedef struct AttrStack_t{
@@ -400,7 +400,7 @@ AxmlNext(void *axml)
 		return event;
 
 	/* common chunk head */
-	chunkType = GetInt32(ap);   //ÔÙ´ÎÈ¡µÃchunkÍ·²¿ÀàĞÍ±êÖ¾
+	chunkType = GetInt32(ap);   //å†æ¬¡å–å¾—chunkå¤´éƒ¨ç±»å‹æ ‡å¿—
 	SkipInt32(ap, 1);	/* chunk size, unused */
 	SkipInt32(ap, 1);	/* line number, unused */
 	SkipInt32(ap, 1);	/* unknown field */
@@ -450,8 +450,8 @@ AxmlNext(void *axml)
 			attr->list[i].data = GetInt32(ap);
 		}
 		/*modify by wan*/
-		/*»ñÈ¡uri·½±ãºóÃæ¹¹ÔìattrµÄÊ±ºòÉèÖÃattrµÄuriÖµ*/
-		if(flag){ //ËµÃ÷´¦ÓÚapplication tag£¬ÄÇÃ´¾Í»ñÈ¡¸ÃtagµÄµÚÒ»¸öattrµÄuriÖµ
+		/*è·å–uriæ–¹ä¾¿åé¢æ„é€ attrçš„æ—¶å€™è®¾ç½®attrçš„uriå€¼*/
+		if(flag){ //è¯´æ˜å¤„äºapplication tagï¼Œé‚£ä¹ˆå°±è·å–è¯¥tagçš„ç¬¬ä¸€ä¸ªattrçš„uriå€¼
 			g_appURIindex = attr->list[0].uri;
 		}
 
@@ -496,7 +496,7 @@ AxmlNext(void *axml)
 		ap->nsNew = 1;
 
 		/* note this recursion rather than return a event*/
-		return AxmlNext(ap);  //×¢ÒâÕâÀïÊÇµİ¹éµØ½øĞĞ±éÀú !!
+		return AxmlNext(ap);  //æ³¨æ„è¿™é‡Œæ˜¯é€’å½’åœ°è¿›è¡Œéå† !!
 	}
 	else if(chunkType == CHUNK_ENDNS)
 	{
@@ -859,7 +859,7 @@ InitBuff(Buff_t *buf)
 }
 
 /*
-¸ñÊ½»¯´òÓ¡×Ö·û´®µ½buffÊı×éÖĞ¡£ÕâÀïµÄbuffÊı×é¾ÍÊÇÎÒÃÇ¿´µ½µÄÎÄ±¾¸ñÊ½µÄxml
+æ ¼å¼åŒ–æ‰“å°å­—ç¬¦ä¸²åˆ°buffæ•°ç»„ä¸­ã€‚è¿™é‡Œçš„buffæ•°ç»„å°±æ˜¯æˆ‘ä»¬çœ‹åˆ°çš„æ–‡æœ¬æ ¼å¼çš„xml
 */
 static int
 PrintToBuff(Buff_t *buf, size_t maxlen, const char *format, ...)
@@ -867,9 +867,9 @@ PrintToBuff(Buff_t *buf, size_t maxlen, const char *format, ...)
 	va_list ap;
 	size_t len;
 
-	if(maxlen >= buf->size - buf->cur) //Èç¹ûbufµÄÊ£Óà¿Õ¼äĞ¡ÓÚµÈÓÚmaxµÄ»°£¬¾ÍĞèÒª×·¼Ó·ÖÅä¿Õ¼ä
+	if(maxlen >= buf->size - buf->cur) //å¦‚æœbufçš„å‰©ä½™ç©ºé—´å°äºç­‰äºmaxçš„è¯ï¼Œå°±éœ€è¦è¿½åŠ åˆ†é…ç©ºé—´
 	{
-		buf->size += 32*1024; //Ò»´ÎĞÔ×·¼Ó·ÖÅä2^15×Ö½Ú
+		buf->size += 32*1024; //ä¸€æ¬¡æ€§è¿½åŠ åˆ†é…2^15å­—èŠ‚
 		buf->data = (char *)realloc(buf->data, buf->size);
 		if(buf->data == NULL)
 		{
@@ -878,11 +878,11 @@ PrintToBuff(Buff_t *buf, size_t maxlen, const char *format, ...)
 		}
 	}
 
-	va_start(ap, format);   //³õÊ¼»¯£¬ÈÃapÖ¸Ïò¿É±ä²ÎÊıÁĞ±íµÄµÚÒ»¸ö²ÎÊı
-	vsnprintf(buf->data + buf->cur, buf->size - buf->cur, format, ap);  //½«¿É±ä²ÎÊı¸ñÊ½»¯Êä³öµ½Ò»¸ö×Ö·ûÊı×é
-	va_end(ap);   //¹Ø±ÕapÖ¸Õë¡£È·±£³ÌĞòµÄ½¡×³ĞÔ
+	va_start(ap, format);   //åˆå§‹åŒ–ï¼Œè®©apæŒ‡å‘å¯å˜å‚æ•°åˆ—è¡¨çš„ç¬¬ä¸€ä¸ªå‚æ•°
+	vsnprintf(buf->data + buf->cur, buf->size - buf->cur, format, ap);  //å°†å¯å˜å‚æ•°æ ¼å¼åŒ–è¾“å‡ºåˆ°ä¸€ä¸ªå­—ç¬¦æ•°ç»„
+	va_end(ap);   //å…³é—­apæŒ‡é’ˆã€‚ç¡®ä¿ç¨‹åºçš„å¥å£®æ€§
 
-	len = strlen(buf->data + buf->cur);  //»ñÈ¡ÊäÈëµÄÊµ¼Ê×Ö·û³¤¶È
+	len = strlen(buf->data + buf->cur);  //è·å–è¾“å…¥çš„å®é™…å­—ç¬¦é•¿åº¦
 	if(len > maxlen)
 	{
 		fprintf(stderr, "Error: length more than expected.\n");
@@ -916,7 +916,7 @@ AxmlToXml(char **outbuf, size_t *outsize, char *inbuf, size_t insize)
 		uint32_t i, n;
 
 		switch(event){
-		case AE_STARTDOC:  //Èç¹ûÊÇÎÄµµ¿ªÊ¼±êÖ¾£¬¾Í´òÓ¡ÏÂÃæ×Ö·û´®µ½buff
+		case AE_STARTDOC:  //å¦‚æœæ˜¯æ–‡æ¡£å¼€å§‹æ ‡å¿—ï¼Œå°±æ‰“å°ä¸‹é¢å­—ç¬¦ä¸²åˆ°buff
 			PrintToBuff(&buf, 50, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
 			break;
 
@@ -993,3 +993,4 @@ AxmlToXml(char **outbuf, size_t *outsize, char *inbuf, size_t insize)
 
 	return 0;
 }
+

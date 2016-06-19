@@ -81,10 +81,10 @@ public class LuaUtil
 		return ret;
 	}
 
-	private static byte[] readAll(InputStream input) throws IOException 
+	public static byte[] readAll(InputStream input) throws IOException 
 	{
 		ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
-		byte[] buffer = new byte[4096];
+		byte[] buffer = new byte[2^32];
 		int n = 0;
 		while (-1 != (n = input.read(buffer)))
 		{

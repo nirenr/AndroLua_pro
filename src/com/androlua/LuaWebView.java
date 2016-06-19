@@ -1,17 +1,17 @@
 package com.androlua;
 
+import android.app.*;
 import android.content.*;
 import android.graphics.*;
+import android.net.*;
 import android.net.http.*;
 import android.os.*;
+import android.util.*;
 import android.view.*;
 import android.webkit.*;
-import com.androlua.LuaWebView.*;
-import android.app.*;
 import android.widget.*;
-import android.graphics.drawable.*;
-import android.net.*;
-import android.util.*;
+import java.io.*;
+import java.util.*;
 
 public class LuaWebView extends WebView
 {
@@ -22,6 +22,14 @@ public class LuaWebView extends WebView
 
 	private DisplayMetrics dm;
 
+	private Dialog open_dlg;
+
+	private ListView open_list;
+	
+	private ValueCallback<Uri> mUploadMessage;
+	
+	private String mDir="/";
+	
 
 	public LuaWebView(LuaActivity context)
 	{
@@ -470,6 +478,7 @@ public class LuaWebView extends WebView
 	{
 		EditText prompt_input_field=new EditText(mContext);
 
+
 		@Override
 		public boolean onJsAlert(WebView view, String url, String message, final android.webkit.JsResult result)
 		{
@@ -587,7 +596,87 @@ public class LuaWebView extends WebView
 			//mContext.setIcon(new BitmapDrawable(icon));
 			super.onReceivedIcon(view, icon);
 		}
-
+		// For Android 3.0+  
+		public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType) {    
+			if (mUploadMessage != null) return;  
+			mUploadMessage = uploadMsg;     
+			openFile(mDir);  
+		}  
+		// For Android < 3.0  
+		public void openFileChooser(ValueCallback<Uri> uploadMsg) {  
+			openFileChooser( uploadMsg, "" );  
+		}  
+		// For Android  > 4.1.1  
+		public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {  
+			openFileChooser(uploadMsg, acceptType);  
+		}  
 	}
 
+	
+	public void openFile(String dir)
+	{
+		if (open_dlg == null)
+		{
+			open_dlg = new Dialog(getContext());
+			open_list = new ListView(getContext());
+			open_list.setFastScrollEnabled(true);
+			open_list.setFastScrollAlwaysVisible(true);
+			open_dlg.setContentView(open_list);
+
+			open_list.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
+					@Override
+					public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4)
+					{
+						String t=((TextView)p2).getText().toString();
+						if (t.equals("../"))
+						{
+							mDir = new File(mDir).getParent()+"/";
+							openFile(mDir);
+							return;
+						}
+						String fn=mDir + t;
+						File f=new File(fn);
+						if (f.isDirectory())
+						{
+							mDir = fn;
+							openFile(mDir);
+							return;
+						}
+						mUploadMessage.onReceiveValue(Uri.parse(fn));
+						}
+				});
+
+		}
+
+		File d=new File(dir);
+		ArrayList<String> ns=new ArrayList<String>();
+		ns.add("../");
+
+
+		String[] fs=d.list();
+		if (fs != null)
+		{
+			Arrays.sort(fs);
+			for (String k:fs)
+			{
+				if (new File(mDir + k).isDirectory())
+					ns.add(k + "/");
+			}
+
+			for (String k:fs)
+			{
+				if (new File(mDir + k).isFile())
+					ns.add(k);
+			}
+
+		}
+
+		ArrayAdapter adapter=new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, ns);
+		open_list.setAdapter(adapter);
+		open_dlg.setTitle(mDir);
+		open_dlg.show();
+	}
+	
+	
 }

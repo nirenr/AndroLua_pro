@@ -3,6 +3,7 @@
 	<style name="WelcomeTheme" parent="android:Theme.Holo.Light.NoActionBar">
 		<item name="android:windowNoTitle">true</item>
 		<item name="android:windowBackground">@drawable/welcome</item>
-		<!-- All customizations that are NOT specific to a particular API-level can go here. -->
+		<!--item name="android:windowIsTranslucent">true</item>
+	    <item name="android:windowAnimationStyle">@+android:style/Animation.Translucent</item-->
 	</style>
 </resources>

@@ -12,8 +12,8 @@ typedef struct{
 	char uri[4];		/* uri of its namespace */
 	char name[4];
 	char string[4];	/* attribute value if type == ATTR_STRING */
-	char type[4];		/* attribute type, == ATTR_*  Ö¸¶¨ÊôĞÔÖµµÃÀàĞÍ£¬Èçstring, int, floatµÈ*/
-	char data[4];		/* attribute value, encoded on type ÊôĞÔµÄÖµ£¬¸ÃÖµ¸ù¾İÊôĞÔµÄ type½øĞĞ±àÂë*/
+	char type[4];		/* attribute type, == ATTR_*  æŒ‡å®šå±æ€§å€¼å¾—ç±»å‹ï¼Œå¦‚string, int, floatç­‰*/
+	char data[4];		/* attribute value, encoded on type å±æ€§çš„å€¼ï¼Œè¯¥å€¼æ ¹æ®å±æ€§çš„ typeè¿›è¡Œç¼–ç */
 } Attribute_t;
 
 
@@ -34,7 +34,7 @@ static void skipUint32(FileAssit_t *hp){
 	hp->cur += 4;
 }
 /*
-½«´ó¶Ë±íÊ¾µÄuint_32×ª»»³ÉĞ¡¶Ë±íÊ¾µÄ4×Ö½ÚÊı¾İºó£¬´æ´¢µ½Ä¿±êµØÖ·
+å°†å¤§ç«¯è¡¨ç¤ºçš„uint_32è½¬æ¢æˆå°ç«¯è¡¨ç¤ºçš„4å­—èŠ‚æ•°æ®åï¼Œå­˜å‚¨åˆ°ç›®æ ‡åœ°å€
 */
 static void copyUint32(char *to, uint32_t value){
 	/**/
@@ -48,16 +48,16 @@ static void copyUint32(char *to, uint32_t value){
 }
 
 /*
-ÔÚstringÖĞ²åÈëÁ½¸ö×Ö·û´®chouchou.class£¬ºÍname
+åœ¨stringä¸­æ’å…¥ä¸¤ä¸ªå­—ç¬¦ä¸²chouchou.classï¼Œå’Œname
 */
 void modifyStringChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
 	char appendString[32] = {0x0E,0x00,0x63,0x00,0x68,0x00,0x6F,0x00,0x75,0x00,0x63,0x00,0x68,0x00,0x6F,0x00,0x75,0x00,
-		0x2E,0x00,0x63,0x00,0x6C,0x00,0x61,0x00,0x73,0x00,0x73,0x00,0x00,0x00}; //chouchou.classµÄUTF-16±àÂë
-	char appendString2[12] = {0x04,0x00,0x6E,0x00,0x61,0x00,0x6D,0x00,0x65,0x00,0x00,0x00}; //nameµÄUTF-16±àÂë
-	//ÎÊÌâ£¬Ò»¶¨Òª½øĞĞ4×Ö½Ú¶ÔÆë²Ù×÷£¡¿¼ÂÇµ½Èç¹ûÓĞstyleData¶Î£¬ÄÇÃ´Ô­string±¾Éí¾ÍÃ»½øĞĞ4×Ö½Ú¶ÔÆë£¬Ö±½ÓÔÚºóÃæ¼ÓÉÏstring£¬È»ºó¾ö¶¨ÊÇ·ñ¶ÔĞÂ¼ÓÈëµÄstring½øĞĞ4×Ö½Ú¶ÔÆë¡£
-	//Èç¹ûÃ»styleData¶Î£¬ÄÇÃ´Ô­string±¾Éí¾Í½øĞĞÁË4×Ö½Ú¶ÔÆë£¬ÎÒÃÇÖ»ĞèÒª¸ù¾İÌí¼ÓµÄstring lengthÀ´¾õµÃÊÇ·ñ½øĞĞ4×Ö½Ú¶ÔÆë¼´¿É¡£
-	//Õâ¾ÍÉæ¼°µ½stringchunksizeµÄ¸Ä±äºÍstyleOffsetµÄ¸Ä±ä,ËùÒÔÎÒÃÇÖ»ÓĞÔÚ×îºó²ÅÄÜÈ·¶¨Á½ÕßµÄ´óĞ¡~
-	//×ÜÖ®¶ÔÆë²Ù×÷±È½ÏÂé·³£¬ĞèÒªÌØ±ğ×¢Òâ
+		0x2E,0x00,0x63,0x00,0x6C,0x00,0x61,0x00,0x73,0x00,0x73,0x00,0x00,0x00}; //chouchou.classçš„UTF-16ç¼–ç 
+	char appendString2[12] = {0x04,0x00,0x6E,0x00,0x61,0x00,0x6D,0x00,0x65,0x00,0x00,0x00}; //nameçš„UTF-16ç¼–ç 
+	//é—®é¢˜ï¼Œä¸€å®šè¦è¿›è¡Œ4å­—èŠ‚å¯¹é½æ“ä½œï¼è€ƒè™‘åˆ°å¦‚æœæœ‰styleDataæ®µï¼Œé‚£ä¹ˆåŸstringæœ¬èº«å°±æ²¡è¿›è¡Œ4å­—èŠ‚å¯¹é½ï¼Œç›´æ¥åœ¨åé¢åŠ ä¸Šstringï¼Œç„¶åå†³å®šæ˜¯å¦å¯¹æ–°åŠ å…¥çš„stringè¿›è¡Œ4å­—èŠ‚å¯¹é½ã€‚
+	//å¦‚æœæ²¡styleDataæ®µï¼Œé‚£ä¹ˆåŸstringæœ¬èº«å°±è¿›è¡Œäº†4å­—èŠ‚å¯¹é½ï¼Œæˆ‘ä»¬åªéœ€è¦æ ¹æ®æ·»åŠ çš„string lengthæ¥è§‰å¾—æ˜¯å¦è¿›è¡Œ4å­—èŠ‚å¯¹é½å³å¯ã€‚
+	//è¿™å°±æ¶‰åŠåˆ°stringchunksizeçš„æ”¹å˜å’ŒstyleOffsetçš„æ”¹å˜,æ‰€ä»¥æˆ‘ä»¬åªæœ‰åœ¨æœ€åæ‰èƒ½ç¡®å®šä¸¤è€…çš„å¤§å°~
+	//æ€»ä¹‹å¯¹é½æ“ä½œæ¯”è¾ƒéº»çƒ¦ï¼Œéœ€è¦ç‰¹åˆ«æ³¨æ„
 	uint32_t stringChunkSize = 0;
 	uint32_t stringCount = 0;
 	uint32_t styleCount = 0;
@@ -78,66 +78,66 @@ void modifyStringChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
 	out->cur += 4;
 	styleCount = getUint32(in);
 	in->cur -= 4;
-	copyDataWithPosChange(out, in, 4*2); //stylesCount ºÍ reverse
+	copyDataWithPosChange(out, in, 4*2); //stylesCount å’Œ reverse
 	stringOffset = getUint32(in);
-    copyUint32(out->data + out->cur, stringOffset + 4*2); //ÓÉÓÚ²åÈëÁË2¸ö×Ö·û´®£¬ËùÒÔĞèÒªÌí¼ÓÁ½¸ö4×Ö½ÚµÄÆ«ÒÆÌõÄ¿£¬ËùÒÔstringOffsetÒª¼Ó8£¡
+    copyUint32(out->data + out->cur, stringOffset + 4*2); //ç”±äºæ’å…¥äº†2ä¸ªå­—ç¬¦ä¸²ï¼Œæ‰€ä»¥éœ€è¦æ·»åŠ ä¸¤ä¸ª4å­—èŠ‚çš„åç§»æ¡ç›®ï¼Œæ‰€ä»¥stringOffsetè¦åŠ 8ï¼
 	out->cur += 4;
-	styleOffset = getUint32(in); //styleOffset¿ÉÄÜ»á¸Ä±ä£¬ËùÒÔÕâÀï¾Í²»Ö±½ÓcopyÁË
-	if(styleOffset == 0){ //ËµÃ÷Ã»ÓĞstyle£¬¿ÉÒÔÖ±½Ócopy
+	styleOffset = getUint32(in); //styleOffsetå¯èƒ½ä¼šæ”¹å˜ï¼Œæ‰€ä»¥è¿™é‡Œå°±ä¸ç›´æ¥copyäº†
+	if(styleOffset == 0){ //è¯´æ˜æ²¡æœ‰styleï¼Œå¯ä»¥ç›´æ¥copy
 		in->cur -= 4;
 		copyDataWithPosChange(out, in, 4);
 		stringLen = stringChunkSize - stringOffset;
-	}else{ //ËµÃ÷ÓĞstyle£¬ÄÇÃ´ÔÚ²åÈëstringºóstyleOffset»á¸Ä±ä
-		//styleOffset×îºóÔÙ½øĞĞ¸³Öµ
+	}else{ //è¯´æ˜æœ‰styleï¼Œé‚£ä¹ˆåœ¨æ’å…¥stringåstyleOffsetä¼šæ”¹å˜
+		//styleOffsetæœ€åå†è¿›è¡Œèµ‹å€¼
 		out->cur += 4;
 		stringLen = styleOffset - stringOffset;
 	}
-	//copy stringCount ¸ö string Æ«ÒÆÖµ
+	//copy stringCount ä¸ª string åç§»å€¼
 	copyDataWithPosChange(out, in, stringCount * 4);
-	/*È»ºóÔÚ´ËÊ±µÄout->dataÖĞ²åÈë2¸östringÆ«ÒÆÖµ£¬Ö¸ÏòÎÒÃÇ²åÈëµÄ×Ö·û´®µÄÊ×µØÖ·*/
+	/*ç„¶ååœ¨æ­¤æ—¶çš„out->dataä¸­æ’å…¥2ä¸ªstringåç§»å€¼ï¼ŒæŒ‡å‘æˆ‘ä»¬æ’å…¥çš„å­—ç¬¦ä¸²çš„é¦–åœ°å€*/
 	addStringOffset = stringLen;
-	addStringOffset_alied = (addStringOffset+0x03)&(~0x03);  //ËäÈ»ÔÚÃ»ÓĞstyleµÄÇé¿öÏÂstringLen±¾Éí¾ÍÊÇ4µÄÕûÊı±¶£¬µ«ÔÚÓĞstyleµÄÇé¿öÏÂ¾Í²»Ò»¶¨ÁË~
-	addStringOffset2 = addStringOffset_alied + 32;  //Ìí¼ÓÉÏchouchou.classµÄ´óĞ¡
-	addStringOffset_alied2 = (addStringOffset2+0x03)&(~0x03); //ÎªÁË·½±ãÒÔºóÀ©Õ¹£¬ÕâÀïaddStringOffset2ËäÈ»ÊÇ4µÄÕûÊı±¶£¬µ«»¹ÊÇ½øĞĞÒ»´Î¶ÔÆë°É
+	addStringOffset_alied = (addStringOffset+0x03)&(~0x03);  //è™½ç„¶åœ¨æ²¡æœ‰styleçš„æƒ…å†µä¸‹stringLenæœ¬èº«å°±æ˜¯4çš„æ•´æ•°å€ï¼Œä½†åœ¨æœ‰styleçš„æƒ…å†µä¸‹å°±ä¸ä¸€å®šäº†~
+	addStringOffset2 = addStringOffset_alied + 32;  //æ·»åŠ ä¸Šchouchou.classçš„å¤§å°
+	addStringOffset_alied2 = (addStringOffset2+0x03)&(~0x03); //ä¸ºäº†æ–¹ä¾¿ä»¥åæ‰©å±•ï¼Œè¿™é‡ŒaddStringOffset2è™½ç„¶æ˜¯4çš„æ•´æ•°å€ï¼Œä½†è¿˜æ˜¯è¿›è¡Œä¸€æ¬¡å¯¹é½å§
 	*externSize += (addStringOffset_alied - addStringOffset + addStringOffset_alied2 - addStringOffset2);
-	//ÉèÖÃchochou.classµÄÆ«ÒÆÖµ
+	//è®¾ç½®chochou.classçš„åç§»å€¼
 	copyUint32(out->data + out->cur, addStringOffset_alied);
 	out->cur += 4;
-	//ÉèÖÃnameµÄÆ«ÒÆÖµ
+	//è®¾ç½®nameçš„åç§»å€¼
 	copyUint32(out->data + out->cur, addStringOffset_alied2);
 	out->cur += 4;
 
-	//È»ºó¾ÍÊÇÁ¬ĞøµÄn¸ö stylesÆ«ÒÆÖµ¡£
+	//ç„¶åå°±æ˜¯è¿ç»­çš„nä¸ª stylesåç§»å€¼ã€‚
 	copyDataWithPosChange(out, in, styleCount * 4);
-	//È»ºó¾ÍÊÇstring data
+	//ç„¶åå°±æ˜¯string data
 	copyDataWithPosChange(out, in, stringLen);
 
-	//²åÈë¡°chochou.class¡± ÕâÀïÓÉÓÚ²åÈëµÄ32×Ö½Ú¸ÕºÃÎª4µÄ±¶Êı£¬ËùÒÔ¾Í²»ĞèÒª½øĞĞ¶ÔÆëÁË¡£Áô´ıÒÔºóÌí¼Ó°É~
+	//æ’å…¥â€œchochou.classâ€ è¿™é‡Œç”±äºæ’å…¥çš„32å­—èŠ‚åˆšå¥½ä¸º4çš„å€æ•°ï¼Œæ‰€ä»¥å°±ä¸éœ€è¦è¿›è¡Œå¯¹é½äº†ã€‚ç•™å¾…ä»¥åæ·»åŠ å§~
 	memcpy(out->data + out->cur, appendString, 32);
 	out->cur += 32;
-	//²åÈë"name",Í¬Ñù²»ĞèÒª¶ÔÆë
+	//æ’å…¥"name",åŒæ ·ä¸éœ€è¦å¯¹é½
 	memcpy(out->data + out->cur, appendString2, 12);
 	out->cur += 12;
 
-	/*Ìí¼Ó³¤¶È¸ÕºÃÎª4µÄÕûÊı±¶£¬ËùÒÔÌí¼ÓµÄ×Ö·û´®±¾Éí²»Éæ¼°¶ÔÆë²Ù×÷¡£Èç¹ûÒªÌí¼ÓÆäËûµÄ×Ö·û´®£¬½øĞĞÏàÓ¦µÄĞŞ¸Ä¼´¿É*/
+	/*æ·»åŠ é•¿åº¦åˆšå¥½ä¸º4çš„æ•´æ•°å€ï¼Œæ‰€ä»¥æ·»åŠ çš„å­—ç¬¦ä¸²æœ¬èº«ä¸æ¶‰åŠå¯¹é½æ“ä½œã€‚å¦‚æœè¦æ·»åŠ å…¶ä»–çš„å­—ç¬¦ä¸²ï¼Œè¿›è¡Œç›¸åº”çš„ä¿®æ”¹å³å¯*/
 	//chouchou.class
-	*externSize += 32; //×Ö·û´®³¤¶È
-	*externSize += 4;  //ĞèÒªÎª¸Ã×Ö·û´®Ìí¼ÓÒ»¸ö4×Ö½ÚµÄÆ«ÒÆ±íÏî
+	*externSize += 32; //å­—ç¬¦ä¸²é•¿åº¦
+	*externSize += 4;  //éœ€è¦ä¸ºè¯¥å­—ç¬¦ä¸²æ·»åŠ ä¸€ä¸ª4å­—èŠ‚çš„åç§»è¡¨é¡¹
 	//name
 	*externSize +=12;
 	*externSize += 4;
 
 	if(styleOffset != 0){
-		//¸ù¾İsxternSizeµÄÖµ,È·¶¨µ±Ç°styleOffsetÖµ
+		//æ ¹æ®sxternSizeçš„å€¼,ç¡®å®šå½“å‰styleOffsetå€¼
 		copyUint32(out->data + 0x20,styleOffset + *externSize);
 	}
-	//¸ù¾İsxternSizeµÄÖµ£¬È·¶¨µ±Ç°stringChunckµÄ´óĞ¡
+	//æ ¹æ®sxternSizeçš„å€¼ï¼Œç¡®å®šå½“å‰stringChunckçš„å¤§å°
 	copyUint32(out->data + 0xc, stringChunkSize + *externSize);
 
 }
 
 void modifyResourceChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
-	//Ê×ÏÈ»ñÈ¡Ô­Ê¼resourceChunk´óĞ¡
+	//é¦–å…ˆè·å–åŸå§‹resourceChunkå¤§å°
 	uint32_t resChunkSize = 0;
 	uint32_t resCount = 0;
 	uint32_t needAppendCount = 0;
@@ -148,10 +148,10 @@ void modifyResourceChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
 	copyUint32(out->data + out->cur, resChunkSize + needAppendCount * 4);
 	out->cur += 4;
 
-	//copy Ô­À´µÄresCount¸öresourceID
+	//copy åŸæ¥çš„resCountä¸ªresourceID
 	copyDataWithPosChange(out, in, resCount * 4);
 
-	//ÓÃ0x0Ìî³äÊ£ÏÂµÄresourcesID
+	//ç”¨0x0å¡«å……å‰©ä¸‹çš„resourcesID
 	memset(out->data + out->cur, 0, needAppendCount * 4);
 	out->cur += needAppendCount*4;
 
@@ -171,12 +171,12 @@ void modifyAppTagChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
 	copyUint32(attr.type, 0x03000008);
 	copyUint32(attr.data,  g_curStringCount - 2);
 
-	//ĞŞ¸Ächunksize!!
-	in->cur -= 0x10; //Ö¸Ïòchunksize;
+	//ä¿®æ”¹chunksize!!
+	in->cur -= 0x10; //æŒ‡å‘chunksize;
 	curChunkSize = getUint32(in);
 	curChunkSize += sizeof(Attribute_t);
 	copyUint32(out->data + out->cur - 0x10, curChunkSize);
-	in->cur += 0xc; //Ö¸Ïòtagname
+	in->cur += 0xc; //æŒ‡å‘tagname
 
 	copyDataWithPosChange(out, in, 8); //tagname and flags
 	curAttrCount = getUint32(in);
@@ -185,13 +185,13 @@ void modifyAppTagChunk(FileAssit_t *in, FileAssit_t *out, size_t *externSize){
 	out->cur += 4;
 	copyDataWithPosChange(out, in, 4); //classAttribute
 
-	//²åÈëĞÂÌí¼ÓµÄÊôĞÔ½á¹¹Ìå
+	//æ’å…¥æ–°æ·»åŠ çš„å±æ€§ç»“æ„ä½“
 	memcpy(out->data + out->cur, (char*)&attr, sizeof(Attribute_t));
 	out->cur += sizeof(Attribute_t);
 	*externSize += sizeof(Attribute_t);
 
 
-	/*ºóÃæµÄÊı¾İÓÉÓÚ²»ÓÃ¸Ä±ä£¬ËùÒÔÖ±½Ócopy¼´¿É*/
+	/*åé¢çš„æ•°æ®ç”±äºä¸ç”¨æ”¹å˜ï¼Œæ‰€ä»¥ç›´æ¥copyå³å¯*/
 
 }
 
@@ -199,7 +199,7 @@ int axmlModify(char* inbuf, size_t insize, char *out_filename){
 	FILE *fp;
 	char *outbuf;
 	char *filename = out_filename;
-	size_t externSize = 0;  //À©ÕÅµÄ×Ö½ÚÊı
+	size_t externSize = 0;  //æ‰©å¼ çš„å­—èŠ‚æ•°
 	uint32_t filesize = 0;
 	size_t ret = 0;
 	FileAssit_t input_h, output_h;
@@ -210,7 +210,7 @@ int axmlModify(char* inbuf, size_t insize, char *out_filename){
 		fprintf(stderr, "Error: open output file failed.\n");
 		return -1;
 	}
-	outbuf = (char *)malloc((insize + 300) * sizeof(char));  //¶à·ÖÅä300×Ö½Ú£¬¿ÉÒÔ¸ù¾İ×Ô¼ºÌí¼Ó×Ö·û´®µÄ´óĞ¡½øĞĞÀ©³ä¡£
+	outbuf = (char *)malloc((insize + 300) * sizeof(char));  //å¤šåˆ†é…300å­—èŠ‚ï¼Œå¯ä»¥æ ¹æ®è‡ªå·±æ·»åŠ å­—ç¬¦ä¸²çš„å¤§å°è¿›è¡Œæ‰©å……ã€‚
 	if(outbuf == NULL){
 		fprintf(stderr, "Error: malloc outbuf failed.\n");
 		return -1;
@@ -220,26 +220,26 @@ int axmlModify(char* inbuf, size_t insize, char *out_filename){
 	input_h.cur = 0;
 	output_h.data = outbuf;
 	output_h.cur = 0;
-	//Ê×ÏÈcopyÄ§Êı
+	//é¦–å…ˆcopyé­”æ•°
 	copyDataWithPosChange(&output_h, &input_h, 4);
-	//È»ºó»ñÈ¡ÎÄ¼ş´óĞ¡
+	//ç„¶åè·å–æ–‡ä»¶å¤§å°
 	filesize = getUint32(&input_h);
 	output_h.cur += 4;
 
-	//²åÈëstring²¢¸ü¸ÄstringChunk¿é
+	//æ’å…¥stringå¹¶æ›´æ”¹stringChunkå—
 	modifyStringChunk(&input_h, &output_h, &externSize);
-	//style dataµ½g_res_ChunkSizeOffsetÖ®¼äµÄÊı¾İ£¬ÓÉÓÚ²»ĞèÒª¸Ä¶¯£¬ËùÒÔÖ±½Ócopy
+	//style dataåˆ°g_res_ChunkSizeOffsetä¹‹é—´çš„æ•°æ®ï¼Œç”±äºä¸éœ€è¦æ”¹åŠ¨ï¼Œæ‰€ä»¥ç›´æ¥copy
 	copyDataWithPosChange(&output_h, &input_h, g_res_ChunkSizeOffset - input_h.cur);
 
-	//¸ù¾İcurStringChunkµÄ´óĞ¡¶ÔResourceChunk¿é½øĞĞÌî³ä£¬ÒÔ±ãĞÂÌí¼ÓµÄattrµÄIDºÅÎª0x00000000
+	//æ ¹æ®curStringChunkçš„å¤§å°å¯¹ResourceChunkå—è¿›è¡Œå¡«å……ï¼Œä»¥ä¾¿æ–°æ·»åŠ çš„attrçš„IDå·ä¸º0x00000000
 	modifyResourceChunk(&input_h, &output_h, &externSize);
 	copyDataWithPosChange(&output_h, &input_h, g_appTag_nameOff - input_h.cur);
 
-	//²åÈëattrubition²¢¸ü¸Ä¸ÃattrËùÊôµÄtagChunk¿é
+	//æ’å…¥attrubitionå¹¶æ›´æ”¹è¯¥attræ‰€å±çš„tagChunkå—
 	modifyAppTagChunk(&input_h, &output_h, &externSize);
-	//ĞŞ¸ÄÎÄ¼ş´óĞ¡
+	//ä¿®æ”¹æ–‡ä»¶å¤§å°
 	copyUint32(output_h.data + 4, filesize + externSize);
-	//copyÊ£ÓàµÄ²¿·Ö
+	//copyå‰©ä½™çš„éƒ¨åˆ†
 	copyDataWithPosChange(&output_h, &input_h, filesize - input_h.cur);
 
 	ret = fwrite(output_h.data, 1, output_h.cur, fp);
@@ -252,11 +252,5 @@ int axmlModify(char* inbuf, size_t insize, char *out_filename){
 	fclose(fp);
 
 	return 0;
-
-
-
-
-
-
-
 }
+

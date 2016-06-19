@@ -67,5 +67,10 @@ public class CPtr
 
     /* No-args constructor. */
     CPtr() {}
- 
+	
+	CPtr(long pr) {
+		peer=pr;
+	}
+
+	
 }

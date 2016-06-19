@@ -2497,8 +2497,8 @@ JNIEXPORT void JNICALL Java_com_luajava_LuaState__1pop(JNIEnv *env,
 JNIEXPORT jint JNICALL
 Java_com_luajava_LuaState__1pushGlobalTable(JNIEnv *env, jobject jobj, jlong cptr) {
   lua_State *L = getStateFromCPtr(env, cptr);
-
-  return (jint)lua_pushglobaltable(L);
+  lua_pushglobaltable(L);
+  return 0;
 }
 
 /************************************************************************

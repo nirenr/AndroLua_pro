@@ -74,7 +74,7 @@ int l_tcc_new(lua_State * L)
     /* MUST BE CALLED before any compilation */
     tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 
-	pushtccstate(L,s);
+	pushtccstate(L,&s);
 	return 1;
 }
 
@@ -220,7 +220,7 @@ int l_tcc_run(lua_State * L)
 	s=*(TCCState**)luaL_checkudata(L,1,"TCCState");
 	
 	int top = lua_gettop(L);
-	char* args[top - 1];
+	const char* args[top - 1];
 
 	int i;
 	for (i = 2; i <= top; i++)
@@ -313,11 +313,11 @@ tcc_meta(lua_State *L) {
 }
 
 
-int pushtccstate(lua_State * L, TCCState* p)
+int pushtccstate(lua_State * L, TCCState** p)
 {
 	TCCState **userData;
 	userData = (TCCState **) lua_newuserdata(L, sizeof(p));
-	*userData = p;
+	*userData = *p;
 	tcc_meta(L);
 	return 1;
 }

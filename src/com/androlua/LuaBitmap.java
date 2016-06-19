@@ -13,6 +13,8 @@ public class LuaBitmap
 {
 	static WeakHashMap<String, WeakReference<Bitmap>> cache = new WeakHashMap<String, WeakReference<Bitmap>>();
 
+	private static int l;
+
 	public static boolean checkCache(LuaContext context, String url)
 	{
 		// TODO: Implement this method
@@ -55,8 +57,23 @@ public class LuaBitmap
 		String path=context.getLuaExtDir("cache") + "/" + url.hashCode();
 		File f=new File(path);
 		if (f.exists())
-			return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
-
+		{
+			try
+			{
+				/*HttpURLConnection con=(HttpURLConnection) new URL(url).openConnection();
+				con.setRequestMethod("HEAD");
+				con.setConnectTimeout(1000);
+				con.connect();
+				l = con.getContentLength();
+				android.util.Log.d("lua",l+","+f.length());
+				if(l==f.length())*/
+					return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+			}
+			catch (Exception e)
+			{
+				return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+			}
+		}
 		URL myFileUrl = new URL(url);
 		HttpURLConnection conn = (HttpURLConnection) myFileUrl.openConnection();
 		//conn.setConnectTimeout(0);

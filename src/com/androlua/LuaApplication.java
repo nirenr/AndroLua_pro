@@ -8,7 +8,8 @@ import android.widget.*;
 import com.luajava.*;
 import java.io.*;
 import java.util.*;
-import java.util.zip.*;  
+import java.util.zip.*;
+import android.util.*;  
 
 /** 
  * 在开发应用时都会和Activity打交道，而Application使用的就相对较少了。 
@@ -76,7 +77,7 @@ public class LuaApplication extends Application implements LuaContext
 	
 	
     @Override  
-    public void onCreate() {  
+    public void onCreate() {
 		super.onCreate();  
 		CrashHandler crashHandler = CrashHandler.getInstance();  
 		// 注册crashHandler  
@@ -298,7 +299,7 @@ public class LuaApplication extends Application implements LuaContext
 
 				FileOutputStream out=new FileOutputStream(extDir + File.separator + path);
 				InputStream in=zip.getInputStream(entry);
-				byte[] buf=new byte[4096];
+				byte[] buf=new byte[2^16];
 				int count=0;
 				while ((count = in.read(buf)) != -1)
 				{

@@ -16,7 +16,6 @@ import dalvik.system.*;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
-import java.math.*;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer,LuaContext
 {
@@ -76,12 +75,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
-		setTheme(android.R.style.Theme_Holo_Light);
+		setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
 		//设置主题
 //		Intent intent=getIntent();
 //		int theme=intent.getIntExtra("theme", android.R.style.Theme_Holo_Light_NoActionBar);
-		
-       
+
+
 		StrictMode.ThreadPolicy policy=new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		//设置print界面
@@ -117,9 +116,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			Object[] arg=(Object[]) intent.getSerializableExtra("arg");
 			if (arg == null)
 				arg = new Object[0];
-			
-			luaPath=getLuaPath();
-			
+
+			luaPath = getLuaPath();
+
 			luaLpath = (luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;") + luaLpath;
 			initLua();
 			File icon=new File(luaDir + "/icon.png");
@@ -128,7 +127,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 			doFile(luaPath, arg);
 			isCreate = true;
-			runFunc("main",arg);
+			runFunc("main", arg);
 			runFunc("onCreate", savedInstanceState);
 			if (!isSetViewed)
 				setContentView(layout);
@@ -152,7 +151,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		mOnTouchEvent = L.getLuaObject("onTouchEvent");
 		if (mOnTouchEvent.isNil())
 			mOnTouchEvent = null;
-		
+
 	}
 
 	public String getLuaPath()
@@ -197,13 +196,13 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	{
 		return L;
 	}
-	
+
 	public View getDecorView()
 	{
 		return getWindow().getDecorView();
 	}
 
-	
+
 	public String getLocalDir()
 	{
 		return localDir;
@@ -310,9 +309,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	public DexClassLoader loadDex(String path) throws LuaException
 	{
 		DexClassLoader dex=dexCache.get(path);
-		if(dex!=null)
+		if (dex != null)
 			return dex;
-			
+
 		if (path.charAt(0) != '/')
 			path = luaDir + "/" + path;
 		if (!new File(path).exists())
@@ -323,8 +322,8 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 				path += ".jar";
 			else
 				throw new LuaException(path + " not found");
-		dex= new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
-		dexCache.put(path,dex);
+		dex = new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
+		dexCache.put(path, dex);
 		return dex;
 	}
 
@@ -440,12 +439,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	protected void onNewIntent(Intent intent)
 	{
 		// TODO: Implement this method
-		runFunc("onNewIntent",intent);
+		runFunc("onNewIntent", intent);
 		super.onNewIntent(intent);
 	}
 
-	
-	
+
+
 	@Override
 	protected void onDestroy()
 	{
@@ -608,7 +607,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	public void onConfigurationChanged(Configuration newConfig)
 	{
 		// TODO: Implement this method
-		runFunc("onConfigurationChanged",newConfig);
+		runFunc("onConfigurationChanged", newConfig);
 		//super.onConfigurationChanged(newConfig);
 	}
 

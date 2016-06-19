@@ -519,16 +519,6 @@ t.Enabled=false--暂停定时器
 t.Enabled=true--重新定时器
 t.stop()--停止定时器
 
-new_env()
-参数：无
-返回：一个继承了import模块函数的环境表
-作用：产生一个继承import模块函数的环境表
-function foo()
-    local _ENV=new_env()
-    import "android.widget.*"
-    b=Button(activity)
-    end
-
 luajava.bindClass(s)
 参数：s class的完整名称，支持基本类型
 返回：Java class对象
