@@ -27,6 +27,8 @@ public class PageLayout extends HorizontalScrollView
 
 	private PageLayout.OnPageChangeListener mOnPageChangeListener;
 
+	private int mIdx;
+
 	public PageLayout(Context context)
 	{
 		super(context);
@@ -137,8 +139,9 @@ public class PageLayout extends HorizontalScrollView
 	{
 		//wrapper.getChildAt(idx);
 		smoothScrollTo(mScreenWidth*idx,0);
-		if(mOnPageChangeListener!=null)
+		if(mOnPageChangeListener!=null && mIdx!=idx)
 			mOnPageChangeListener.onPageChange(this,idx);
+		mIdx=idx;
 	}
 	
 	public void showPage(View v)
