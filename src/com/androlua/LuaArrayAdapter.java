@@ -9,6 +9,7 @@ import android.widget.*;
 import com.luajava.*;
 import java.io.*;
 import java.util.*;
+import android.view.animation.*;
 
 public class LuaArrayAdapter extends ArrayListAdapter
 {
@@ -20,6 +21,8 @@ public class LuaArrayAdapter extends ArrayListAdapter
 	private LuaObject mResource;
 
 	private LuaObject loadlayout;
+
+	private Animation mAnimation;
 
 	
 	public LuaArrayAdapter(LuaActivity context,LuaObject resource) throws LuaException
@@ -71,8 +74,20 @@ public class LuaArrayAdapter extends ArrayListAdapter
 			view=convertView;
 		}
 		setHelper(view,getItem(position));
+		view.startAnimation(mAnimation);
 		return view;
 	}
+	
+	public void setAnimation(Animation animation)
+	{
+		this.mAnimation = animation;
+	}
+
+	public Animation getAnimation()
+	{
+		return mAnimation;
+	}
+	
 	
 	private void setHelper(View view, Object value)
 	{

@@ -9,6 +9,7 @@ import java.lang.ref.*;
 import java.util.*;
 import java.io.*;
 import android.util.*;
+import android.view.animation.*;
 
 public class LuaAdapter extends BaseAdapter
 {
@@ -30,6 +31,18 @@ public class LuaAdapter extends BaseAdapter
 	private String[] mTo;
 
 	private boolean mNotifyOnChange=true;
+
+	private Animation mAnimation;
+
+	public void setAnimation(Animation animation)
+	{
+		this.mAnimation = animation;
+	}
+
+	public Animation getAnimation()
+	{
+		return mAnimation;
+	}
 
 	@Override
 	public int getCount()
@@ -172,6 +185,7 @@ public class LuaAdapter extends BaseAdapter
 			}
 
 		}
+		view.startAnimation(mAnimation);
 		return view;
 	}
 
