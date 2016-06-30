@@ -61,6 +61,7 @@ public class LuaObject
 	
 	protected LuaObject(LuaState L)
 	{
+		this.L=L;
 	}
 	/**
 	 * Creates a reference to an object in the variable globalName
@@ -262,6 +263,17 @@ public class LuaObject
 		}
 	}
 
+	public boolean isInteger()
+	{
+		synchronized (L)
+		{
+			push();
+			boolean bool = L.isInteger(-1);
+			L.pop(1);
+			return bool;
+		}
+	}
+	
 	public boolean isString()
 	{
 		synchronized (L)
@@ -361,6 +373,17 @@ public class LuaObject
 		}
 	}
 
+	public long getInteger()
+	{
+		synchronized (L)
+		{
+			push();
+			long lg = L.toInteger(-1);
+			L.pop(1);
+			return lg;
+		}
+	}
+	
 	public String getString()
 	{
 		synchronized (L)
