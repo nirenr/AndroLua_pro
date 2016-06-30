@@ -177,8 +177,9 @@ implements Document.TextFieldMetrics{
 
 	private Typeface _italicTypeface=Typeface.create(Typeface.DEFAULT, Typeface.ITALIC);
 
-	private Pair _caretSpan=new Pair(0,0);
+	private Pair _caretSpan=new Pair(0, 0);
 
+	
 	public FreeScrollingTextField(Context context){
 		super(context);
 		_hDoc = new DocumentProvider(this);
@@ -668,6 +669,7 @@ implements Document.TextFieldMetrics{
 				}
 				
 				char c = row.charAt(i);
+				
 				if (_fieldController.inSelectionRange(currIndex)){
 					paintX += drawSelectedText(canvas, c, paintX, paintY);
 				}
@@ -713,7 +715,7 @@ implements Document.TextFieldMetrics{
 		int originalColor = _brush.getColor();
 		int charWidth = getAdvance(c,paintX);
 		if (paintX > getScrollX() || (paintX) < (getScrollX() + getContentWidth()))
-		
+
 		switch(c){
 			case ' ':
 				if(_showNonPrinting){
@@ -742,8 +744,8 @@ implements Document.TextFieldMetrics{
 					_brush.setColor(originalColor);
 				}
 				else{
-					int i=(paintX-_leftOffset)/getAdvance(' ')%_tabLength;
-					charWidth-=getAdvance(' ')*i;
+					//int i=(paintX-_leftOffset)/getAdvance(' ')%_tabLength;
+					//charWidth-=getAdvance(' ')*i;
 				}
 				break;
 
@@ -1022,7 +1024,7 @@ implements Document.TextFieldMetrics{
 		int charLeft = visibleRange.getFirst();
 		int charRight = visibleRange.getSecond();
 
-		if (charRight-_leftOffset > (getScrollX() + getContentWidth())){
+		if (charRight > (getScrollX() + getContentWidth())){
 			scrollBy = charRight - getScrollX() - getContentWidth();
 		}
 
