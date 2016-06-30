@@ -441,14 +441,33 @@ local function setattribute(root,view,params,k,v,ids)
   end
 end
 
+local function copytable(f,t,b)
+  for k,v in pairs(f) do
+    if k==1 then
+    elseif b or t[k]==nil then
+      t[k]=v
+    end
+  end
+end
+
+
 local function loadlayout(t,root,group)
+    if type(t)=="string" then
+      t=require(t)
+    end
     root=root or _G
     local view,style
+    
     if t.style then
       if t.style:find("^%?") then
         style=getIdentifier(t.style:sub(2,-1))
       else
-        style=checkattr(t.style)
+        local st,sty=pcall(require,t.style)
+        if st then
+           copytable(sty,t)
+        else
+          style=checkattr(t.style)
+        end
       end
     end
     if not t[1] then
@@ -480,7 +499,7 @@ local function loadlayout(t,root,group)
     end
 
     for k,v in pairs(t) do
-      if tonumber(k) and type(v)=="table" then --创建子view
+      if tonumber(k) and (type(v)=="table" or type(v)=="string") then --创建子view
         view.addView(loadlayout(v,root,t[1]))
       elseif k=="id" then --创建view的全局变量
         rawset(root,v,view)
