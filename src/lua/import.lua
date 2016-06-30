@@ -181,11 +181,17 @@ function dump(o)
     elseif type(o)==('string') then
       table.insert(t,string.format('%q',o))
     elseif type(o)==('table') then
+      local mt=getmetatable(o)
+      if mt and mt.__tostring then
+        table.insert(t,tostring(o))
+      else
       deep = deep + 2
       table.insert(t,'{')
 
       for k,v in pairs(o) do
-        if v~=package.loaded and v~=_G then
+        if v==_G then
+          table.insert(t,string.format('\r\n%s%s\t=%s ;',string.rep(space, deep - 1),k,"_G"))
+        elseif v~=package.loaded then
           if tonumber(k) then
             k=string.format('[%s]',k)
           else
@@ -193,14 +199,14 @@ function dump(o)
           end
           table.insert(t,string.format('\r\n%s%s\t= ',string.rep(space, deep - 1),k))
           if type(v)==('table') then
-            if _t[k]==nil then
-              _t[k]=v
+            if _t[tostring(v)]==nil then
+              _t[tostring(v)]=v
               local _k=_k..k
-              _t[tostring(k)]=_k
+              _t[tostring(v)]=_k
               _ToString(v,_k)
             else
-              table.insert(t,tostring(_t[tostring(k)]))
-              table.insert(t,',')
+              table.insert(t,tostring(_t[tostring(v)]))
+              table.insert(t,';')
             end
           else
             _ToString(v,_k)
@@ -209,13 +215,67 @@ function dump(o)
       end
       table.insert(t,string.format('\r\n%s}',string.rep(space, deep-1)))
       deep = deep - 2
+      end
     else
       table.insert(t,tostring(o))
     end
+    table.insert(t," ;")
     return t
   end
   t=_ToString(o,'')
   return table.concat(t)
+end
+
+local NIL={}
+setmetatable(NIL,{__tostring=function()return "nil" end})
+
+function printstack()
+  local stacks={}
+  for m=2,16 do
+    local dbs={}
+    local info=debug.getinfo(m)
+    if info==nil then
+      break
+    end
+    table.insert(stacks,dbs)
+    dbs.info=info
+    local func=info.func
+    local nups=info.nups
+    local ups={}
+    dbs.upvalues=ups
+    for n=1,nups do
+      local n,v=debug.getupvalue(func,n)
+      if v==nil then
+        v=NIL
+      end
+      ups[n]=v
+    end
+    local lps={}
+    dbs.localvalues=lps
+    for n=-1,-255,-1 do
+      local k,v=debug.getlocal(m,n)
+      if k==nil then
+        break
+      end
+      if v==nil then
+        v=NIL
+      end
+     lps[k]=v
+    end
+    for n=1,255 do
+      local n,v=debug.getlocal(m,n)
+      if n==nil then
+        break
+      end
+      if v==nil then
+        v=NIL
+      end
+     lps[n]=v
+    end
+  end
+  print(dump(stacks))
+  -- print("info="..dump(dbs))
+  -- print("_ENV="..dump(ups._ENV or lps._ENV))
 end
 
 import "loadlayout"
