@@ -74,7 +74,8 @@ public class LuaArrayAdapter extends ArrayListAdapter
 			view=convertView;
 		}
 		setHelper(view,getItem(position));
-		view.startAnimation(mAnimation);
+		if(mAnimation!=null)
+			view.startAnimation(mAnimation);
 		return view;
 	}
 	

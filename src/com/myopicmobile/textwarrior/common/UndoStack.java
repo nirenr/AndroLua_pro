@@ -216,7 +216,7 @@ public class UndoStack {
 	
 	
 	private abstract class Command{
-		public final static long MERGE_TIME = 750000000; //750ms in nanoseconds
+		public final static long MERGE_TIME = 1000000000; //750ms in nanoseconds
 		/** Start position of the edit */
 		public int _start;
 		/** Length of the affected segment */

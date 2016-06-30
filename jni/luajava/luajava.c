@@ -132,7 +132,7 @@ static lua_State *getStateFromCPtr(JNIEnv *env, jlong cptr);
 
 static int luaJavaFunctionCall(lua_State *L);
 
-static void pushJNIEnv(JNIEnv *env, lua_State *L);
+void pushJNIEnv(JNIEnv *env, lua_State *L);
 
 int pushJavaObject(lua_State *L, jobject javaObject);
 
@@ -209,6 +209,107 @@ void checkError(JNIEnv *javaEnv, lua_State *L) {
 /********************* Implementations ***************************/
 
 static void init(JNIEnv *javaEnv, lua_State *L) {
+  jclass tempClass;
+
+  if (luajava_api_class == NULL) {
+    tempClass = (*javaEnv)->FindClass(javaEnv, "com/luajava/LuaJavaAPI");
+
+    if (tempClass == NULL) {
+      fprintf(stderr, "Could not find LuaJavaAPI class\n");
+      exit(1);
+    }
+
+    if ((luajava_api_class = (*javaEnv)->NewGlobalRef(javaEnv, tempClass)) == NULL) {
+      fprintf(stderr, "Could not bind to LuaJavaAPI class\n");
+      exit(1);
+    }
+    (*javaEnv)->DeleteLocalRef(javaEnv, tempClass);
+  }
+
+  if (java_function_class == NULL) {
+    tempClass = (*javaEnv)->FindClass(javaEnv, "com/luajava/JavaFunction");
+
+    if (tempClass == NULL) {
+      fprintf(stderr, "Could not find JavaFunction interface\n");
+      exit(1);
+    }
+
+    if ((java_function_class = (*javaEnv)->NewGlobalRef(javaEnv, tempClass)) == NULL) {
+      fprintf(stderr, "Could not bind to JavaFunction interface\n");
+      exit(1);
+    }
+    (*javaEnv)->DeleteLocalRef(javaEnv, tempClass);
+  }
+
+  if (java_function_method == NULL) {
+    java_function_method =
+        (*javaEnv)->GetMethodID(javaEnv, java_function_class, "execute", "()I");
+    if (!java_function_method) {
+      fprintf(stderr, "Could not find <execute> method in JavaFunction\n");
+      exit(1);
+    }
+  }
+
+  if (throwable_class == NULL) {
+    tempClass = (*javaEnv)->FindClass(javaEnv, "java/lang/Throwable");
+
+    if (tempClass == NULL) {
+      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
+      exit(1);
+    }
+
+    throwable_class = (*javaEnv)->NewGlobalRef(javaEnv, tempClass);
+    (*javaEnv)->DeleteLocalRef(javaEnv, tempClass);
+
+    if (throwable_class == NULL) {
+      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
+      exit(1);
+    }
+  }
+
+  if (get_message_method == NULL) {
+    get_message_method = (*javaEnv)->GetMethodID(javaEnv, throwable_class, "getMessage",
+                                             "()Ljava/lang/String;");
+
+    if (get_message_method == NULL) {
+      fprintf(stderr,
+              "Could not find <getMessage> method in java.lang.Throwable\n");
+      exit(1);
+    }
+  }
+
+  if (java_lang_class == NULL) {
+    tempClass = (*javaEnv)->FindClass(javaEnv, "java/lang/Class");
+
+    if (tempClass == NULL) {
+      fprintf(stderr, "Error. Coundn't bind java class java.lang.Class\n");
+      exit(1);
+    }
+
+    java_lang_class = (*javaEnv)->NewGlobalRef(javaEnv, tempClass);
+    (*javaEnv)->DeleteLocalRef(javaEnv, tempClass);
+
+    if (java_lang_class == NULL) {
+      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
+      exit(1);
+    }
+  }
+
+  if (java_string_class == NULL) {
+    tempClass = (*javaEnv)->FindClass(javaEnv, "java/lang/String");
+
+    if (tempClass == NULL) {
+      fprintf(stderr, "Could not find String class\n");
+      exit(1);
+    }
+
+    if ((java_string_class = (*javaEnv)->NewGlobalRef(javaEnv, tempClass)) == NULL) {
+      fprintf(stderr, "Could not bind to String class\n");
+      exit(1);
+    }
+    (*javaEnv)->DeleteLocalRef(javaEnv, tempClass);
+  }
+	
   /* Gets method */
   if (call_method == NULL)
     call_method = (*javaEnv)->GetStaticMethodID(
@@ -1181,6 +1282,8 @@ static const luaL_Reg ljlib[] = {{"bindClass", javaBindClass},
                                  {NULL, NULL}};
 
 LUALIB_API int luaopen_luajava(lua_State *L) {
+  JNIEnv *env;
+
   luaL_register(L, "luajava", ljlib);
   set_info(L);
 
@@ -1190,7 +1293,8 @@ LUALIB_API int luaopen_luajava(lua_State *L) {
   lua_pushboolean(L, 1);
   lua_rawset(L, -3);
   lua_pop(L, 1);
-
+  env = checkEnv(L);
+  init(env, L);
   return 1;
 }
 
@@ -1205,118 +1309,16 @@ JNIEXPORT void JNICALL
 Java_com_luajava_LuaState__1openLuajava(JNIEnv *env, jobject jobj, jlong cptr) {
   lua_State *L;
 
-  jclass tempClass;
-
+  
   L = getStateFromCPtr(env, cptr);
 
   lua_pushstring(L, LUAJAVASTATEINDEX);
   lua_pushinteger(L, (lua_Integer)cptr);
   lua_settable(L, LUA_REGISTRYINDEX);
+  pushJNIEnv(env, L);
 
   // luaopen_luajava( L );
   luaL_requiref(L, "luajava", luaopen_luajava, 1);
-
-  if (luajava_api_class == NULL) {
-    tempClass = (*env)->FindClass(env, "com/luajava/LuaJavaAPI");
-
-    if (tempClass == NULL) {
-      fprintf(stderr, "Could not find LuaJavaAPI class\n");
-      exit(1);
-    }
-
-    if ((luajava_api_class = (*env)->NewGlobalRef(env, tempClass)) == NULL) {
-      fprintf(stderr, "Could not bind to LuaJavaAPI class\n");
-      exit(1);
-    }
-    (*env)->DeleteLocalRef(env, tempClass);
-  }
-
-  if (java_function_class == NULL) {
-    tempClass = (*env)->FindClass(env, "com/luajava/JavaFunction");
-
-    if (tempClass == NULL) {
-      fprintf(stderr, "Could not find JavaFunction interface\n");
-      exit(1);
-    }
-
-    if ((java_function_class = (*env)->NewGlobalRef(env, tempClass)) == NULL) {
-      fprintf(stderr, "Could not bind to JavaFunction interface\n");
-      exit(1);
-    }
-    (*env)->DeleteLocalRef(env, tempClass);
-  }
-
-  if (java_function_method == NULL) {
-    java_function_method =
-        (*env)->GetMethodID(env, java_function_class, "execute", "()I");
-    if (!java_function_method) {
-      fprintf(stderr, "Could not find <execute> method in JavaFunction\n");
-      exit(1);
-    }
-  }
-
-  if (throwable_class == NULL) {
-    tempClass = (*env)->FindClass(env, "java/lang/Throwable");
-
-    if (tempClass == NULL) {
-      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
-      exit(1);
-    }
-
-    throwable_class = (*env)->NewGlobalRef(env, tempClass);
-    (*env)->DeleteLocalRef(env, tempClass);
-
-    if (throwable_class == NULL) {
-      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
-      exit(1);
-    }
-  }
-
-  if (get_message_method == NULL) {
-    get_message_method = (*env)->GetMethodID(env, throwable_class, "getMessage",
-                                             "()Ljava/lang/String;");
-
-    if (get_message_method == NULL) {
-      fprintf(stderr,
-              "Could not find <getMessage> method in java.lang.Throwable\n");
-      exit(1);
-    }
-  }
-
-  if (java_lang_class == NULL) {
-    tempClass = (*env)->FindClass(env, "java/lang/Class");
-
-    if (tempClass == NULL) {
-      fprintf(stderr, "Error. Coundn't bind java class java.lang.Class\n");
-      exit(1);
-    }
-
-    java_lang_class = (*env)->NewGlobalRef(env, tempClass);
-    (*env)->DeleteLocalRef(env, tempClass);
-
-    if (java_lang_class == NULL) {
-      fprintf(stderr, "Error. Couldn't bind java class java.lang.Throwable\n");
-      exit(1);
-    }
-  }
-
-  if (java_string_class == NULL) {
-    tempClass = (*env)->FindClass(env, "java/lang/String");
-
-    if (tempClass == NULL) {
-      fprintf(stderr, "Could not find String class\n");
-      exit(1);
-    }
-
-    if ((java_string_class = (*env)->NewGlobalRef(env, tempClass)) == NULL) {
-      fprintf(stderr, "Could not bind to String class\n");
-      exit(1);
-    }
-    (*env)->DeleteLocalRef(env, tempClass);
-  }
-
-  init(env, L);
-  pushJNIEnv(env, L);
 }
 
 /************************************************************************
@@ -2494,11 +2496,10 @@ JNIEXPORT void JNICALL Java_com_luajava_LuaState__1pop(JNIEnv *env,
 *      Lua Exported Function
 ************************************************************************/
 
-JNIEXPORT jint JNICALL
+JNIEXPORT void JNICALL
 Java_com_luajava_LuaState__1pushGlobalTable(JNIEnv *env, jobject jobj, jlong cptr) {
   lua_State *L = getStateFromCPtr(env, cptr);
   lua_pushglobaltable(L);
-  return 0;
 }
 
 /************************************************************************

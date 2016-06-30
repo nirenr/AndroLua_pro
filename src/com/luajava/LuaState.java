@@ -267,7 +267,7 @@ public class LuaState
 	private synchronized native int  _isThread(long ptr, int idx);
 	private synchronized native int  _isNone(long ptr, int idx);
 	private synchronized native int  _isNoneOrNil(long ptr, int idx);
-	private synchronized native int  _pushGlobalTable(long ptr);
+	private synchronized native void  _pushGlobalTable(long ptr);
 	private synchronized native void _setGlobal(long ptr, String name);
 	private synchronized native int _getGlobal(long ptr, String name);
 
@@ -834,9 +834,9 @@ public class LuaState
 	}
 
 	
-	public synchronized int pushGlobalTable()
+	public synchronized void pushGlobalTable()
 	{
-		return _pushGlobalTable(luaState);
+		_pushGlobalTable(luaState);
 	}
 	
 	public synchronized int getGlobal(String global)

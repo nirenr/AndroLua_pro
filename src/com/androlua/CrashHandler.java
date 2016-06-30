@@ -22,6 +22,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+import java.util.*;
 
 /**
  * UncaughtException处理类,当程序发生Uncaught异常的时候,有该类来接管程序,并记录发送错误报告.
@@ -41,7 +42,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 	//程序的Context对象
 	private Context mContext;
 	//用来存储设备信息和异常信息
-	private Map<String, String> infos = new HashMap<String, String>();
+	private Map<String, String> infos = new LinkedHashMap<String, String>();
 
 	//用于格式化日期,作为日志文件名的一部分
 	private DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
@@ -155,7 +156,28 @@ public class CrashHandler implements UncaughtExceptionHandler
 			try
 			{
 				field.setAccessible(true);
-				infos.put(field.getName(), field.get(null).toString());
+				Object obj=field.get(null);
+				if(obj instanceof String[])
+					infos.put(field.getName(), Arrays.toString((String[])obj));
+				else
+					infos.put(field.getName(), obj.toString());
+				Log.d(TAG, field.getName() + " : " + field.get(null));
+			}
+			catch (Exception e)
+			{
+				Log.e(TAG, "an error occured when collect crash info", e);
+			}
+		}
+		fields = Build.VERSION.class.getDeclaredFields();
+		for (Field field : fields)
+		{
+			try
+			{
+				Object obj=field.get(null);
+				if(obj instanceof String[])
+					infos.put(field.getName(), Arrays.toString((String[])obj));
+				else
+					infos.put(field.getName(), obj.toString());
 				Log.d(TAG, field.getName() + " : " + field.get(null));
 			}
 			catch (Exception e)

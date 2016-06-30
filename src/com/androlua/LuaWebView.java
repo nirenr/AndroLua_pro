@@ -38,6 +38,10 @@ public class LuaWebView extends WebView
 		mContext = context;
 		getSettings().setJavaScriptEnabled(true);
 		getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+		getSettings().setDisplayZoomControls(true);
+		getSettings().setSupportZoom(true);
+		//getSettings().setUseWideViewPort(true);
+		
 		addJavascriptInterface(new LuaJavaScriptinterface(context), "androlua");
 		//requestFocus();
 		setWebViewClient(new WebViewClient()
