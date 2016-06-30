@@ -19,7 +19,8 @@ import java.util.zip.*;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer,LuaContext
 {
-	private static HashMap<String,DexClassLoader> dexCache=new HashMap<String,DexClassLoader>();
+	private static HashMap<String,LuaDexClassLoader> dexCache=new HashMap<String,LuaDexClassLoader>();
+	private static ArrayList<String> prjCache=new ArrayList<String>();
 
 	private LuaState L;
 	private String luaPath;
@@ -70,7 +71,8 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 	private boolean isUpdata;
 
-	private ToolBar mToolBar;
+	private boolean mDebug=true;
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -121,9 +123,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 			luaLpath = (luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;") + luaLpath;
 			initLua();
-			File icon=new File(luaDir + "/icon.png");
-			if (icon.exists())
-				setIcon(new BitmapDrawable(LuaBitmap.getBitmap(this, luaDir + "/icon.png")));
 
 			doFile(luaPath, arg);
 			isCreate = true;
@@ -138,7 +137,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			setContentView(layout);
 			return;
 		}
-
 		mOnKeyDown = L.getLuaObject("onKeyDown");
 		if (mOnKeyDown.isNil())
 			mOnKeyDown = null;
@@ -160,13 +158,24 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		Intent intent=getIntent();
 		Uri uri=intent.getData();
 		String path = null;
-		if (uri != null)
-		{
-			path = uri.getPath();
-			luaPath = path;
-			//luaDir = luaPath.substring(0, luaPath.lastIndexOf("/"));
-			luaDir = new File(luaPath).getParent();
-		}
+		if (uri == null)
+			return null;
+			
+		path = uri.getPath();
+		luaPath = path;
+		File f=new File(path);
+
+		luaDir = new File(luaPath).getParent();
+		if (f.getName().equals("main.lua") && new File(luaDir + "/init.lua").exists())
+			if (!prjCache.contains(luaDir))
+				prjCache.add(luaDir);
+			else
+				for (String p:prjCache)
+					if (luaDir.indexOf(p) == 0)
+					{
+						luaDir = p;
+						break;
+					}
 		return path;
 	}
 
@@ -308,7 +317,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 	public DexClassLoader loadDex(String path) throws LuaException
 	{
-		DexClassLoader dex=dexCache.get(path);
+		LuaDexClassLoader dex=dexCache.get(path);
 		if (dex != null)
 			return dex;
 
@@ -322,10 +331,34 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 				path += ".jar";
 			else
 				throw new LuaException(path + " not found");
-		dex = new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
+		dex = new LuaDexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
 		dexCache.put(path, dex);
 		return dex;
 	}
+
+	private static class LuaDexClassLoader extends DexClassLoader
+	{
+		private static HashMap<String,Class<?>> classCache=new HashMap<String,Class<?>>();
+
+		public LuaDexClassLoader(java.lang.String dexPath, java.lang.String optimizedDirectory, java.lang.String libraryPath, java.lang.ClassLoader parent)
+		{
+			super(dexPath, optimizedDirectory, libraryPath, parent);
+		}
+
+		@Override
+		protected Class<?> findClass(String name) throws ClassNotFoundException
+		{
+			// TODO: Implement this method
+			Class<?> cls=classCache.get(name);
+			if (cls == null)
+			{
+				cls = super.findClass(name);
+				classCache.put(name, cls);
+			}
+			return cls;
+		}
+	}
+
 
 	public Object loadLib(String name) throws LuaException
 	{
@@ -375,29 +408,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		runFunc("onReceive", context, intent);
 	}
 
-	public void setActionBar(ToolBar toolbar)
-	{
-		// TODO: Implement this method
-		mToolBar = toolbar;
-	}
-
-	@Override
-	public void setTitle(CharSequence title)
-	{
-		// TODO: Implement this method
-		if (mToolBar != null)
-			mToolBar.setTitle(title);
-		super.setTitle(title);
-	}
-
-	public void setIcon(Drawable icon)
-	{
-		if (mToolBar != null)
-			mToolBar.setLogo(icon);
-		ActionBar ab = getActionBar();
-		if (ab != null)
-			ab.setIcon(icon);
-	}
 
 	@Override
 	public void onContentChanged()
@@ -689,28 +699,35 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	}
 
 
-	public void newActivity(String path)
+	public void newActivity(String path) throws FileNotFoundException
 	{
 		newActivity(1, path, null);
 	}
 
-	public void newActivity(String path, Object[] arg)
+	public void newActivity(String path, Object[] arg) throws FileNotFoundException
 	{
 		newActivity(1, path, arg);
 	}
 
-	public void newActivity(int req, String path)
+	public void newActivity(int req, String path) throws FileNotFoundException
 	{
 		newActivity(req, path, null);
 	}
 
-	public void newActivity(int req, String path, Object[] arg)
+	public void newActivity(int req, String path, Object[] arg) throws FileNotFoundException
 	{
 		Intent intent = new Intent(this, LuaActivity.class);
 		if (path.charAt(0) != '/')
-			intent.setData(Uri.parse("file://" + luaDir + "/" + path + ".lua"));
-		else
-			intent.setData(Uri.parse("file://" + path));
+			path = luaDir + "/" + path + ".lua";
+		File f=new File(path);
+		if(f.isDirectory() && new File(path+"/main.lua").exists())
+			path+="/main.lua";
+		else if (!f.exists() && !path.endsWith(".lua"))
+			path += ".lua";
+		if (!new File(path).exists())
+			throw new FileNotFoundException(path);
+
+		intent.setData(Uri.parse("file://" + path));
 
 		if (arg != null)
 			intent.putExtra("arg", arg);
@@ -719,29 +736,35 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	}
 
 
-	public void newActivity(String path, int in, int out)
+	public void newActivity(String path, int in, int out) throws FileNotFoundException
 	{
 		newActivity(1, path, in, out, null);
 	}
 
-	public void newActivity(String path, int in, int out, Object[] arg)
+	public void newActivity(String path, int in, int out, Object[] arg) throws FileNotFoundException
 	{
 		newActivity(1, path, in, out, arg);
 	}
 
-	public void newActivity(int req, String path, int in, int out)
+	public void newActivity(int req, String path, int in, int out) throws FileNotFoundException
 	{
 		newActivity(req, path, in, out, null);
 	}
 
 
-	public void newActivity(int req, String path, int in, int out, Object[] arg)
+	public void newActivity(int req, String path, int in, int out, Object[] arg) throws FileNotFoundException
 	{
 		Intent intent = new Intent(this, LuaActivity.class);
 		if (path.charAt(0) != '/')
-			intent.setData(Uri.parse("file://" + luaDir + "/" + path + ".lua"));
-		else
-			intent.setData(Uri.parse("file://" + path));
+			path = luaDir + "/" + path;
+		File f=new File(path);
+		if(f.isDirectory() && new File(path+"/main.lua").exists())
+			path+="/main.lua";
+		else if (!f.exists() && !path.endsWith(".lua"))
+			path += ".lua";
+		if (!new File(path).exists())
+			throw new FileNotFoundException(path);
+		intent.setData(Uri.parse("file://" + path));
 
 		if (arg != null)
 			intent.putExtra("arg", arg);
@@ -792,6 +815,20 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		return LuaBitmap.getBitmap(this, path);
 	}
 
+	public void setContentView(String layout) throws LuaException
+	{
+		setContentView(layout, null);
+	}
+
+	public void setContentView(String layout, LuaObject env) throws LuaException
+	{
+		// TODO: Implement this method
+		LuaObject loadlayout=L.getLuaObject("loadlayout");
+		View view=(View) loadlayout.call(layout, env);
+		super.setContentView(view);
+	}
+
+
 	public void setContentView(LuaObject layout) throws LuaException
 	{
 		setContentView(layout, null);
@@ -801,7 +838,13 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	{
 		// TODO: Implement this method
 		LuaObject loadlayout=L.getLuaObject("loadlayout");
-		View view=(View) loadlayout.call(layout, env);
+		View view = null;
+		if (layout.isString())
+			view = (View) loadlayout.call(layout.getString(), env);
+		else if (layout.isTable())
+			view = (View) loadlayout.call(layout, env);
+		else
+			throw new LuaException("layout may be table or string.");
 		super.setContentView(view);
 	}
 
@@ -824,6 +867,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		L.pushString(luaPath);
 		L.setField(-2, "luapath"); 
 		L.pop(1);
+		initENV();
 
 		JavaFunction print = new LuaPrint(this, L);
 		print.register("print");
@@ -874,6 +918,55 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		call.register("call");
 
 	}
+
+	public void setDebug(boolean isDebug)
+	{
+		mDebug = isDebug;
+	}
+
+
+	private void initENV() throws LuaException
+	{
+		if (!new File(luaDir + "/init.lua").exists())
+			return;
+
+		try
+		{
+			int ok=L.LloadFile(luaDir + "/init.lua");
+			if (ok == 0)
+			{
+				L.newTable();
+				LuaObject env=L.getLuaObject(-1);
+				L.setUpValue(-2, 1);
+				ok = L.pcall(0, 0, 0);
+				if (ok == 0)
+				{
+					LuaObject title=env.getField("appname");
+					if (title.isString())
+						setTitle(title.getString());
+
+					LuaObject debug=env.getField("debugmode");
+					if (debug.isBoolean())
+						mDebug = debug.getBoolean();
+
+					LuaObject theme=env.getField("theme");
+
+					if (theme.isNumber())
+						setTheme((int)theme.getInteger());
+					else if (theme.isString())
+						setTheme(android.R.style.class.getField(theme.getString()).getInt(null));
+
+					return ;
+				}
+			}
+			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
+		}
+		catch (Exception e)
+		{
+			sendMsg(e.getMessage());
+		}
+	}
+
 
 //运行lua脚本
 	public Object doFile(String filePath) 
@@ -1002,7 +1095,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			try
 			{
 				L.setTop(0);
-				L.getGlobal(funcName);
+				L.pushGlobalTable();
+				L.pushString(funcName);
+				L.rawGet(-2);
 				if (L.isFunction(-1))
 				{
 					L.getGlobal("debug");
@@ -1240,6 +1335,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 	public class MainHandler extends Handler
 	{
+
 		@Override 
 		public void handleMessage(Message msg)
 		{ 
@@ -1250,7 +1346,8 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 					{
 
 						String data = msg.getData().getString("data");
-						showToast(data);
+						if (mDebug)
+							showToast(data);
 						status.append(data + "\n");
 					}
 					break;
