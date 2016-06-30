@@ -153,11 +153,14 @@ public class LuaAdapter extends BaseAdapter
 
 					LuaObject obj=holder.getField(to[i]);
 					if (obj.isJavaObject())
-						obj.setField(mField[i], mData.get(position).get(mFrom[i]));
+						if(mField[i].equals("Src"))
+							setHelper((View)obj.getObject(),mData.get(position).get(mFrom[i]));
+						else
+							obj.setField(mField[i], mData.get(position).get(mFrom[i]));
 				}
 				catch (LuaException e)
 				{
-					Log.d("lua","",e);
+					Log.d("lua",e.getMessage());
 				}
 			}
 		}
@@ -185,7 +188,8 @@ public class LuaAdapter extends BaseAdapter
 			}
 
 		}
-		view.startAnimation(mAnimation);
+		if(mAnimation!=null)
+			view.startAnimation(mAnimation);
 		return view;
 	}
 
