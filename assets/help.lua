@@ -4,6 +4,7 @@ import "android.view.*"
 import "android.app.*"
 import "android.net.*"
 import "android.content.*"
+import "autotheme"
 
 help=[===[
 @关于@
@@ -792,12 +793,12 @@ listview.setOnItemClickListener(AdapterView.OnItemClickListener{
         end
     })
 activity.setTitle("帮助")
-activity.setTheme(android.R.style.Theme_Holo_Light)
+activity.setTheme(autotheme())
 local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(list))
 listview.setAdapter(adapter)
 activity.setContentView(listview)
 
-help_dlg=Dialog(activity,android.R.style.Theme_Holo_Light)
+help_dlg=Dialog(activity,autotheme())
 help_sv=ScrollView(activity)
 help_tv=TextView(activity)
 help_tv.setTextSize(20)

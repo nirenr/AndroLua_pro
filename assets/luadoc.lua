@@ -3,8 +3,9 @@ import "android.widget.*"
 import "android.view.*"
 import "com.androlua.*"
 import "android.app.*"
+import "autotheme"
 
-activity.setTheme(android.R.style.Theme_Holo_Light)
+activity.setTheme(autotheme())
 activity.setTitle("Lua参考手册")
 
 items={"目录","返回",}
@@ -20,7 +21,7 @@ function onMenuItemSelected(id,item)
     end
 func={}
 func["目录"]=function()
-    doc_web.loadUrl("file:/android_asset/luadoc/contents.html#contents")
+    doc_web.loadUrl("file://"..activity.getLuaDir().."/luadoc/contents.html#contents")
     end
 
 func["返回"]=function()
@@ -29,7 +30,7 @@ func["返回"]=function()
     end
 
 doc_web=LuaWebView(activity)
-doc_web.loadUrl("file:/android_asset/luadoc/manual.html")
+doc_web.loadUrl("file://"..activity.getLuaDir().."/luadoc/manual.html")
 doc_web.setOnKeyListener(View.OnKeyListener{
     onKey=function (view,keyCode,event)
         if ((keyCode == event.KEYCODE_BACK) and view.canGoBack()) then

@@ -1,6 +1,8 @@
 require "import"
 import "android.widget.*"
-activity.setTheme(android.R.style.Theme_Holo_Light)
+import "autotheme"
+
+activity.setTheme(autotheme())
 activity.setTitle("LogCat")
 items={"All","Lua","Tcc","Error","Warning","Info","Debug","Verbose","Clear"}
 function onCreateOptionsMenu(menu)
