@@ -128,7 +128,6 @@ public class LuaTable extends LuaObject implements Map
 		super(L);
 		L.newTable();
 		registerValue(-1);
-		L.pop(1);
 	}
 	
 }

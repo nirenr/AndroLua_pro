@@ -7,6 +7,7 @@ import android.graphics.*;
 import android.util.*;
 import android.view.*;
 import java.io.*;
+import java.util.zip.*;
 
 public class LuaUtil
 {
@@ -192,6 +193,14 @@ public class LuaUtil
 				f.delete();
 		}
 		//dir.delete();
+	}
+	
+	public static byte[] readZip(String zippath,String filepath) throws IOException
+	{
+		ZipFile zip=new ZipFile(zippath);
+		ZipEntry entey=zip.getEntry(filepath);
+		InputStream is=zip.getInputStream(entey);
+		return readAll(is);
 	}
 
 }

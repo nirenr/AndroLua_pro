@@ -38,7 +38,6 @@ permission={
   READ_CALL_LOG=true,
   WRITE_CALL_LOG=true,
   SYSTEM_ALERT_WINDOW=true,
-  ACCESS_SUPERUSER=true,
   CAMERA=true,
   READ_FRAME_BUFFER=true,
   PERSISTENT_ACTIVITY=true,
@@ -86,7 +85,6 @@ permission_info={
   READ_FRAME_BUFFER="读取帧缓存",
   PERSISTENT_ACTIVITY="永久活动",
   INSTALL_SHORTCUT="安装快捷方式",
-  ACCESS_SUPERUSER="超级用户",
   DOWNLOAD_WITHOUT_NOTIFICATION="直接下载",
 }
 

@@ -266,11 +266,11 @@ public class Lexer
 							//标准库函数
 							tokens.add(new Pair(len, NAME));
 						}
-						else if (lastType == LuaTokenTypes.DOT || lastType == LuaTokenTypes.COLON)
-						{
+						//else if (lastType == LuaTokenTypes.DOT || lastType == LuaTokenTypes.COLON)
+						//{
 							//其他
-							tokens.add(new Pair(len, LITERAL));
-						}
+							//tokens.add(new Pair(len, LITERAL));
+						//}
 						else if (language.isName(name))
 						{
 							tokens.add(new Pair(len, NAME));
