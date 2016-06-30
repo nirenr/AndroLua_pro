@@ -1,0 +1,30 @@
+{
+  LinearLayout;
+  layout_width="fill";
+  {
+    ImageView;
+    id="icon";
+    padding="2dp";
+    layout_width="64dp";
+    layout_height="64dp";
+  };
+  {
+    FrameLayout;
+    padding="2dp";
+    layout_width="fill";
+    layout_height="64dp";
+    {
+      TextView;
+      id="title";
+      layout_width="fill";
+      textSize="20sp";
+    };
+    {
+      TextView;
+      textSize="14sp";
+      id="description";
+      layout_width="fill";
+      layout_gravity="bottom";
+    };
+  };
+};
