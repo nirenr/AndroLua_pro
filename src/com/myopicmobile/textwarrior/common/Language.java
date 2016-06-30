@@ -105,7 +105,7 @@ public abstract class Language
 
 	public void addUserWord(String name)
 	{
-		if(!_ueserCache.contains(name))
+		if(!_ueserCache.contains(name) && !_names.containsKey(name))
 			_ueserCache.add(name);
 		_users.put(name, Lexer.NAME);	
 	}
