@@ -1,27 +1,27 @@
 layout={
   main={
-  LinearLayout,
-  layout_width="fill",
-  layout_height="fill",
-  orientation="vertical";
-  {
-    LuaEditor,
-    id="editor",
-    text= "",
+    LinearLayout,
     layout_width="fill",
     layout_height="fill",
-    layout_weight=1 ,
-    --gravity="top"
-  },
-  {
-   HorizontalScrollView;
-   {
-      LinearLayout;
-      id="ps_bar";
+    orientation="vertical";
+    {
+      LuaEditor,
+      id="editor",
+      text= "",
+      layout_width="fill",
+      layout_height="fill",
+      layout_weight=1 ,
+      --gravity="top"
+    },
+    {
+      HorizontalScrollView;
+      {
+        LinearLayout;
+        id="ps_bar";
+        layout_width="fill";
+      };
       layout_width="fill";
     };
-    layout_width="fill";
-  };
   },
 
   build={
@@ -121,5 +121,21 @@ layout={
         singleLine=true,
       },
     }
-  }
+  },
+  open2={
+    LinearLayout;
+    orientation="vertical";
+    {
+      EditText;
+      layout_width="fill";
+      id="open_edit";
+    };
+    {
+      ListView;
+      layout_width="fill";
+      id="listview2";
+    };
+  };
+
+
 }

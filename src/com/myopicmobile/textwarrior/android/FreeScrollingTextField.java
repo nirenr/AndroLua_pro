@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013 Tah Wei Hoon.
- * All rights reserved. This program and the accompanying materials
+ * All rights "eserved. This program and the accompanying materials
  * are made available under the terms of the Apache License Version 2.0,
  * with full text available at http://www.apache.org/licenses/LICENSE-2.0.html
  *
@@ -11,7 +11,7 @@
  *****************************************************************************
  *
  * --------------------------------- row length
- * Hello World(\n)      =2           | 12
+ * Hello World(\n)                 | 12
  * This is a test of the caret(\n) | 28
  * func|t|ions(\n)                 | 10
  * of this program(EOF)            | 16
@@ -128,7 +128,7 @@ implements Document.TextFieldMetrics{
 	private TextFieldInputConnection _inputConnection;
 	private final Scroller _scroller;
 	private RowListener _rowLis;
-	private SelectionModeListener _selModeLis;
+	private OnSelectionChangedListener _selModeLis;
 
 	protected int _caretPosition = 0;
 	private int _caretRow = 0; // can be calculated, but stored for efficiency purposes
@@ -167,7 +167,7 @@ implements Document.TextFieldMetrics{
 
 	private TextChangeListener _textLis;
 
-	private AutoCompletePanel _autoCompletePanel;
+	protected AutoCompletePanel _autoCompletePanel;
 
 	private int _topOffset;
 
@@ -179,6 +179,16 @@ implements Document.TextFieldMetrics{
 
 	private Pair _caretSpan=new Pair(0, 0);
 
+	private char _emoji;
+
+	private boolean _isLayout;
+
+	private Paint _brushLine;
+
+	private int _alphaWidth;
+
+	private int _spaceWidth;
+		
 	
 	public FreeScrollingTextField(Context context){
 		super(context);
@@ -257,6 +267,7 @@ implements Document.TextFieldMetrics{
 	}
 	
 	public void format(){
+		selectText(false);
 		CharSequence text=AutoIndent.format(createDocumentProvider().toString(), _autoIndentWidth);
 		_hDoc.beginBatchEdit();
 		_hDoc.deleteAt(0,_hDoc.docLength()-1,System.nanoTime());
@@ -277,6 +288,9 @@ implements Document.TextFieldMetrics{
 		_brush = new Paint();
 		_brush.setAntiAlias(true);
 		_brush.setTextSize(BASE_TEXT_SIZE_PIXELS);
+		_brushLine = new Paint();
+		_brushLine.setAntiAlias(true);
+		_brushLine.setTextSize(BASE_TEXT_SIZE_PIXELS);
 		//setBackgroundColor(_colorScheme.getColor(Colorable.BACKGROUND));
 		setLongClickable(true);
 		setFocusableInTouchMode(true);
@@ -289,9 +303,11 @@ implements Document.TextFieldMetrics{
 			}
 		};
 
-		_selModeLis = new SelectionModeListener() {
+		_selModeLis = new OnSelectionChangedListener() {
+
 			@Override
-			public void onSelectionModeChanged(boolean active) {
+			public void onSelectionChanged(boolean active, int selStart, int selEnd) {
+				// TODO: Implement this method
 				if(active)
 					_clipboardPanel.show();
 				else
@@ -344,6 +360,7 @@ implements Document.TextFieldMetrics{
 		_autoCompletePanel.setLanguage(LanguageLua.getInstance());
 		//TODO find out if this function works
 		//setScrollContainer(true);
+		invalidate();
 	}
 
 	private void resetView(){
@@ -353,7 +370,7 @@ implements Document.TextFieldMetrics{
 		_fieldController.setSelectText(false);
 		_fieldController.stopTextComposing();
 		_hDoc.clearSpans();
-		if(getContentWidth() > 0){
+		if(getContentWidth() > 0 || !_hDoc.isWordWrap()){
 			_hDoc.analyzeWordWrap();
 		}
 		_rowLis.onRowChange(0);
@@ -384,7 +401,7 @@ implements Document.TextFieldMetrics{
 		_rowLis = rLis;
 	}
 
-	public void setSelModeListener(SelectionModeListener sLis){
+	public void setOnSelectionChangedListener(OnSelectionChangedListener sLis){
 		_selModeLis = sLis;
 	}
 
@@ -451,7 +468,9 @@ implements Document.TextFieldMetrics{
 			Rect rect=new Rect();
 			getWindowVisibleDisplayFrame(rect);
 			_topOffset = rect.top + rect.height() - getHeight();
-			respan();
+			if(!_isLayout)
+				respan();
+			_isLayout=right>0;
 			invalidate();
 			_autoCompletePanel.setWidth(getWidth()/2);
 		}
@@ -461,11 +480,11 @@ implements Document.TextFieldMetrics{
 	@Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 		super.onSizeChanged(w, h, oldw, oldh);
-		_hDoc.analyzeWordWrap();
+		if(_hDoc.isWordWrap() && oldw!=w)
+			_hDoc.analyzeWordWrap();
 		_fieldController.updateCaretRow();
-		//if (!makeCharVisible(_caretPosition)){
-			//invalidate();
-		//}
+		if(h<oldh)
+			makeCharVisible(_caretPosition);
 	}
 
 	private int useAllDimensions(int measureSpec) {
@@ -565,10 +584,10 @@ implements Document.TextFieldMetrics{
  		if(currIndex < 0){
  			return;
  		}
-		int currLineNum=_hDoc.findLineNumber(currIndex)+1;
+		int currLineNum=isWordWrap() ? _hDoc.findLineNumber(currIndex)+1 : currRowNum+1;
 		int lastLineNum=0;
 		if(_showLineNumbers)
-			_leftOffset=(int) _brush.measureText(_hDoc.getRowCount() + " ");
+			_leftOffset=(int) _brushLine.measureText(_hDoc.getRowCount() + " ");
 		int endRowNum = getEndPaintRow(canvas);
 		int paintX = 0;
 		int paintY = getPaintBaseline(currRowNum);
@@ -589,10 +608,11 @@ implements Document.TextFieldMetrics{
 			
 		Pair currSpan;
 		int spanOffset=0;
+		int spanSize=spans.size();
 		do{
 			currSpan = nextSpan;
 			spanOffset+=currSpan.getFirst();
-			if(spanIndex < spans.size()){
+			if(spanIndex < spanSize){
 				nextSpan = spans.get(spanIndex++);
 			}
 			else{
@@ -600,6 +620,8 @@ implements Document.TextFieldMetrics{
 			}
 		}
 		while(nextSpan != null && spanOffset <= currIndex);
+		int currType=currSpan.getSecond();
+		int lastType=currType;
 		
 		switch(currSpan.getSecond()){
 			case Lexer.KEYWORD:
@@ -617,29 +639,39 @@ implements Document.TextFieldMetrics{
 		//----------------------------------------------
 		// start painting!
 		//----------------------------------------------
-		while (currRowNum <= endRowNum)
+		int rowCount=_hDoc.getRowCount();
+		if(_showLineNumbers){
+			_brushLine.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
+			canvas.drawLine(_leftOffset-_spaceWidth/2,getScrollY(),_leftOffset-_spaceWidth/2,getScrollY()+getHeight(),_brushLine);
+		}
+		
+		while (currRowNum <= endRowNum)  
 		{
 
 			String row = _hDoc.getRow(currRowNum);
-			if(row.length() == 0){
+			int rowLen=_hDoc.getRowSize(currRowNum);
+			if (currRowNum > rowCount) {
 				break;
 			}
 
 			if(_showLineNumbers && currLineNum!=lastLineNum)
 			{
 				lastLineNum=currLineNum;
-				String num=currLineNum + "";
+				String num=String.valueOf(currLineNum);
 				drawLineNum(canvas, num, 0, paintY);
 			}
 			paintX = _leftOffset;
-			for (int i = 0; i < row.length(); ++i)
+			
+			for (int i = 0; i < rowLen; ++i)
 			{
 			 	// check if formatting changes are needed
 			 	if(nextSpan!=null && currIndex>=spanOffset){
 					currSpan = nextSpan;
 					spanOffset+=currSpan.getFirst();
-					spanColor = _colorScheme.getTokenColor(currSpan.getSecond());
+					lastType=currType;
+					currType=currSpan.getSecond();
 					
+					if(lastType!=currType){
 					switch(currSpan.getSecond()){
 						case Lexer.KEYWORD:
 							_brush.setTypeface(_boldTypeface);
@@ -651,9 +683,10 @@ implements Document.TextFieldMetrics{
 							_brush.setTypeface(_defTypeface);
 
 					}
-					
-		 			_brush.setColor(spanColor);
-					if(spanIndex < spans.size()){
+					spanColor = _colorScheme.getTokenColor(currSpan.getSecond());
+					_brush.setColor(spanColor);
+					}
+					if(spanIndex < spanSize){
 		 				nextSpan = spans.get(spanIndex++);
 		 			}
 		 			else{
@@ -668,7 +701,7 @@ implements Document.TextFieldMetrics{
 					drawCaret(canvas, paintX, paintY);
 				}
 				
-				char c = row.charAt(i);
+				char c = _hDoc.charAt(currIndex);//row.charAt(i);
 				
 				if (_fieldController.inSelectionRange(currIndex)){
 					paintX += drawSelectedText(canvas, c, paintX, paintY);
@@ -706,7 +739,6 @@ implements Document.TextFieldMetrics{
 			//canvas.drawRect(0, y+1, lineLength, y+2, _brush);
 			drawTextBackground(canvas,0,_caretY,lineLength);
 			_brush.setColor(0x88000000);
-			canvas.drawLine(_leftOffset-2,getScrollY(),_leftOffset-2,getScrollY()+getHeight(),_brush);
 			_brush.setColor(originalColor);
 		}
 	}
@@ -714,9 +746,13 @@ implements Document.TextFieldMetrics{
 	private int drawChar(Canvas canvas, char c, int paintX, int paintY){
 		int originalColor = _brush.getColor();
 		int charWidth = getAdvance(c,paintX);
-		if (paintX > getScrollX() || (paintX) < (getScrollX() + getContentWidth()))
-
+		
+		if (paintX > getScrollX() || paintX < (getScrollX() + getContentWidth()))
 		switch(c){
+			case 0xd83c:
+			case 0xd83d:
+				_emoji=c;
+				break;
 			case ' ':
 				if(_showNonPrinting){
 					_brush.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
@@ -743,15 +779,17 @@ implements Document.TextFieldMetrics{
 					canvas.drawText(Language.GLYPH_TAB, 0, 1, paintX, paintY, _brush);
 					_brush.setColor(originalColor);
 				}
-				else{
-					//int i=(paintX-_leftOffset)/getAdvance(' ')%_tabLength;
-					//charWidth-=getAdvance(' ')*i;
-				}
 				break;
 
 			default:
-				char[] ca = {c};
-				canvas.drawText(ca, 0, 1, paintX, paintY, _brush);
+				if(_emoji!=0){
+					canvas.drawText(new char[]{_emoji,c},0,2,paintX, paintY,_brush);
+					_emoji=0;
+				}
+				else{
+					char[] ca = {c};
+					canvas.drawText(ca, 0, 1, paintX, paintY, _brush);
+				}
 				break;
 		}
 
@@ -797,10 +835,10 @@ implements Document.TextFieldMetrics{
 	}
 
 	private int drawLineNum(Canvas canvas, String s, int paintX, int paintY){
-		int originalColor = _brush.getColor();
-		_brush.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
-		canvas.drawText(s, paintX, paintY, _brush);
-		_brush.setColor(originalColor);
+		//int originalColor = _brush.getColor();
+		//_brush.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
+		canvas.drawText(s, paintX, paintY, _brushLine);
+		//_brush.setColor(originalColor);
 		return 0;
 	}
 
@@ -823,6 +861,10 @@ implements Document.TextFieldMetrics{
 		int advance;
 
 		switch (c){
+			case 0xd83c:
+			case 0xd83d:
+				advance=0;
+				break;
 			case ' ':
 				advance = getSpaceAdvance();
 				break;
@@ -834,8 +876,15 @@ implements Document.TextFieldMetrics{
 				advance = getTabAdvance();
 				break;
 			default:
-				char[] ca = {c};
-				advance = (int) _brush.measureText(ca, 0, 1);
+				if(_emoji!=0)
+				{
+					char[] ca = {_emoji,c};
+					advance = (int) _brush.measureText(ca, 0, 2);
+				}
+				else{
+					char[] ca = {c};
+					advance = (int) _brush.measureText(ca, 0, 1);
+				}
 				break;
 		}
 
@@ -846,6 +895,10 @@ implements Document.TextFieldMetrics{
 		int advance;
 
 		switch (c){
+			case 0xd83c:
+			case 0xd83d:
+				advance=0;
+				break;
 			case ' ':
 				advance = getSpaceAdvance();
 				break;
@@ -857,14 +910,27 @@ implements Document.TextFieldMetrics{
 				advance = getTabAdvance(x);
 				break;
 			default:
-				char[] ca = {c};
-				advance = (int) _brush.measureText(ca, 0, 1);
+				if(_emoji!=0)
+				{
+					char[] ca = {_emoji,c};
+					advance = (int) _brush.measureText(ca, 0, 2);
+				}
+				else{
+					char[] ca = {c};
+					advance = (int) _brush.measureText(ca, 0, 1);
+				}
 				break;
 		}
 
 		return advance;
 	}
 	
+	public int getCharAdvance(char c){
+		int advance;
+		char[] ca = {c};
+		advance = (int) _brush.measureText(ca, 0, 1);
+		return advance;
+	}
 	
 	protected int getSpaceAdvance(){
 		if(_showNonPrinting){
@@ -872,7 +938,7 @@ implements Document.TextFieldMetrics{
 											0, Language.GLYPH_SPACE.length());
 		}
 		else{
-			return (int) _brush.measureText(" ", 0, 1);
+			return _spaceWidth;
 		}
 	}
 
@@ -892,7 +958,7 @@ implements Document.TextFieldMetrics{
 														 0, Language.GLYPH_SPACE.length());
 		}
 		else{
-			return _tabLength * (int) _brush.measureText(" ", 0, 1);
+			return _tabLength * _spaceWidth;
 		}
 	}
 
@@ -902,8 +968,8 @@ implements Document.TextFieldMetrics{
 														 0, Language.GLYPH_SPACE.length());
 		}
 		else{
-			int i=(x-_leftOffset)/getAdvance(' ')%_tabLength;
-			return (_tabLength-i) * (int) _brush.measureText(" ", 0, 1);
+			int i=(x-_leftOffset)/_spaceWidth%_tabLength;
+			return (_tabLength-i) * _spaceWidth;
 		}
 	}
 	
@@ -1028,8 +1094,8 @@ implements Document.TextFieldMetrics{
 			scrollBy = charRight - getScrollX() - getContentWidth();
 		}
 
-		if (charLeft < getScrollX()){
-			scrollBy = charLeft - getScrollX();
+		if (charLeft < getScrollX()+_alphaWidth){
+			scrollBy = charLeft - getScrollX()-_alphaWidth;
 		}
 
 		return scrollBy;
@@ -1043,32 +1109,44 @@ implements Document.TextFieldMetrics{
 	 */
 	protected Pair getCharExtent(int charOffset){
 		int row = _hDoc.findRowNumber(charOffset);
-		int currOffset = _hDoc.seekChar(_hDoc.getRowOffset(row));
+		int rowOffset = _hDoc.getRowOffset(row);
 		int left = _leftOffset;
 		int right = _leftOffset;
-
-		while(currOffset <= charOffset && _hDoc.hasNext()){
+		boolean isEmoji=false;
+		String rowText = _hDoc.getRow(row);
+		int i = 0;
+		
+		int len=rowText.length();
+		while(rowOffset+i <= charOffset && i < len){
+			char c = rowText.charAt(i);
 			left = right;
-			char c = _hDoc.next();
-			switch (c){
-				case ' ':
-					right += getSpaceAdvance();
+			switch(c)
+			{
+				case 0xd83c:
+				case 0xd83d:
+					isEmoji=true;
+					char[] ca = {c,rowText.charAt(i+1)};
+					right += (int) _brush.measureText(ca, 0, 2);
 					break;
 				case Language.NEWLINE:
 				case Language.EOF:
 					right += getEOLAdvance();
 					break;
+				case ' ':
+					right += getSpaceAdvance();
+					break;
 				case Language.TAB:
 					right += getTabAdvance(right);
 					break;
 				default:
-					char[] ca = {c};
-					right += (int) _brush.measureText(ca, 0, 1);
+					if (isEmoji)
+						isEmoji=false;
+					else
+						right += getCharAdvance(c);
 					break;
 			}
-			++currOffset;
+			++i;
 		}
-
 		return new Pair(left, right);
 	}
 
@@ -1137,21 +1215,36 @@ implements Document.TextFieldMetrics{
 
 		int extent = _leftOffset;
 		int i = 0;
-		x-=getAdvance('a')/2;
-		while(i < rowText.length()){
+		boolean isEmoji = false;
+		
+		//x-=getAdvance('a')/2;
+		int len=rowText.length();
+		while(i < len){
 			char c = rowText.charAt(i);
-			if (c == Language.NEWLINE || c == Language.EOF){
-				extent += getEOLAdvance();
-			}
-			else if (c == ' '){
-				extent += getSpaceAdvance();
-			}
-			else if (c == Language.TAB){
-				extent += getTabAdvance(extent);
-			}
-			else{
-				char[] ca = {c};
-				extent += (int) _brush.measureText(ca, 0, 1);
+			switch(c)
+			{
+				case 0xd83c:
+				case 0xd83d:
+					isEmoji=true;
+					char[] ca = {c,rowText.charAt(i+1)};
+					extent += (int) _brush.measureText(ca, 0, 2);
+					break;
+				case Language.NEWLINE:
+				case Language.EOF:
+					extent += getEOLAdvance();
+					break;
+				case ' ':
+					extent += getSpaceAdvance();
+					break;
+				case Language.TAB:
+					extent += getTabAdvance(extent);
+					break;
+				default:
+					if (isEmoji)
+						isEmoji=false;
+					else
+						extent += getCharAdvance(c);
+					
 			}
 
 			if(extent >= x){
@@ -1160,11 +1253,11 @@ implements Document.TextFieldMetrics{
 
 			++i;
 		}
-
+			
+		
 		if(i < rowText.length()){
 			return charIndex + i;
 		}
-
 		//nearest char is last char of line
 		return charIndex + i - 1;
 	}
@@ -1194,34 +1287,49 @@ implements Document.TextFieldMetrics{
 
 		int extent = 0;
 		int i = 0;
-		x-=getAdvance('a')/2;
-		while(i < rowText.length()){
-			char c = rowText.charAt(i);
-			if (c == Language.NEWLINE || c == Language.EOF){
-				extent += getEOLAdvance();
-			}
-			else if (c == ' '){
-				extent += getSpaceAdvance();
-			}
-			else if (c == Language.TAB){
-				extent += getTabAdvance(extent);
-			}
-			else{
-				char[] ca = {c};
-				extent += (int) _brush.measureText(ca, 0, 1);
-			}
+		boolean isEmoji = false;
 
+		//x-=getAdvance('a')/2;
+		int len=rowText.length();
+		while(i < len){
+			char c = rowText.charAt(i);
+			switch(c)
+			{
+				case 0xd83c:
+				case 0xd83d:
+					isEmoji=true;
+					char[] ca = {c,rowText.charAt(i+1)};
+					extent += (int) _brush.measureText(ca, 0, 2);
+					break;
+				case Language.NEWLINE:
+				case Language.EOF:
+					extent += getEOLAdvance();
+					break;
+				case ' ':
+					extent += getSpaceAdvance();
+					break;
+				case Language.TAB:
+					extent += getTabAdvance(extent);
+					break;
+				default:
+					if (isEmoji)
+						isEmoji=false;
+					else
+						extent += getCharAdvance(c);
+
+			}
+			
 			if(extent >= x){
 				break;
 			}
 
 			++i;
 		}
-
+		
 		if(i < rowText.length()){
 			return charIndex + i;
 		}
-
+		
 		//no char enclosing x
 		return -1;
 	}
@@ -1233,8 +1341,11 @@ implements Document.TextFieldMetrics{
 	 * of text in the viewport.
 	 */
 	int getMaxScrollX(){
-		return Math.max(0,
-						_xExtent - getContentWidth() + _navMethod.getCaretBloat().right+getAdvance('a'));
+		if(isWordWrap())
+			return _leftOffset;
+		else
+			return Math.max(0,
+						_xExtent - getContentWidth() + _navMethod.getCaretBloat().right+_alphaWidth);
 	}
 
 	/**
@@ -1513,7 +1624,11 @@ implements Document.TextFieldMetrics{
 	public final boolean isSelectText(){
 		return _fieldController.isSelectText();
 	}
-
+	
+	public final boolean isSelectText2(){
+		return _fieldController.isSelectText2();
+	}
+	
 	/**
 	 * Enter or exit select mode.
 	 * Invalidates necessary areas for repainting.
@@ -1577,6 +1692,7 @@ implements Document.TextFieldMetrics{
 	public void copy() {
 		if(_selectionAnchor!=_selectionEdge)
 			_fieldController.copy(_clipboardManager);
+		selectText(false);
 	}
 
 	public void paste() {
@@ -1622,7 +1738,9 @@ implements Document.TextFieldMetrics{
 		_boldTypeface=Typeface.create(typeface,Typeface.BOLD);
 		_italicTypeface=Typeface.create(typeface,Typeface.ITALIC);
 		_brush.setTypeface(typeface);
-		_hDoc.analyzeWordWrap();
+		_brushLine.setTypeface(typeface);
+		if(_hDoc.isWordWrap())
+			_hDoc.analyzeWordWrap();
 		_fieldController.updateCaretRow();
 		if(!makeCharVisible(_caretPosition)){
 			invalidate();
@@ -1666,8 +1784,11 @@ implements Document.TextFieldMetrics{
 		_zoomFactor = factor;
 		int newSize = (int) (factor * BASE_TEXT_SIZE_PIXELS);
 		_brush.setTextSize(newSize);
-		_hDoc.analyzeWordWrap();
+		_brushLine.setTextSize(newSize);
+		if(_hDoc.isWordWrap())
+			_hDoc.analyzeWordWrap();
 		_fieldController.updateCaretRow();
+		_alphaWidth=(int)_brush.measureText("a");
 		//if(!makeCharVisible(_caretPosition)){
 			invalidate();
 		//}
@@ -1685,11 +1806,15 @@ implements Document.TextFieldMetrics{
 		double oldWidth=getAdvance('a');
 		_zoomFactor = pix / BASE_TEXT_SIZE_PIXELS;
 		_brush.setTextSize(pix);
-		_hDoc.analyzeWordWrap();
+		_brushLine.setTextSize(pix);
+		if(_hDoc.isWordWrap())
+			_hDoc.analyzeWordWrap();
 		_fieldController.updateCaretRow();
 		double x = getScrollX() * ((double)getAdvance('a') / oldWidth);
 		double y = getScrollY() * ((double)rowHeight() / oldHeight);
 		scrollTo((int)x, (int)y);
+		_alphaWidth=(int)_brush.measureText("a");
+		_spaceWidth=(int)_brush.measureText(" ");
 		//int idx=coordToCharIndex(getScrollX(), getScrollY());
 		//if (!makeCharVisible(idx))
 		{
@@ -1710,7 +1835,8 @@ implements Document.TextFieldMetrics{
 		}
 
 		_tabLength = spaceCount;
-		_hDoc.analyzeWordWrap();
+		if(_hDoc.isWordWrap())
+			_hDoc.analyzeWordWrap();
 		_fieldController.updateCaretRow();
 		if(!makeCharVisible(_caretPosition)){
 			invalidate();
@@ -1757,7 +1883,8 @@ implements Document.TextFieldMetrics{
 	public void setNonPrintingCharVisibility(boolean enable) {
 		if(enable ^ _showNonPrinting){
 			_showNonPrinting = enable;
-			_hDoc.analyzeWordWrap();
+			if(_hDoc.isWordWrap())
+				_hDoc.analyzeWordWrap();
 			_fieldController.updateCaretRow();
 			if (!makeCharVisible(_caretPosition)){
 				invalidate();
@@ -2057,6 +2184,8 @@ implements Document.TextFieldMetrics{
 		private boolean _isInSelectionMode = false;
 		private final Lexer _lexer = new Lexer(this);
 
+		private boolean _isInSelectionMode2;
+
 		/**
 		 * Analyze the text for programming language keywords and redraws the
 		 * text view when done. The global programming language used is set with
@@ -2108,6 +2237,11 @@ implements Document.TextFieldMetrics{
 
 					if(_caretPosition > 0){
 						_hDoc.deleteAt(_caretPosition - 1, System.nanoTime());
+						if(_hDoc.charAt(_caretPosition - 2)==0xd83d || _hDoc.charAt(_caretPosition - 2)==0xd83c){
+							_hDoc.deleteAt(_caretPosition - 2, System.nanoTime());
+							moveCaretLeft(true);
+						}
+						
 						_textLis.onDel(c+"",_caretPosition,1);
 						moveCaretLeft(true);
 						
@@ -2352,7 +2486,11 @@ implements Document.TextFieldMetrics{
 		public final boolean isSelectText(){
 			return _isInSelectionMode;
 		}
-
+		
+		public final boolean isSelectText2(){
+			return _isInSelectionMode2;
+		}
+		
 		/**
 		 * Enter or exit select mode.
 		 * Does not invalidate view.
@@ -2373,7 +2511,8 @@ implements Document.TextFieldMetrics{
 				_selectionEdge = -1;
 			}
 			_isInSelectionMode = mode;
-			_selModeLis.onSelectionModeChanged(mode);
+			_isInSelectionMode2 = mode;
+			_selModeLis.onSelectionChanged(mode,getSelectionStart(),getSelectionEnd());
 		}
 
 		public boolean inSelectionRange(int charOffset){
@@ -2419,7 +2558,8 @@ implements Document.TextFieldMetrics{
 			_caretPosition = _selectionEdge;
 			stopTextComposing();
 			updateCaretRow();
-
+			if(mode)
+				_selModeLis.onSelectionChanged(isSelectText(),_selectionAnchor,_selectionEdge);
 			boolean scrolled = makeCharVisible(_selectionEdge);
 
 			if(scrollToStart){

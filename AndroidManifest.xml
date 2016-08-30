@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest android:versionCode="320" android:versionName="3.2.160701" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest android:versionCode="320" android:versionName="3.2.160830" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
 	<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21"/>
 	<uses-permission android:name="android.permission.CALL_PHONE"/>
 	<uses-permission android:name="android.permission.SEND_SMS"/>
@@ -47,15 +47,15 @@
 		<activity 
 			android:name="com.androlua.Main"
 			android:label="AndroLua+"
-			android:theme="@style/WelcomeTheme"
+			android:theme="@android:style/Theme.Holo.Light.NoActionBar"
 			android:launchMode="singleTask"
 			android:screenOrientation="portrait"
-			android:configChanges="orientation"
+			android:configChanges="orientation|screenSize|keyboardHidden"
 			>
-			<intent-filter>
+			<!--intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 				<category android:name="android.intent.category.LAUNCHER"/>
-			</intent-filter>
+			</intent-filter-->
 			<intent-filter >
 				<action  android:name = "android.intent.action.VIEW"  />
 				<category  android:name = "android.intent.category.DEFAULT"  />
@@ -79,7 +79,7 @@
 			android:label="AndroLua+"
 			android:theme="@android:style/Theme.Holo.Light.NoActionBar"
 			android:screenOrientation="portrait"
-			android:configChanges='orientation'
+			android:configChanges='orientation|screenSize|keyboardHidden'
 			>
 			<intent-filter >
 				<action  android:name = "android.intent.action.VIEW"  />
@@ -116,15 +116,16 @@
 				<data  android:pathPattern = ".*\\.luac"  />
 			</intent-filter >
 		</activity>
-		<!--activity
+		<activity
 			android:name="com.androlua.Welcome"
+			android:label="AndroLua+"
 			android:theme="@style/WelcomeTheme"
 			android:screenOrientation="portrait" >
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
-		</activity-->
+		</activity>
 		<service
 			android:name="com.androlua.LuaService"
 			android:enabled="true" >

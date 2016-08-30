@@ -1,5 +1,5 @@
 ﻿# AndroLua-
-lua 5.3.1 for android pro
+lua 5.3 for android pro
 
 ﻿2.0
 更新Lua5.3.1，

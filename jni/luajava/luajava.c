@@ -91,6 +91,7 @@ static jmethodID create_proxy_method = NULL;
 static jmethodID create_array_method = NULL;
 static jmethodID java_create_method = NULL;
 static jmethodID java_new_method = NULL;
+static jmethodID object_call_method = NULL;
 static jmethodID java_newinstance_method = NULL;
 static jmethodID as_table_method = NULL;
 static jmethodID to_string_method = NULL;
@@ -351,6 +352,9 @@ static void init(JNIEnv *javaEnv, lua_State *L) {
   if (java_new_method == NULL)
     java_new_method = (*javaEnv)->GetStaticMethodID(
         javaEnv, luajava_api_class, "javaNew", "(JLjava/lang/Class;)I");
+  if (object_call_method == NULL)
+    object_call_method = (*javaEnv)->GetStaticMethodID(
+        javaEnv, luajava_api_class, "objectCall", "(JLjava/lang/Object;)I");
   if (java_newinstance_method == NULL)
     java_newinstance_method = (*javaEnv)->GetStaticMethodID(
         javaEnv, luajava_api_class, "javaNewInstance",
@@ -464,7 +468,12 @@ int objectIndex(lua_State *L) {
     key = lua_tostring(L, 2);
     lua_getmetatable(L, 1);
     /* lua stack：1,object;2,key;3,metatable */
-    
+	if(lua_rawgeti(L, 3, (int)obj)==LUA_TNIL){
+      lua_pop(L, 1);
+      lua_newtable(L);
+	  lua_pushvalue(L, -1);
+      lua_rawseti(L, 3, (int)obj);
+	}
     lua_pushvalue(L, 2);
     lua_rawget(L, -2);
     int mtype = lua_type(L, -1);
@@ -474,9 +483,16 @@ int objectIndex(lua_State *L) {
 
     lua_pop(L, 1);
     const char *name = getObjectName(L, javaEnv, *obj);
-    luaL_getsubtable(L, LUA_REGISTRYINDEX, "_CACHE");
+    //luaL_getsubtable(L, 3, "_CACHE");
+    if(lua_rawgeti(L, 3, 0)==LUA_TNIL){
+      lua_pop(L, 1);
+      lua_newtable(L);
+	  lua_pushvalue(L, -1);
+      lua_rawseti(L, 3, 0);
+	}
+    lua_remove(L, 3);
     tag = lua_pushfstring(L, "%s %s", name, key);
-	/* lua stack：1,object;2,key;3,metatable;4,cache;5,tag */
+	/* lua stack：1,object;2,key;3,objtable;4,cache;5,tag */
 
 	lua_pushvalue(L, -1);
     lua_rawget(L, 4);
@@ -626,6 +642,10 @@ int gc(lua_State *L) {
   }
 
   pObj = (jobject *)lua_touserdata(L, 1);
+  lua_getmetatable(L, 1);
+  lua_pushnil(L);
+  lua_rawseti(L, -2, (int)pObj);
+  lua_pop(L, 1);
   /* Gets the JNI Environment */
   javaEnv = checkEnv(L);
 
@@ -740,7 +760,7 @@ int newArray(lua_State *L) {
 
 /***************************************************************************
 *
-*  Function: createProxy
+*  Function: createArray
 *  ****/
 int createArray(lua_State *L) {
   jint ret;
@@ -806,12 +826,18 @@ int javaNew(lua_State *L) {
 
   if ((*javaEnv)->IsInstanceOf(javaEnv, *classInstance, java_lang_class) ==
       JNI_FALSE) {
-    lua_pushstring(L, "Argument not a valid Java Class.");
-    lua_error(L);
+    ret = (*javaEnv)->CallStaticIntMethod(javaEnv, luajava_api_class,
+                                          object_call_method, stateIndex,
+                                          *classInstance);
+    checkError(javaEnv, L);
+	if(ret==0){
+	  lua_pushstring(L, "Can not call a Java Object.");
+      lua_error(L);
+    }
   }
 
   /* if arg is table create array or interface, else create calss instance. */
-  if (lua_type(L, 2) == LUA_TTABLE) {
+  else if (lua_type(L, 2) == LUA_TTABLE && top==2) {
     ret = (*javaEnv)->CallStaticIntMethod(javaEnv, luajava_api_class,
                                           java_create_method, stateIndex,
                                           *classInstance);
@@ -1111,8 +1137,9 @@ int pushJavaObject(lua_State *L, jobject javaObject) {
 
   userData = (jobject *)lua_newuserdata(L, sizeof(jobject));
   *userData = globalRef;
-  // luaL_getmetatable(L, "_javaObjectMeta");
-
+  luaL_setmetatable(L, "_javaObjectMeta");
+  return 1;
+  /*
   lua_newtable(L);
   luaL_setfuncs(L, ljobjectmeta, 0);
   lua_pushstring(L, LUAJAVAOBJECTIND);
@@ -1124,7 +1151,7 @@ int pushJavaObject(lua_State *L, jobject javaObject) {
     lua_error(L);
   }
 
-  return 1;
+  return 1;*/
 }
 
 /***************************************************************************

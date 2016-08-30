@@ -22,7 +22,8 @@ local OnClickListener=bindClass("android.view.View$OnClickListener")
 local TypedValue=luajava.bindClass("android.util.TypedValue")
 local BitmapDrawable=luajava.bindClass("android.graphics.drawable.BitmapDrawable")
 local LuaDrawable=luajava.bindClass "com.androlua.LuaDrawable"
-local ArrayAdapter=bindClass("android.widget.ArrayAdapter")
+local ArrayListAdapter=bindClass("android.widget.ArrayListAdapter")
+local ArrayPageAdapter=bindClass("android.widget.ArrayPageAdapter")
 local ScaleType=bindClass("android.widget.ImageView$ScaleType")
 local scaleTypes=ScaleType.values()
 local android_R=bindClass("android.R")
@@ -75,8 +76,8 @@ local toint={
 
   --android:visibility
   visible=0,
-  invisible=1,
-  gone=2,
+  invisible=4,
+  gone=8,
 
   wrap_content=-2,
   fill_parent=-1,
@@ -360,8 +361,18 @@ local function setattribute(root,view,params,k,v,ids)
   elseif k=="items" and type(v)=="table" then --创建列表项目
     local adapter=ArrayListAdapter(context,android_R.layout.simple_list_item_1, String(v))
     view.setAdapter(adapter)
-  elseif k=="text" then
-    view.setText(v)
+  elseif k=="pages" and type(v)=="table" then --创建页项目
+    local ps={}
+    for n,o in ipairs(v) do
+      local tp=type(o)
+      if tp=="string" or tp=="table" then
+        table.insert(ps,loadlayout(o,root))
+      else
+        table.insert(ps,o)
+      end
+    end
+    local adapter=ArrayPageAdapter(View(ps))
+    view.setAdapter(adapter)
   elseif k=="textSize" then
     if tonumber(v) then
       view.setTextSize(tonumber(v))
@@ -405,8 +416,11 @@ local function setattribute(root,view,params,k,v,ids)
         if (not v:find("^/")) and luadir then
            v=luadir..v
         end
-        --,task([[require "import" url=... return loadbitmap(url)]],v,function(bmp)view.setBackground(BitmapDrawable(bmp))end)
+        if v:find("%.9%.png") then
+        view.setBackground(NineBitmapDrawable(loadbitmap(v)))
+        else
         view.setBackground(BitmapDrawable(loadbitmap(v)))
+        end
       end
     elseif type(v)=="userdata" then
       view.setBackground(v)
@@ -437,7 +451,11 @@ local function setattribute(root,view,params,k,v,ids)
     view.setInputType(0x81)
   elseif type(k)=="string" and not(k:find("layout_")) and not(k:find("padding")) and k~="style" then --设置属性
     k=string.gsub(k,"^(%w)",function(s)return string.upper(s)end)
+    if k=="Text" or k=="Title" or k=="Subtitle" then
+    view["set"..k](v)
+    else
     view["set"..k](checkValue(v))
+    end
   end
 end
 

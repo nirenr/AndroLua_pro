@@ -33,6 +33,8 @@ layout={
 }
 
 luadir,luapath=...
+luadir=luadir or luapath:gsub("/[^/]+$","")
+package.path=package.path..";"..luadir.."/?.lua"
 if luapath:find("%.aly$") then
   local f=io.open(luapath)
   local s=f:read("*a")
@@ -462,7 +464,11 @@ function dumplayout(t)
     elseif type(v)=="table" then
       table.insert(ret,k.."="..dumparray(v))
     elseif type(v)=="string" then
-      table.insert(ret,string.format("%s=\"%s\";\n",k,v))
+      if v:find("[\"\'\r\n]") then
+        table.insert(ret,string.format("%s=[==[%s]==];\n",k,v))
+      else
+        table.insert(ret,string.format("%s=\"%s\";\n",k,v))
+      end
     else
       table.insert(ret,string.format("%s=%s;\n",k,tostring(v)))
     end

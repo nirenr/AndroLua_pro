@@ -118,7 +118,12 @@ public class SlidingLayout extends HorizontalScrollView
 			mMenuWidth = lp.width;
 			mHalfMenuWidth = lp.width / 2;
 			content.getLayoutParams().width = mScreenWidth;
+			wrapper.getLayoutParams().width=mScreenWidth+mMenuWidth;
 		}
+		if(isOpen)
+			openMenu();
+		else
+			closeMenu();
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
 	}
@@ -136,6 +141,7 @@ public class SlidingLayout extends HorizontalScrollView
 				closeMenu();
 			once = true;
 		}
+		
 	}
 
 	@Override

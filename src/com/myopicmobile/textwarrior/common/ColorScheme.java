@@ -91,7 +91,7 @@ public abstract class ColorScheme
 		colors.put(Colorable.FOREGROUND, BLACK);
 		colors.put(Colorable.BACKGROUND, WHITE);
 		colors.put(Colorable.SELECTION_FOREGROUND, WHITE);
-		colors.put(Colorable.SELECTION_BACKGROUND, 0xFF88AA88);
+		colors.put(Colorable.SELECTION_BACKGROUND, 0xFF97C024);
 		colors.put(Colorable.CARET_FOREGROUND, WHITE);
 		colors.put(Colorable.CARET_BACKGROUND, LIGHT_BLUE2);
 		colors.put(Colorable.CARET_DISABLED, GREY);
@@ -115,7 +115,7 @@ public abstract class ColorScheme
 	private static final int GREY = 0xFF808080;
 	private static final int LIGHT_GREY = 0xFFAAAAAA;
 	private static final int MAROON = 0xFF800000;
-	private static final int INDIGO = 0xFF2A00FF;
+	private static final int INDIGO = 0xFF2A40FF;
 	private static final int OLIVE_GREEN = 0xFF3F7F5F;
 	private static final int PURPLE = 0xFFDD4488;
 	private static final int RED = 0x44FF0000;

@@ -72,7 +72,7 @@ public abstract class Language
 		return _keyword;
 	}
 
-	protected void setKeywords(String[] keywords)
+	public void setKeywords(String[] keywords)
 	{
 		_keyword = keywords;
 		_keywords = new HashMap<String, Integer>(keywords.length);
@@ -82,14 +82,19 @@ public abstract class Language
 		}
 	}
 
-	protected void setNames(String[] names)
+	public void setNames(String[] names)
 	{
 		_name = names;
+		ArrayList<String> buf=new ArrayList<String>();
 		_names = new HashMap<String, Integer>(names.length);
-		for (int i = 0; i < names.length; ++i)
+		for (int i = 0; i < names.length; ++i) 
 		{
+			if(!buf.contains(names[i]))
+				buf.add(names[i]);
 			_names.put(names[i], Lexer.NAME);
 		}
+		_name=new String[buf.size()];
+		buf.toArray(_name);
 	}
 
 	public void addBasePackage(String name, String[] names)

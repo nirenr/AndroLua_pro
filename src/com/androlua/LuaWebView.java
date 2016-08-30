@@ -13,8 +13,14 @@ import android.widget.*;
 import java.io.*;
 import java.util.*;
 
-public class LuaWebView extends WebView
+public class LuaWebView extends WebView implements LuaGcable
 {
+
+	@Override
+	public void gc() {
+		// TODO: Implement this method
+		destroy();
+	}
 
 	private LuaActivity mContext;
 
@@ -34,14 +40,16 @@ public class LuaWebView extends WebView
 	public LuaWebView(LuaActivity context)
 	{
 		super(context);
-		context.Webs.add(this);
+		context.regGc(this);
 		mContext = context;
 		getSettings().setJavaScriptEnabled(true);
 		getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 		getSettings().setDisplayZoomControls(true);
 		getSettings().setSupportZoom(true);
 		//getSettings().setUseWideViewPort(true);
-		
+		//getSettings().setUseWideViewPort(true);
+		//getSettings().setLoadWithOverviewMode(true);
+		//getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
 		addJavascriptInterface(new LuaJavaScriptinterface(context), "androlua");
 		//requestFocus();
 		setWebViewClient(new WebViewClient()
@@ -69,6 +77,19 @@ public class LuaWebView extends WebView
 		
 		setWebChromeClient(new LuaWebChromeClient());
 		setDownloadListener(new Download());
+	}
+
+	public void setProgressBarEnabled(boolean visibility) {
+		// TODO: Implement this method
+		if(visibility)
+			mProgressbar.setVisibility(0);
+		else
+			mProgressbar.setVisibility(8);
+	}
+	
+	public void setProgressBar(ProgressBar pb) {
+		// TODO: Implement this method
+		mProgressbar=pb;
 	}
 	
 	@Override

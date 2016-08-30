@@ -118,7 +118,7 @@ local function env_import(env)
       local dexname=package:sub(1,j-1)
       local classname=package:sub(j+1,-1)
       local class=luacontext.loadDex(dexname).loadClass(classname)
-      local classname = package:match('([%w_]+)$')
+      local classname = package:match('([^%.$]+)$')
       _env[classname]=class
       return class
     end
@@ -127,7 +127,7 @@ local function env_import(env)
       append(packages,package:sub(1,-2))
       return import_pacckage(package:sub(1,-2))
     else
-      local classname = package:match('([%w_]+)$')
+      local classname = package:match('([^%.$]+)$')
       local class = import_require(package) or import_class(classname,package) or import_dex_class(classname,package)
       if class then
         if class ~= true then
@@ -362,8 +362,8 @@ function thread(src,...)
     luaThread=LuaThread(activity or service,src,true)
   end
   luaThread.start()
-  setmetamethod(luaThread,"__index",__index)
-  setmetamethod(luaThread,"__newindex",__newindex)
+  --setmetamethod(luaThread,"__index",__index)
+  --setmetamethod(luaThread,"__newindex",__newindex)
   return luaThread
 end
 

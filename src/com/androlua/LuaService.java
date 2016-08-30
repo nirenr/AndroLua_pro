@@ -12,23 +12,40 @@ import android.os.IBinder.*;
 import android.net.*;
 import com.androlua.LuaService.*;
 import dalvik.system.*;
+import java.util.*;
 
 public class LuaService extends Service implements LuaContext
 {
 
+	private ArrayList<LuaGcable> gclist=new ArrayList<LuaGcable>();
+	
 	@Override
-	public String getLuaDir(String dir)
+	public void regGc(LuaGcable obj) {
+		// TODO: Implement this method
+		gclist.add(obj);
+	}
+
+	@Override
+	public String getLuaDir(String name)
 	{
 		// TODO: Implement this method
-		return null;
+		File dir=new File(luaDir + "/" + name);
+		if (!dir.exists())
+			if (!dir.mkdirs())
+				return null;
+		return dir.getAbsolutePath();
 	}
 
 
 	@Override
-	public String getLuaExtDir(String dir)
+	public String getLuaExtDir(String name)
 	{
 		// TODO: Implement this method
-		return null;
+		File dir=new File(luaExtDir + "/" + name);
+		if (!dir.exists())
+			if (!dir.mkdirs())
+				return null;
+		return dir.getAbsolutePath();
 	}
 
 
@@ -538,6 +555,11 @@ public class LuaService extends Service implements LuaContext
 		{
 			return LuaService.this;
 		}
+	}
+	
+	public static LuaService getService()
+	{
+		return _this;
 	}
 	
 	//显示信息

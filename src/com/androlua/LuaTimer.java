@@ -3,9 +3,15 @@ package com.androlua;
 import com.luajava.*;
 import java.util.*;
 
-public class LuaTimer extends TimerX
+public class LuaTimer extends TimerX implements LuaGcable
 {
 
+	@Override
+	public void gc() {
+		// TODO: Implement this method
+		stop();
+	}
+	
 	private LuaTimerTask task;
 	
 	public LuaTimer(LuaContext main,String src) throws LuaException
@@ -15,6 +21,7 @@ public class LuaTimer extends TimerX
 	public LuaTimer(LuaContext main,String src,Object[] arg) throws LuaException
 	{
 		super("LuaTimer");
+		main.regGc(this);
 		task= new LuaTimerTask(main, src,arg);
 	}
 	
@@ -25,6 +32,7 @@ public class LuaTimer extends TimerX
 	public LuaTimer(LuaContext main,LuaObject func,Object[] arg) throws LuaException
 	{
 		super("LuaTimer");
+		main.regGc(this);
 		task= new LuaTimerTask(main, func, arg);
 	}
 	

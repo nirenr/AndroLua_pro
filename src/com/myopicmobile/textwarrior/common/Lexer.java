@@ -186,7 +186,7 @@ public class Lexer
 		private void tokenize()
 		{ 
 			DocumentProvider hDoc = getDocument();
-			ArrayList<Pair> tokens = new ArrayList<Pair>();
+			ArrayList<Pair> tokens = new ArrayList<Pair>(8196);
 			LuaLexer lexer = new LuaLexer(hDoc);
 			Language language = Lexer.getLanguage();
 			language.clearUserWord();

@@ -14,7 +14,7 @@ import android.view.animation.*;
 public class LuaArrayAdapter extends ArrayListAdapter
 {
 
-	private LuaActivity mContext;
+	private LuaContext mContext;
 
 	private LuaState L;
 
@@ -25,14 +25,14 @@ public class LuaArrayAdapter extends ArrayListAdapter
 	private Animation mAnimation;
 
 	
-	public LuaArrayAdapter(LuaActivity context,LuaObject resource) throws LuaException
+	public LuaArrayAdapter(LuaContext context,LuaObject resource) throws LuaException
 	{
 		this(context,resource,new String[0]);
 	}
 	
-	public LuaArrayAdapter(LuaActivity context,LuaObject resource,String[] objects) throws LuaException
+	public LuaArrayAdapter(LuaContext context,LuaObject resource,String[] objects) throws LuaException
 	{
-		super(context,0,objects);
+		super(context.getContext(),0,objects);
 		mContext=context;
 		mResource = resource;
 		L = context.getLuaState();
@@ -66,7 +66,7 @@ public class LuaArrayAdapter extends ArrayListAdapter
 			}
 			catch (LuaException e)
 			{
-				return new View(mContext);
+				return new View(mContext.getContext());
 			}
 		}
 		else
@@ -107,7 +107,7 @@ public class LuaArrayAdapter extends ArrayListAdapter
 				else if (value instanceof Drawable)
 					drawable=(Drawable)value;
 				else if (value instanceof Number)
-					drawable=mContext.getDrawable(0);
+					drawable=mContext.getContext().getDrawable(((Number)value).intValue());
 				
 				img.setImageDrawable(drawable);
 			}
@@ -119,44 +119,53 @@ public class LuaArrayAdapter extends ArrayListAdapter
 		}
 	}
 	
-	
-	private class AsyncLoader extends AsyncTask
+	private Handler mHandler=new Handler(){
+		@Override
+		public void handleMessage(Message msg) {
+			notifyDataSetChanged();
+		}
+
+	};
+	private HashMap<String,Boolean> loaded=new HashMap<String,Boolean>();
+	private class AsyncLoader extends Thread
 	{
-		public Bitmap getBitmap(LuaActivity mContext, String path) throws IOException
+
+		private String mPath;
+
+		private LuaContext mContext;
+		
+		public Bitmap getBitmap(LuaContext context, String path) throws IOException
 		{
 			// TODO: Implement this method
-			if(path.indexOf("http://")!=0)
-				return LuaBitmap.getBitmap(mContext,path);
-			if(LuaBitmap.checkCache(mContext,path))
-				return LuaBitmap.getBitmap(mContext,path);
-			execute(mContext,path);
+			mContext=context;
+			mPath=path;
+			if(!path.startsWith("http://"))
+				return LuaBitmap.getBitmap(context,path);
+			if(LuaBitmap.checkCache(context,path))
+				return LuaBitmap.getBitmap(context,path);
+			if(!loaded.containsKey(mPath)){
+				start();
+				loaded.put(mPath,true);
+			}			
 			return Bitmap.createBitmap(0,0,Bitmap.Config.RGB_565);
 		}
 
 		@Override
-		protected Object doInBackground(Object[] p1)
+		public void run()
 		{
 			// TODO: Implement this method
 			try
 			{
-				LuaBitmap.getBitmap((LuaContext)p1[0], (String)p1[1]);
-				return true;
+				LuaBitmap.getBitmap(mContext, mPath);
+				mHandler.sendEmptyMessage(0);
 			}
 			catch (IOException e)
 			{
-				return null;
+				mContext.sendMsg(e.getMessage());
 			}
 
 		}
 
-		@Override
-		protected void onPostExecute(Object result)
-		{
-			// TODO: Implement this method
-			super.onPostExecute(result);
-			if(result!=null)
-				notifyDataSetChanged();
-		}
 	}
 	
 }

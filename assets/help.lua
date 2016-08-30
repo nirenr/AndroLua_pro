@@ -640,8 +640,8 @@ newTimer(func, arg)
 
     -- android:visibility
     visible=0,
-    invisible=1,
-    gone=2,
+    invisible=4,
+    gone=8,
 
     wrap_content=-2,
     fill_parent=-1,

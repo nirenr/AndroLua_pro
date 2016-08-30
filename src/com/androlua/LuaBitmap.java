@@ -34,7 +34,7 @@ public class LuaBitmap
 
 	public static Bitmap getLoacalBitmap(LuaContext context, String url)
 	{
-		return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(url));
+		return decodeScale(context.getWidth(), new File(url));
 	}
 
 	public static Bitmap getHttpBitmap(String url) throws IOException
@@ -67,11 +67,11 @@ public class LuaBitmap
 				l = con.getContentLength();
 				android.util.Log.d("lua",l+","+f.length());
 				if(l==f.length())*/
-					return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+					return decodeScale(context.getWidth(), new File(path));
 			}
 			catch (Exception e)
 			{
-				return decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+				return decodeScale(context.getWidth(), new File(path));
 			}
 		}
 		URL myFileUrl = new URL(url);
@@ -83,7 +83,7 @@ public class LuaBitmap
 		FileOutputStream out=new FileOutputStream(path);
 		LuaUtil.copyFile(is, out);
 		//Bitmap bitmap = BitmapFactory.decodeStream(is);
-		Bitmap bitmap =decodeScale(((LuaActivity)context.getContext()).getWidth(), new File(path));
+		Bitmap bitmap =decodeScale(context.getWidth(), new File(path));
 		is.close();
 		return bitmap;
 	}

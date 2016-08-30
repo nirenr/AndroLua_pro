@@ -554,9 +554,9 @@ public class LuaState
 
 	// GET FUNCTIONS
 
-	public void getTable(int idx)
+	public int getTable(int idx)
 	{
-		_getTable(luaState, idx);
+		return _getTable(luaState, idx);
 	}
 
 	public int getField(int idx, String k)
@@ -1133,9 +1133,6 @@ public class LuaState
 	public LuaObject getLuaObject(LuaObject parent, String name)
 	throws LuaException
 	{
-		if (parent.L.getPointer() != luaState)
-			throw new LuaException("Object must have the same LuaState as the parent!");
-
 		return new LuaObject(parent, name);
 	}
 
@@ -1149,9 +1146,6 @@ public class LuaState
 	public LuaObject getLuaObject(LuaObject parent, Number name)
 	throws LuaException
 	{
-		if (parent.L.getPointer() != luaState)
-			throw new LuaException("Object must have the same LuaState as the parent!");
-
 		return new LuaObject(parent, name);
 	}
 
@@ -1180,7 +1174,9 @@ public class LuaState
 	 */
 	public LuaObject getLuaObject(int index)
 	{
-		if(isTable(index))
+		if(isFunction(index))
+			return new LuaFunction(this,index);
+		else if(isTable(index))
 			return new LuaTable(this, index);
 		else
 			return new LuaObject(this, index);

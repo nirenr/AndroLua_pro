@@ -45,7 +45,7 @@ end
 
 adp=LuaAdapter(activity,item)
 for k,v in ipairs(pls) do
-  adp.add{icon=checkicon(k),title=v.appname.." "..v.appver,description=v.description}
+  adp.add{icon=checkicon(k),title=v.appname.." "..v.appver,description=v.description or ""}
 end
 plist.Adapter=adp
 plist.onItemClick=function(l,v,p,i)

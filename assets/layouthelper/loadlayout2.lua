@@ -54,8 +54,8 @@ local toint={
 
   --android:visibility
   visible=0,
-  invisible=1,
-  gone=2,
+  invisible=4,
+  gone=8,
 
   wrap_content=-2,
   fill_parent=-1,
@@ -386,10 +386,11 @@ local function setattribute(root,view,params,k,v,ids)
         if (not v:find("^/")) and luadir then
           v=luadir..v
         end
-        if (not v:find("^/")) and luadir then
-          v=luadir..v
-        end
+       if v:find("%.9%.png") then
+        view.setBackground(NineBitmapDrawable(loadbitmap(v)))
+        else
         view.setBackground(BitmapDrawable(loadbitmap(v)))
+        end
       end
     elseif type(v)=="userdata" then
       view.setBackground(v)

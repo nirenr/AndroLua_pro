@@ -173,6 +173,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 		{
 			try
 			{
+				field.setAccessible(true);
 				Object obj=field.get(null);
 				if(obj instanceof String[])
 					infos.put(field.getName(), Arrays.toString((String[])obj));

@@ -279,22 +279,32 @@ end
 function reopen(path)
   local f=io.open(path,"r")
   if f then
-  local str=f:read("*all")
-  if tostring(editor.getText())~=str then
-    editor.setText(str,true)
-  end
-  f:close()
+    local str=f:read("*all")
+    if tostring(editor.getText())~=str then
+      editor.setText(str,true)
+    end
+    f:close()
   end
 end
 
 function read(path)
   local f=io.open(path,"r")
-  editor.setText(f:read("*all"))
+  if f==nil then
+    --Toast.makeText(activity, "打开文件出错."..path, Toast.LENGTH_LONG ).show()
+    error()
+    return
+  end
+  local str=f:read("*all")
   f:close()
+  if string.byte(str,1)==0x1b then
+    Toast.makeText(activity, "不能打开已编译文件."..path, Toast.LENGTH_LONG ).show()
+    return 
+  end
+  editor.setText(str)
   activity.getActionBar().setSubtitle(".."..path:match("(/[^/]+/[^/]+)$"))
   luapath=path
   write(luaconf,string.format("luapath=%q",path))
-  if luaproject and path:find(luaproject) then
+  if luaproject and path:find(luaproject,1,true) then
     --Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
     return
   end
@@ -391,8 +401,7 @@ function open(p)
     imports(luadir..p)
     open_dlg.hide()
   else
-    luapath=luadir..p
-    read(luapath)
+    read(luadir..p)
     open_dlg.hide()
   end
 end
@@ -406,6 +415,11 @@ function sort(a,b)
     return false
   end
 end
+
+function adapter(t)
+  return ArrayListAdapter(activity,android.R.layout.simple_list_item_1, String(t))
+end
+
 
 function list(v,p)
   local f=File(p)
@@ -468,9 +482,10 @@ function list2(v,p)
     end
   end
   table.sort(td,sort)
-  --local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(td))
-  --v.setAdapter(adapter)
-  open_dlg2.setItems(td)
+  local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(td))
+  v.setAdapter(adapter)
+  plist=td
+  --open_dlg2.setItems(td)
 end
 
 
@@ -888,9 +903,12 @@ function importx(path,tp)
   end
 
   local f=File(path)
-  local s=f.Name:match("^([^%._]+)")
+  local app={}
+  loadstring(tostring(String(LuaUtil.readZip(path,"init.lua"))),"bt","bt",app)()
+
+  local s=app.appname or f.Name:match("^([^%._]+)")
   local out=activity.getLuaExtDir("project").."/"..s
-  
+
   if tp=="build" then
     out=activity.getLuaExtDir("bin/.temp").."/"..s
   elseif tp=="plugin" then
@@ -981,6 +999,7 @@ end
 func.openproject=function()
   save()
   create_open_dlg2()
+  open_edit=""
   list2(listview2, luaprojectdir)
   open_dlg2.show()
 end
@@ -1190,25 +1209,24 @@ end
 activity.setContentView(layout.main)
 
 function onCreate(s)
-  local intent=activity.getIntent()
+  --[[ local intent=activity.getIntent()
   local uri=intent.getData()
   if not s and uri and uri.getPath():find("%.alp$") then
     imports(uri.getPath())
+  else]]
+  if pcall(read,luapath) then
+    last=last or 0
+    if last < editor.getText().length() then
+      editor.setSelection(last)
+    end
   else
-    if pcall(read,luapath) then
-      last=last or 0
-      if last < editor.getText().length() then
-        editor.setSelection(last)
-      end
-    else
-      luapath=activity.LuaExtDir.."/new.lua"
-      if not pcall(read,luapath) then
-        write(luapath,code)
-        pcall(read,luapath)
-      end
+    luapath=activity.LuaExtDir.."/new.lua"
+    if not pcall(read,luapath) then
+      write(luapath,code)
+      pcall(read,luapath)
     end
   end
-
+  --end
 end
 
 function onNewIntent(intent)
@@ -1356,9 +1374,33 @@ function create_open_dlg2()
     return
   end
   open_dlg2=AlertDialogBuilder(activity)
+  --open_dlg2.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+
   open_dlg2.setTitle("打开工程")
-  listview2=open_dlg2.ListView
+  open_dlg2.setView(loadlayout(layout.open2))
+
+  --listview2=open_dlg2.ListView
   listview2.FastScrollEnabled=true
+  --open_edit=EditText(activity)
+  --listview2.addHeaderView(open_edit)
+
+  open_edit.addTextChangedListener{
+    onTextChanged=function(c)
+      local s=tostring(c)
+      if #s==0 then
+        listview2.setAdapter(adapter(plist))
+      end
+      local t={}
+      s=s:lower()
+      for k,v in ipairs(plist) do
+        if v:lower():find(s,1,true) then
+          table.insert(t,v)
+        end
+      end
+      listview2.setAdapter(adapter(t))
+    end
+  }
+
   listview2.setOnItemClickListener(AdapterView.OnItemClickListener{
     onItemClick=function(parent, v, pos,id)
       luadir=luaprojectdir..tostring(v.Text).."/"
@@ -1487,4 +1529,34 @@ local ps={"(",")","[","]","{","}","\"","=",":",".",",","_","+","-","*","/","\\",
 for k,v in ipairs(ps) do
   ps_bar.addView(newButton(v))
 end
+
+local function adds()
+  require "import"
+  local classes=require "javaapi.android"
+  local ms={"onCreate",
+    "onStart",
+    "onResume",
+    "onPause",
+    "onStop",
+    "onDestroy",
+    "onActivityResult",
+    "onResult",
+    "onCreateOptionsMenu",
+    "onOptionsItemSelected",
+    "onClick",
+    "onTouch",
+    "onLongClick",
+    "onItemClick",
+  }
+  local buf=String[#ms+#classes]
+  for k,v in ipairs(ms) do
+    buf[k-1]=v
+  end
+  local l=#ms
+  for k,v in ipairs(classes) do
+    buf[l+k-1]=string.match(v,"%w+$")
+  end
+  return buf
+end
+task(adds,function(buf)editor.addNames(buf)end)
 

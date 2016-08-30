@@ -10,11 +10,12 @@ import java.util.*;
 import java.io.*;
 import android.util.*;
 import android.view.animation.*;
+import android.content.*;
 
 public class LuaAdapter extends BaseAdapter
 {
 
-	private LuaActivity mContext;
+	private LuaContext mContext;
 
 	private LuaObject mResource;
 
@@ -130,7 +131,7 @@ public class LuaAdapter extends BaseAdapter
 			}
 			catch (LuaException e)
 			{
-				return new View(mContext);
+				return new View(mContext.getContext());
 			}
 		}
 		else
@@ -220,7 +221,7 @@ public class LuaAdapter extends BaseAdapter
 
 	
 	
-	public LuaAdapter(LuaActivity context, LuaObject resource) throws LuaException
+	public LuaAdapter(LuaContext context, LuaObject resource) throws LuaException
 	{
 		mContext = context;
 		mData = new ArrayList<Map<String, ?>>();
@@ -233,7 +234,7 @@ public class LuaAdapter extends BaseAdapter
 	}
 
 
-	public LuaAdapter(LuaActivity context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource) throws LuaException
+	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource) throws LuaException
 	{
 		mContext = context;
 		mData = new ArrayList<Map<String, ?>>(data);
@@ -245,7 +246,7 @@ public class LuaAdapter extends BaseAdapter
 		L.pop(1);
 	}
 
-	public LuaAdapter(LuaActivity context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] field) throws LuaException
+	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] field) throws LuaException
 	{
 		mContext = context;
 		mData = new ArrayList<Map<String, ?>>(data);
@@ -259,7 +260,7 @@ public class LuaAdapter extends BaseAdapter
 		L.pop(1);
 	}
 
-	public LuaAdapter(LuaActivity context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] to, String[] field) throws LuaException
+	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] to, String[] field) throws LuaException
 	{
 		mContext = context;
 		mData = new ArrayList<Map<String, ?>>(data);
@@ -275,46 +276,55 @@ public class LuaAdapter extends BaseAdapter
 	}
 
 	
-	private class AsyncLoader extends AsyncTask
+	private Handler mHandler=new Handler(){
+		@Override
+		public void handleMessage(Message msg) {
+			notifyDataSetChanged();
+		}
+
+	};
+	private HashMap<String,Boolean> loaded=new HashMap<String,Boolean>();
+	private class AsyncLoader extends Thread
 	{
-		public Bitmap getBitmap(LuaActivity mContext, String path) throws IOException
+
+		private String mPath;
+
+		private LuaContext mContext;
+
+		public Bitmap getBitmap(LuaContext context, String path) throws IOException
 		{
 			// TODO: Implement this method
-			if(path.indexOf("http://")!=0)
-				return LuaBitmap.getBitmap(mContext,path);
-			if(LuaBitmap.checkCache(mContext,path))
-				return LuaBitmap.getBitmap(mContext,path);
-			execute(mContext,path);
+			mContext=context;
+			mPath=path;
+			if(!path.startsWith("http://"))
+				return LuaBitmap.getBitmap(context,path);
+			if(LuaBitmap.checkCache(context,path))
+				return LuaBitmap.getBitmap(context,path);
+			if(!loaded.containsKey(mPath)){
+				start();
+				loaded.put(mPath,true);
+			}			
 			return Bitmap.createBitmap(0,0,Bitmap.Config.RGB_565);
 		}
-		
+
 		@Override
-		protected Object doInBackground(Object[] p1)
+		public void run()
 		{
 			// TODO: Implement this method
 			try
 			{
-				LuaBitmap.getBitmap((LuaContext)p1[0], (String)p1[1]);
-				return true;
+				LuaBitmap.getBitmap(mContext, mPath);
+				mHandler.sendEmptyMessage(0);
 			}
 			catch (IOException e)
 			{
-				return null;
+				mContext.sendMsg(e.getMessage());
 			}
-			
+
 		}
 
-		@Override
-		protected void onPostExecute(Object result)
-		{
-			// TODO: Implement this method
-			super.onPostExecute(result);
-			if(result!=null)
-				notifyDataSetChanged();
-		}
 	}
 	
-
 	public class AsyncImageLoader
 	{
 

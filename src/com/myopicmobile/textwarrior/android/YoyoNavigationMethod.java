@@ -219,7 +219,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 	@Override
 	public void onTextDrawComplete(Canvas canvas)
 	{		
-		if (!_textField.isSelectText())
+		if (!_textField.isSelectText2())
 		{
 			_yoyoCaret.show();
 			_yoyoStart.hide();

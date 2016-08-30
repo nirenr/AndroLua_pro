@@ -73,6 +73,31 @@ static int maxn (lua_State *L) {
   lua_pushnumber(L, max);
   return 1;
 }
+
+static int size (lua_State *L) {
+  lua_Number i = 0;
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushnil(L);  /* first key */
+  while (lua_next(L, 1)) {
+    lua_pop(L, 1);  /* remove value */
+    i++;
+   }
+  lua_pushnumber(L, i);
+  return 1;
+}
+
+static int clear (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushnil(L);  /* first key */
+  while (lua_next(L, 1)) {
+    lua_pop(L, 1);  /* remove value */
+    lua_pushvalue(L,-1);
+    lua_pushnil(L);
+    lua_settable(L,-4);
+   }
+  return 0;
+}
+
 #endif
 
 
@@ -469,6 +494,8 @@ static const luaL_Reg tab_funcs[] = {
 #endif
 #if defined(LUA_COMPAT_MAXN)
   {"maxn", maxn},
+  {"size", size},
+  {"clear", clear},
 #endif
   {"insert", tinsert},
   {"pack", pack},

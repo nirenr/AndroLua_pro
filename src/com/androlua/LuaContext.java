@@ -8,7 +8,6 @@ public interface LuaContext
 
 	public void call(String func, Object...args);
 
-
 	public void set(String name, Object value);
 
 	public String getLuaDir();
@@ -34,5 +33,7 @@ public interface LuaContext
 	public int getWidth();
 	
 	public int getHeight();
+	
+	public void regGc(LuaGcable obj);
 	
 }

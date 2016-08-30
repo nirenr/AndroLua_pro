@@ -8,6 +8,10 @@
 package com.androlua;
 
 public final class R {
+    public static final class anim {
+        public static final int reverse_anim=0x7f040000;
+        public static final int rotating=0x7f040001;
+    }
     public static final class attr {
         /** <p>Must be a color value, in the form of "<code>#<i>rgb</i></code>", "<code>#<i>argb</i></code>",
 "<code>#<i>rrggbb</i></code>", or "<code>#<i>aarrggbb</i></code>".
@@ -116,46 +120,82 @@ containing a value of this type.
         public static final int contentPaddingTop=0x7f010009;
     }
     public static final class color {
-        public static final int cardview_dark_background=0x7f060000;
-        public static final int cardview_light_background=0x7f060001;
-        public static final int cardview_shadow_end_color=0x7f060002;
-        public static final int cardview_shadow_start_color=0x7f060003;
+        public static final int black=0x7f050001;
+        public static final int cardview_dark_background=0x7f050004;
+        public static final int cardview_light_background=0x7f050005;
+        public static final int cardview_shadow_end_color=0x7f050006;
+        public static final int cardview_shadow_start_color=0x7f050007;
+        public static final int gray=0x7f050002;
+        public static final int light_blue=0x7f050003;
+        public static final int white=0x7f050000;
     }
     public static final class dimen {
-        public static final int cardview_compat_inset_shadow=0x7f070000;
-        public static final int cardview_default_elevation=0x7f070001;
-        public static final int cardview_default_radius=0x7f070002;
+        public static final int cardview_compat_inset_shadow=0x7f080000;
+        public static final int cardview_default_elevation=0x7f080001;
+        public static final int cardview_default_radius=0x7f080002;
     }
     public static final class drawable {
         public static final int icon=0x7f020000;
-        public static final int welcome=0x7f020001;
+        public static final int load_failed=0x7f020001;
+        public static final int load_succeed=0x7f020002;
+        public static final int loading=0x7f020003;
+        public static final int pull_icon_big=0x7f020004;
+        public static final int pullup_icon_big=0x7f020005;
+        public static final int refresh_failed=0x7f020006;
+        public static final int refresh_succeed=0x7f020007;
+        public static final int refreshing=0x7f020008;
+        public static final int welcome=0x7f020009;
     }
     public static final class id {
-        public static final int imageView=0x7f080007;
-        public static final int logo=0x7f080002;
-        public static final int menu=0x7f080005;
-        public static final int navi=0x7f080001;
-        public static final int status=0x7f080000;
-        public static final int subtitle=0x7f080004;
-        public static final int title=0x7f080003;
-        public static final int welcome=0x7f080006;
+        public static final int head_view=0x7f090006;
+        public static final int imageView=0x7f090011;
+        public static final int loading_icon=0x7f090002;
+        public static final int loadmore_view=0x7f090000;
+        public static final int loadstate_iv=0x7f090004;
+        public static final int loadstate_tv=0x7f090003;
+        public static final int logo=0x7f09000c;
+        public static final int menu=0x7f09000f;
+        public static final int navi=0x7f09000b;
+        public static final int pull_icon=0x7f090007;
+        public static final int pullup_icon=0x7f090001;
+        public static final int refreshing_icon=0x7f090008;
+        public static final int state_iv=0x7f09000a;
+        public static final int state_tv=0x7f090009;
+        public static final int status=0x7f090005;
+        public static final int subtitle=0x7f09000e;
+        public static final int title=0x7f09000d;
+        public static final int welcome=0x7f090010;
     }
     public static final class layout {
-        public static final int main=0x7f030000;
-        public static final int toolbar=0x7f030001;
-        public static final int welcome=0x7f030002;
+        public static final int load_more=0x7f030000;
+        public static final int main=0x7f030001;
+        public static final int refresh_head=0x7f030002;
+        public static final int toolbar=0x7f030003;
+        public static final int welcome=0x7f030004;
     }
     public static final class string {
-        public static final int app_name=0x7f040000;
+        public static final int app_name=0x7f060000;
+        public static final int load_fail=0x7f06000b;
+        public static final int load_nothing=0x7f06000c;
+        public static final int load_succeed=0x7f06000a;
+        public static final int loading=0x7f060009;
+        public static final int pull_to_refresh=0x7f060001;
+        public static final int pullup_to_load=0x7f060007;
+        public static final int refresh_fail=0x7f060005;
+        public static final int refresh_nothing=0x7f060006;
+        public static final int refresh_succeed=0x7f060004;
+        public static final int refreshing=0x7f060003;
+        public static final int release_to_load=0x7f060008;
+        public static final int release_to_refresh=0x7f060002;
     }
     public static final class style {
-        public static final int CardView=0x7f050001;
-        public static final int CardView_Dark=0x7f050002;
-        public static final int CardView_Light=0x7f050003;
+        public static final int CardView=0x7f070001;
+        public static final int CardView_Dark=0x7f070002;
+        public static final int CardView_Light=0x7f070003;
         /** item name="android:windowIsTranslucent">true</item>
 	    <item name="android:windowAnimationStyle">@+android:style/Animation.Translucent</item
          */
-        public static final int WelcomeTheme=0x7f050000;
+        public static final int WelcomeTheme=0x7f070000;
     }
     public static final class styleable {
         /** Attributes that can be used with a CardView.

@@ -6,8 +6,53 @@ import com.luajava.*;
 import java.io.*;
 import java.util.regex.*;
 
-public class LuaThread extends Thread implements Runnable
+public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 {
+
+	@Override
+	public void gc() {
+		// TODO: Implement this method
+		if(isRun)
+			quit();
+	}
+	
+
+	@Override
+	public Object __call(Object[] arg) {
+		// TODO: Implement this method
+		return null;
+	}
+
+	@Override
+	public Object __index(final String key) {
+		// TODO: Implement this method
+		return new LuaMetaTable(){
+			@Override
+			public Object __call(Object[] arg) {
+				// TODO: Implement this method
+				call(key,arg);
+				return null;
+			}
+
+			@Override
+			public Object __index(String key) {
+				// TODO: Implement this method
+				return null;
+			}
+
+			@Override
+			public void __newIndex(String key, Object value) {
+				// TODO: Implement this method
+			}
+		};
+	}
+
+	@Override
+	public void __newIndex(String key, Object value) {
+		// TODO: Implement this method
+		set(key,value);
+	}
+	
 	private LuaState L;
 	private Handler thandler;
 	public boolean isRun = false;
@@ -38,6 +83,7 @@ public class LuaThread extends Thread implements Runnable
 
 	public LuaThread(LuaContext luaContext, String src, boolean isLoop, Object[] arg) throws LuaException
 	{
+		luaContext.regGc(this);
 		mLuaContext = luaContext;
 		mSrc = src;
 		mIsLoop = isLoop;

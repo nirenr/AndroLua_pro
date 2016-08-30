@@ -35,8 +35,7 @@ import java.lang.reflect.Method;
  * @author Rizzato
  * @author Thiago Ponte
  */
-public class LuaInvocationHandler implements InvocationHandler
-{
+public class LuaInvocationHandler implements InvocationHandler {
 	private LuaObject obj;
 
 	private LuaState L;
@@ -44,54 +43,50 @@ public class LuaInvocationHandler implements InvocationHandler
 	private LuaObject print;
 
 
-	public LuaInvocationHandler(LuaObject obj)
-	{
+	public LuaInvocationHandler(LuaObject obj) {
 		this.obj = obj;
-		L=obj.L;
-		print=L.getLuaObject("print");
+		L = obj.L;
+		print = L.getLuaObject("print");
 	}
 
 	/**
 	 * Function called when a proxy object function is invoked.
 	 */
-	public Object invoke(Object proxy, Method method, Object[] args) throws LuaException
-	{
-		synchronized (obj.L)
-		{
+	public Object invoke(Object proxy, Method method, Object[] args) throws LuaException {
+		synchronized (obj.L) {
 			String methodName = method.getName();
 			LuaObject func    = obj.getField(methodName);
+			Class<?> retType = method.getReturnType();
 
-			if (func.isNil())
-			{
-				return null;
+			if (func.isNil()) {
+				if (retType.equals(boolean.class) || retType.equals(Boolean.class))
+					return false;
+				else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
+					return 0;
 			}
 
-			Class retType = method.getReturnType();
 			Object ret = null;
-			try
-			{
-
+			try {
 				// Checks if returned type is void. if it is returns null.
-				if (retType.equals(Void.class) || retType.equals(void.class))
-				{
+				if (retType.equals(Void.class) || retType.equals(void.class)) {
 					func.call(args);
 					ret = null;
 				}
-				else
-				{
+				else {
 					ret = func.call(args);
-					if (ret != null && ret instanceof Double)
-					{
+					if (ret != null && ret instanceof Double) {
 						ret = LuaState.convertLuaNumber((Double) ret, retType);
 					}
 				}
 			}
-			catch (LuaException e)
-			{
-				print.call(methodName+" "+e.getMessage());
+			catch (LuaException e) {
+				print.call(methodName + " " + e.getMessage());
 			}  	
-			if(ret==null && (retType.equals(boolean.class)||retType.equals(Boolean.class)))
-				return false;
+			if (ret == null)
+				if (retType.equals(boolean.class) || retType.equals(Boolean.class))
+					return false;
+				else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
+					return 0;
 			return ret;
 		}
 	}
