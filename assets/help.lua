@@ -9,12 +9,15 @@ import "autotheme"
 help=[===[
 @关于@
 @AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
-官方QQ群：236938279
+官方QQ群：236938279(已满)
 http://jq.qq.com/?_wv=1027&k=dcofRr
+官方QQ2群：148389676
+http://jq.qq.com/?_wv=1027&k=2Gqxcak
+
 百度贴吧：
 http://c.tieba.baidu.com/mo/m?kw=androlua
 项目地址：
-http://sf.net/p/androlua
+https://github.com/nirenr/AndroLua_pro
 点击链接支持我的工作，一块也可以哦：
 https://qr.alipay.com/apt7ujjb4jngmu3z9a
 
@@ -56,7 +59,7 @@ jni
 由nirenr开发
 
 @
-@与标准Lua5.3.1的不同@
+@与标准Lua5.3的不同@
 @打开了部分兼容选项，module，unpack，bit32
 添加string.gfind函数，用于递归返回匹配位置
 增加tointeger函数，强制将数值转为整数
@@ -70,27 +73,46 @@ Android 中文API：
 http://android.toolib.net/reference/packages.html
 @
 @2，导入模块@
-@在每个脚本程序的开头应该写上 require "import" 以导入import模块，简化写代码的难度。目前程序内置bson,canvas,cjson,crypt,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zip,zlib。
+@require "import" 
+以导入import模块，简化写代码的难度。
+目前程序还内置bmob,bson,canvas,cjson,crypt,ftp,gl,http,import,md5,smtp,socket,sensor,xml,zip,zlib等模块。
+一般模块导入形式
+local http=require "http"
+这样导入的是局部变量
+导入import后也可以使用
+import "http"
+的形式，导入为全局变量
 @
 @3，导入包或类@
-@可以导入包或者类
+@在使用Java类之前需要导入相应的包或者类，
+可以用包名.*的形式导入导入包
 import "android.widget.*"
+或者用完整的类名导入类
 import "android.widget.Button"
 导入内部类
-import "android.view.View_*"
-或
 import "android.view.View_OnClickListener"
-或
+或者在导入类后直接使用内部类
 View.OnClickListene
 包名和类名必须用引号包围。
+导入的类为全局变量，你可以使用
+local Burton=import "android.widget.Button"
+的形式保存为局部变量，以解决类名冲突问题。
 @
 @4，创建布局与组件@
-@layout=LinearLayout(activity)
-activity.setContentView(layout)
+@安卓使用布局与视图管理和显示用户界面。
+布局负责管理视图如何显示，如LinearLayout以线性排列视图，FrameLayout则要求自行指定停靠与位置。
+视图则显示具体内容，如TextView可以向用户展示文字内容，Button可以响应用户点击事件。
+
+创建一个线性布局
+layout=LinearLayout(activity)
+创建一个按钮视图
 button=Button(activity)
+将按钮添加到布局
 layout.addView(button)
-注.activity是当前窗口的Context对象，如果习惯写this只需要
-this=activity
+将刚才的内容设置为活动内容视图
+activity.setContentView(layout)
+
+注.activity是当前窗口的Context对象，如果你习惯也可以使用this
 button=Button(this)
 @
 @5，使用方法@
@@ -99,7 +121,7 @@ button=Button(this)
 getter/setter
 Java的getxxx方法没有参数与setxxx方法只有一个参数时可以简写，
 button.Text="按钮"
-x=button.X
+x=button.Text
 @
 @6，使用事件@
 @创建事件处理函数
@@ -123,17 +145,80 @@ button.onClick=function(v)
     end
 @
 @7，回调方法@
-@function onResume()
+@在活动文件添加以下函数，这些函数可以在活动的特定状态执行。
+function main(...)
+    --...：newActivity传递过来的参数。
+    print("入口函数",...)
+    end
+
+function onCreate()
+    print("窗口创建")
+    end
+
+function onStart()
+    print("活动开始")
+    end
+  
+function onResume()
     print("返回程序")
     end
+
+function onPause()
+    print("活动暂停")
+    end
+
+function onStop()
+    print("活动停止")
+    end
+
 function onDestroy()
     print("程序已退出")
     end
+
+function onResult(name,...)
+  --name：返回的活动名称
+  --...：返回的参数
+  print("返回活动",name,...)
+  end
+
 function onCreateOptionsMenu(menu)
+    --menu：选项菜单。
     menu.add("菜单")
     end
-支持onCreate,onStart,onResume,onPause,onStop,onDestroy,onActivityResult,onCreateOptionsMenu,onCreateContextMenu,onMenuItemSelected
-@
+
+function onOptionsItemSelected(item)
+    --item：选中的菜单项
+    print(item.Title)
+    end
+
+function onConfigurationChanged(config)
+    --config：配置信息
+    print("屏幕方向关闭")
+    end
+  
+function onKeyDown(keycode,event)
+    --keycode：键值
+    --event：事件
+    print("按键按下",keycode)
+    end
+
+function onKeyUp(keycode,event)
+    --keycode：键值
+    --event：事件
+    print("按键抬起",keycode)
+    end
+
+function onKeyLongPress(keycode,event)
+    --keycode：键值
+    --event：事件
+    print("按键长按",keycode)
+    end
+
+function onTouchEvent(event)
+    --event：事件
+    print("触摸事件",event)
+    end
+  @
 @8，按键与触控@
 @function onKeyDown(code,event)
     print(code event)
@@ -152,7 +237,8 @@ a=array[0]
 array[0]=4
 @
 @10，使用线程@
-@需导入import模块，参看thread,timer与task函数说明
+@需导入import模块，参看thread,timer与task函数说明。
+线程中使用独立环境运行，不能使用外部变量与函数，需要使用参数和回调与外部交互。
 任务
 
 task(str,args,callback)
@@ -195,15 +281,34 @@ import "android.widget.*"
 import "android.view.*"
 布局表格式
 layout={
-    控件名称,
+    控件类名称,
     id=控件名称,
     属性=值,
     {
-        子控件名称,
+        子控件类名称,
         id=控件名称,
         属性=值,
         }
     }
+  
+例如：
+layout={
+  LinearLayout,--视图类名称
+  id="linear",--视图ID，可以在loadlayout后直接使用
+  orientation="vertical",--属性与值
+  {
+    TextView,--子视图类名称
+    text="hello AndroLua+",--属性与值
+    layout_width="fill"--布局属性
+  },
+}
+使用loadlayout函数解析布局表生成布局。
+activity.setContentView(loadlayout(layout))
+也可以简化为：
+activity.setContentView(layout)
+如果使用单独文件布局(比如有个layout.aly布局文件)也可以简写为：
+activity.setContentView("layout")
+此时不用导入布局文件。
 
 布局表支持大全部安卓控件属性，
 与安卓XML布局文件的不同点：
@@ -212,11 +317,8 @@ ImageView的src属性是当前目录图片名称或绝对文件路径图片或�
 layout_width与layout_height的值支持fill与wrap简写，
 onClick值为lua函数或java onClick接口或他们的全局变量名称，
 背景background支持背景图片，背景色与LuaDrawable自绘制背景，背景图片参数为是当前目录图片名称或绝对文件路径图片或网络上的图片，颜色同backgroundColor，自绘制背景参数为绘制函数或绘制函数的全局变量名称，
-绘制函数形式
-function draw(canvas,paint)
-    canvas.drawRect(1,1,100,100,paint)
-    end
 控件背景色使用backgroundColor设置，值为"十六进制颜色值"。
+尺寸单位支持 px，dp，sp，in，mm，%w，%h。
 其他参考loadlayout与loadbitmap
 @
 @12，2D绘图@
@@ -266,9 +368,9 @@ map.a=3
 取长度运算符#可以获取Java中array，List,Map,Set，String的长度。
 
 @
-@14，部分模块@
-@(1) canvas模块
-require "import"
+
+@14.1 canvas模块@
+@require "import"
 import "canvas"
 import "android.app.*"
 import "android.os.*"
@@ -300,9 +402,9 @@ callback=SurfaceHolder_Callback{
 holder=sureface.getHolder()
 holder.addCallback(callback)
 activity.setContentView(sureface)
-
-(2) OpenGL模块
-require "import"
+@
+@14.2 OpenGL模块@
+@require "import"
 import "gl"
 import "android.app.*"
 import "android.os.*"
@@ -360,9 +462,9 @@ glSurefaceView = GLSurfaceView(activity);
 glSurefaceView.setRenderer(sr);
 activity.setContentView(glSurefaceView);
 
-
-(3) http模块
-body,cookie,code,headers=http.get(url [,cookie,ua,header])
+@
+@14.3 http 同步网络模块@
+@body,cookie,code,headers=http.get(url [,cookie,ua,header])
 body,cookie,code,headers=http.post(url ,postdata [,cookie,ua,header])
 code,headers=http.download(url [,cookie,ua,ref,header])
 body,cookie,code,headers=http.upload(url ,datas ,files [,cookie,ua,header])
@@ -390,10 +492,9 @@ http.download("http://androlua.com","/sdcard/a.txt")
 
 --upload用于上传文件，参数是请求的网址，请求内容字符串部分，格式为以key=value形式的表，请求文件部分，格式为key=文件路径的表，最后一个参数为cookie
 http.upload("http://androlua.com",{title="标题",msg="内容"},{file1="/sdcard/1.txt",file2="/sdcard/2.txt"})
-
-(4) import模块
-
-require "import"
+@
+@14.4 import模块@
+@require "import"
 import "android.widget.*"
 import "android.view.*"
 layout={
@@ -417,7 +518,110 @@ function click()
     end
 activity.setContentView(loadlayout(layout))
 @
+@14.5 Http 异步网络模块@
+@获取内容 get函数
+Http.get(url,cookie,charset,header,callback)
+url 网络请求的链接网址
+cookie 使用的cookie，也就是服务器的身份识别信息
+charset 内容编码
+header 请求头
+callback 请求完成后执行的函数
 
+除了url和callback其他参数都不是必须的
+
+回调函数接受四个参数值分别是
+code 响应代码，2xx表示成功，4xx表示请求错误，5xx表示服务器错误，-1表示出错
+content 内容，如果code是-1，则为出错信息
+cookie 服务器返回的用户身份识别信息
+header 服务器返回的头信息
+
+向服务器发送数据 post函数
+Http.post(url,data,cookie,charset,header,callback)
+除了增加了一个data外，其他参数和get完全相同
+data 向服务器发送的数据
+
+下载文件 download函数
+Http.download(url,path,cookie,header,callback)
+参数中没有编码参数，其他同get，
+path 文件保存路径
+
+需要特别注意一点，只支持同时有127个网络请求，否则会出错
+
+
+Http其实是对Http.HttpTask的封装，Http.HttpTask使用的更加通用和灵活的形式
+参数格式如下
+Http.HttpTask( url, String method, cookie, charset, header,  callback) 
+所有参数都是必选，没有则传入nil
+
+url 请求的网址
+method 请求方法可以是get，post，put，delete等
+cookie 身份验证信息
+charset 内容编码
+header 请求头
+callback 回调函数
+
+该函数返回的是一个HttpTask对象，
+需要调用execute方法才可以执行，
+t=Http.HttpTask(xxx)
+t.execute{data}
+
+注意调用的括号是花括号，内容可以是字符串或者byte数组，
+使用这个形式可以自己封装异步上传函数
+
+@
+@14.6 bmob网络数据库@
+@b=bmob(id,key)
+id 用户id，key 应用key。
+
+b:insert(key,data,callback)
+新建数据表，key 表名称，data 数据，callback 回调函数。
+
+b:update(key,id,data,callback)
+更新数据表，key 表名称id 数据id，data 数据，callback 回调函数。
+
+b:query(key,data,callback)
+查询数据表，key 表名称，data 查询规则，callback 回调函数。
+
+b:increment(key,id,k,v,c)
+原子计数，key 表名称，id 数据id，k 数据key，v 计数增加量。
+
+b:delete(key,id,callback)
+删除数据，key 表名称,id 数据id，callback 回调函数。
+
+b:sign(user,pass,mail,callback)
+注册用户，user 用户名，pass 密码，mail 电子邮箱，callback 回调函数。
+
+b:login(user or mail,pass,callback)
+登录用户，user 用户名，pass 密码，mail 电子邮箱，callback 回调函数。
+
+b:upload(path,callback)
+上传文件，path 文件路径，callback 回调函数。
+
+b:remove(url,callback)
+删除文件，url 文件路径，callback 回调函数。
+
+
+注：
+1，查询规则支持表或者json格式，具体用法参考官方api
+2，回调函数的第一个参数为状态码，-1 出错，其他状态码参考http状态码，第二个参数为返回内容。
+@
+@15.1 LuaUtil 辅助库@
+@copyDir(from,to)
+复制文件或文件夹，from 源路径，to 目标路径。
+
+zip(from,dir,name)
+压缩文件或文件夹，from 源路径，dir 目标文件夹，name zip文件名称。
+
+unZip(from,to)
+解压文件，from zip文件路径，to 目标路径。
+
+getFileMD5(path)
+获取文件MD5值， path 文件路径。
+
+getFileSha1(path)
+获取文件Sha1值， path 文件路径。
+
+@
 @关于打包@
 @新建工程或在脚本目录新建init.lua文件。
 写入以下内容，即可将文件夹下所有lua文件打包，main.lua为程序人口。
@@ -425,7 +629,6 @@ appname="demo"
 appver="1.0"
 packagename="com.androlua.demo"
 目录下icon.png替换图标，welcome.png替换启动图。
-没有int.lua文件打包当前文件。
 打包使用debug签名。
 @
 @部分函数参考@
@@ -564,7 +767,7 @@ luajava.clear(o)
 参数：o Java对象
 返回：无
 作用：销毁Java对象
-注意：尽量避免使用此函数，除非确认不在使用此对象，且该对象比较大
+注意：仅用于销毁临时对象
 
 luajava.astable(o)
 参数：o Java对象
@@ -597,11 +800,13 @@ loadLib(path)
 加载当前目录c模块，返回载入后模块的返回值(通常是包含模块函数的包)
 registerReceiver(filter)
 注册一个广播接收者，当再次调用该方法时将移除上次注册的过滤器
-newActivity(req, path, arg)
-打开一个新activity，运行路径为path的Lua文件，其他两个参数为可选，arg为表，接受脚本为变长参数
-newTask(func, update, callback)
+newActivity(req, path, enterAnim, exitAnim, arg)
+打开一个新activity，运行路径为path的Lua文件，其他参数为可选，arg为表，接受脚本为变长参数
+result{...}
+向来源activity返回数据，在源activity的onResult回调
+newTask(func[, update], callback)
 新建一个Task异步任务，在线程中执行func函数，其他两个参数可选，执行结束回调callback，在任务调用update函数时在UI线程回调该函数
-新建的Task在调用execute{}时通过表传入参数，在func以unpack形式接收，执行func可以返回多个值，
+新建的Task在调用execute{}时通过表传入参数，在func以unpack形式接收，执行func可以返回多个值
 newThread(func, arg)
 新建一个线程，在线程中运行func函数，可以以表的形式传入arg，在func以unpack形式接收
 新建的线程调用start()方法运行，线程为含有loop线程，在当前activity结束后自动结束loop
@@ -640,8 +845,8 @@ newTimer(func, arg)
 
     -- android:visibility
     visible=0,
-    invisible=4,
-    gone=8,
+    invisible=1,
+    gone=2,
 
     wrap_content=-2,
     fill_parent=-1,
@@ -725,6 +930,12 @@ newTimer(func, arg)
     datetime=0x00000004,
     date=0x00000014,
     time=0x00000024,
+    
+    --android:ellipsize
+    end　　  
+    start 　　
+    middle     
+    marquee
 
 相对布局rule
     layout_above=2,
@@ -763,6 +974,10 @@ newTimer(func, arg)
 
 @
 ]===]
+activity.setTitle("帮助")
+activity.setTheme(autotheme())
+
+
 list={}
 for t,c in help:gmatch("(%b@@)\n*(%b@@)") do
     --print(t)
@@ -792,8 +1007,6 @@ listview.setOnItemClickListener(AdapterView.OnItemClickListener{
         show(v)
         end
     })
-activity.setTitle("帮助")
-activity.setTheme(autotheme())
 local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(list))
 listview.setAdapter(adapter)
 activity.setContentView(listview)

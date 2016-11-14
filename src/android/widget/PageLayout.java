@@ -75,12 +75,10 @@ public class PageLayout extends HorizontalScrollView {
 		if (mCount != count || mWidth != w) {
 			mCount = count;
 			mWidth = w;
-			Log.d("lua", "m" + mWidth);
 			for (int i=0;i < count;i++) {
 				ViewGroup chid=(ViewGroup) wrapper.getChildAt(i);
 				ViewGroup.LayoutParams lp=chid.getLayoutParams();
 				lp.width = mWidth;
-				Log.d("lua", i + "cm" + lp.width);
 				chid.setLayoutParams(lp);
 				chid.requestLayout();
 			}
@@ -179,7 +177,6 @@ public class PageLayout extends HorizontalScrollView {
 
 	public void showPage(int idx) {
 		//wrapper.getChildAt(idx);
-		Log.d("lua", idx + "m" + mWidth);
 		smoothScrollTo(mWidth * idx, 0);
 		if (mOnPageChangeListener != null && mIdx != idx)
 			mOnPageChangeListener.onPageChange(this, idx);

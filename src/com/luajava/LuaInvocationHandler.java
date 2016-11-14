@@ -63,6 +63,8 @@ public class LuaInvocationHandler implements InvocationHandler {
 					return false;
 				else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
 					return 0;
+				else
+					return null;
 			}
 
 			Object ret = null;

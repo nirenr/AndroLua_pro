@@ -12,9 +12,11 @@ import android.webkit.*;
 import android.widget.*;
 import java.io.*;
 import java.util.*;
+import com.androlua.LuaWebView.*;
 
-public class LuaWebView extends WebView implements LuaGcable
-{
+public class LuaWebView extends WebView implements LuaGcable {
+
+	private LuaWebView.DownloadBroadcastReceiver mDownloadBroadcastReceiver;
 
 	@Override
 	public void gc() {
@@ -22,6 +24,10 @@ public class LuaWebView extends WebView implements LuaGcable
 		destroy();
 	}
 
+	private HashMap<Long,String[]> mDownload=new HashMap<Long,String[]>();
+	
+	private OnDownloadCompleteListener mOnDownloadCompleteListener;
+	
 	private LuaActivity mContext;
 
 	private ProgressBar mProgressbar;
@@ -31,14 +37,13 @@ public class LuaWebView extends WebView implements LuaGcable
 	private Dialog open_dlg;
 
 	private ListView open_list;
-	
-	private ValueCallback<Uri> mUploadMessage;
-	
-	private String mDir="/";
-	
 
-	public LuaWebView(LuaActivity context)
-	{
+	private ValueCallback<Uri> mUploadMessage;
+
+	private String mDir="/";
+
+
+	public LuaWebView(LuaActivity context) {
 		super(context);
 		context.regGc(this);
 		mContext = context;
@@ -54,44 +59,45 @@ public class LuaWebView extends WebView implements LuaGcable
 		//requestFocus();
 		setWebViewClient(new WebViewClient()
 			{
-				public boolean shouldOverrideUrlLoading(WebView view, String url)
-				{
+				public boolean shouldOverrideUrlLoading(WebView view, String url) {
 					/*if(!url.substring(0,3).equals("http") && !url.substring(0,3).equals("file"))
-					{
-						mContext.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));
-						return true;
-					}*/
-						
+					 {
+					 mContext.startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));
+					 return true;
+					 }*/
+
 					view.loadUrl(url);  
 					return true;
 				}
 			}
 		);
 
-		dm=context.getResources().getDisplayMetrics();
-		int top=(int) TypedValue.applyDimension(1,8,dm);
-		
+		dm = context.getResources().getDisplayMetrics();
+		int top=(int) TypedValue.applyDimension(1, 8, dm);
+
 		mProgressbar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
         mProgressbar.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, top, 0, 0));
         addView(mProgressbar);
-		
+
 		setWebChromeClient(new LuaWebChromeClient());
 		setDownloadListener(new Download());
+		
+				
 	}
 
 	public void setProgressBarEnabled(boolean visibility) {
 		// TODO: Implement this method
-		if(visibility)
+		if (visibility)
 			mProgressbar.setVisibility(0);
 		else
 			mProgressbar.setVisibility(8);
 	}
-	
+
 	public void setProgressBar(ProgressBar pb) {
 		// TODO: Implement this method
-		mProgressbar=pb;
+		mProgressbar = pb;
 	}
-	
+
 	@Override
 	protected void onScrollChanged(int l, int t, int oldl, int oldt) {
         LayoutParams lp = (LayoutParams) mProgressbar.getLayoutParams();
@@ -100,22 +106,56 @@ public class LuaWebView extends WebView implements LuaGcable
         mProgressbar.setLayoutParams(lp);
 		super.onScrollChanged(l, t, oldl, oldt);
     }
-	
+
 	@Override
-	public void setDownloadListener(DownloadListener listener)
-	{
+	public void setDownloadListener(DownloadListener listener) {
 		// TODO: Implement this method
 		super.setDownloadListener(listener);
 	}
 
-	public interface onDownloadStartListener
-	{
+	public void setOnDownloadStartListener(final OnDownloadStartListener listener) {
+		setDownloadListener(new DownloadListener(){
+				@Override
+				public void onDownloadStart(String p1, String p2, String p3, String p4, long p5) {
+					// TODO: Implement this method
+					listener.onDownloadStart(p1, p2, p3, p4, p5);
+				}
+			});
+	}
+
+	public void setOnDownloadCompleteListener(OnDownloadCompleteListener listener){
+		mOnDownloadCompleteListener=listener;
+	}
+	
+	public interface OnDownloadCompleteListener {
+		public abstract void onDownloadComplete(String fileName, String mimetype);
+	}
+	
+	
+	private class DownloadBroadcastReceiver extends BroadcastReceiver {
+
+		
+		@Override
+		public void onReceive(Context p1, Intent p2) {
+			// TODO: Implement this method
+			 //id=p2.getLongExtra("flg", 0);
+			//int id=p2.getFlags();
+			long id = p2.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+			Bundle bundle=p2.getExtras();
+			//bundle.g
+			if (mDownload.containsKey(id) && mOnDownloadCompleteListener != null) {
+				String[] data=mDownload.get(id);
+				mOnDownloadCompleteListener.onDownloadComplete(data[0],data[1]);
+			}
+		}
+	}
+	
+	public interface OnDownloadStartListener {
 		public abstract void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength);
 	}
 
 
-	class Download implements DownloadListener
-	{
+	private class Download implements DownloadListener {
 
 		private String mUrl;
 
@@ -124,14 +164,13 @@ public class LuaWebView extends WebView implements LuaGcable
 		private String mContentDisposition;
 
 		private String mMimetype;
-
+		 
 		private long mContentLength;
-		EditText file_input_field=new EditText(mContext);
+		EditText file_input_field;
 		private String mFilename;
 
 		@Override
-		public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength)
-		{
+		public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
 			// TODO: Implement this method
 			mUrl = url;
 			mUserAgent = userAgent;
@@ -140,29 +179,27 @@ public class LuaWebView extends WebView implements LuaGcable
 			mContentLength = contentLength;
 			Uri uri=Uri.parse(mUrl);
 			mFilename = uri.getLastPathSegment();
-			if (contentDisposition != null)
-			{
+			if (contentDisposition != null) {
 				String p="filename=\"";
 				int i=contentDisposition.indexOf(p);
-				if (i != -1)
-				{
-					i+=p.length();
+				if (i != -1) {
+					i += p.length();
 					int n=contentDisposition.indexOf('"', i);
 					if (n > i)
 						mFilename = contentDisposition.substring(i, n);
 				}
 			}
-			
+			file_input_field = new EditText(mContext);
+			//file_input_field.setTextColor(0xff000000);
 			file_input_field.setText(mFilename);
 
 			new AlertDialog.Builder(mContext)
-				.setTitle("确认下载")
-				.setMessage("url: " + url + "\nType: " + mimetype + "\nSize: " + contentLength)
+				.setTitle("Download")
+				.setMessage("Type: " + mimetype + "\nSize: " + contentLength)
 				.setView(file_input_field)
 				.setPositiveButton("Download", new DialogInterface.OnClickListener(){
 					@Override
-					public void onClick(DialogInterface p1, int p2)
-					{
+					public void onClick(DialogInterface p1, int p2) {
 						// TODO: Implement this method
 						mFilename = file_input_field.getText().toString();
 						download(false);
@@ -172,8 +209,7 @@ public class LuaWebView extends WebView implements LuaGcable
 				.setNeutralButton("Only Wifi", new DialogInterface.OnClickListener(){
 
 					@Override
-					public void onClick(DialogInterface p1, int p2)
-					{
+					public void onClick(DialogInterface p1, int p2) {
 						// TODO: Implement this method
 						mFilename = file_input_field.getText().toString();
 						download(true);
@@ -183,39 +219,56 @@ public class LuaWebView extends WebView implements LuaGcable
 				.show();
 		}
 
-		private long download(boolean isWifi)
-		{
+		private long download(boolean isWifi) {
+			if(mDownloadBroadcastReceiver==null){
+				IntentFilter filter = new IntentFilter();
+				filter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+				mDownloadBroadcastReceiver=new DownloadBroadcastReceiver();
+				mContext.registerReceiver(mDownloadBroadcastReceiver,filter);
+			}
+			
 			DownloadManager downloadManager =  (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);
 
 			Uri uri=Uri.parse(mUrl);
 			uri.getLastPathSegment();
-			DownloadManager.Request request = new  DownloadManager.Request(uri);
+			DownloadManager.Request request = new DownloadManager.Request(uri);
+			String dir=mContext.getLuaExtDir("Download");
+			request.setDestinationInExternalPublicDir("AndroLua/Download", mFilename);
 
-			request.setDestinationInExternalPublicDir("Download", mFilename);
+			request.setTitle(mFilename);
 
-			//request.setTitle(mFilename);
+			request.setDescription(mUrl);
 
-			request.setDescription("By Androlua+");
-
-			request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+			//request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 			if (isWifi)
 				request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
 
 			//request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
 
 			request.setMimeType(mMimetype);
-
+			//Environment.getExternalStoragePublicDirectory(dirType)
 			long downloadId =  downloadManager.enqueue(request);
+			mDownload.put(downloadId,new String[]{new File(dir,mFilename).getAbsolutePath(),mMimetype});
 			return downloadId;
 		}
 	}
 
-
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event)
-	{       
-		if ((keyCode == KeyEvent.KEYCODE_BACK) && canGoBack())
-		{       
+	public void destroy() {
+		// TODO: Implement this method
+		if(mDownloadBroadcastReceiver!=null){
+			mContext.unregisterReceiver(mDownloadBroadcastReceiver);
+		}
+		super.destroy();
+	}
+
+
+	
+	
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {       
+		if ((keyCode == KeyEvent.KEYCODE_BACK) && canGoBack()) {       
             goBack();       
 			return true;       
         }       
@@ -223,187 +276,154 @@ public class LuaWebView extends WebView implements LuaGcable
     }
 
 	@Override
-	public void setOnKeyListener(View.OnKeyListener l)
-	{
+	public void setOnKeyListener(View.OnKeyListener l) {
 		// TODO: Implement this method
 		super.setOnKeyListener(l);
 	}
 
-	
-	public void addJSInterface(JsInterface object, String name)
-	{
+
+	public void addJSInterface(JsInterface object, String name) {
 		// TODO: Implement this method
 		super.addJavascriptInterface(new JsObject(object), name);
 	}
 
-	
-	public void addJsInterface(JsInterface object, String name)
-	{
+
+	public void addJsInterface(JsInterface object, String name) {
 		// TODO: Implement this method
 		super.addJavascriptInterface(new JsObject(object), name);
 	}
 
-	class JsObject
-	{
+	class JsObject {
 		private LuaWebView.JsInterface mJs;
-		public JsObject(JsInterface js)
-		{
+		public JsObject(JsInterface js) {
 			mJs = js;
 		}
 		@JavascriptInterface
-		public String execute(String arg)
-		{
+		public String execute(String arg) {
 			return mJs.execute(arg);
 		};
 	}
 
-	public interface JsInterface
-	{
+	public interface JsInterface {
 		@JavascriptInterface
 		public String execute(String arg);
 	}
 
-	public void setWebViewClient(LuaWebViewClient client)
-	{
+	public void setWebViewClient(LuaWebViewClient client) {
 		// TODO: Implement this method
 		super.setWebViewClient(new SimpleLuaWebViewClient(client));
 	}
 
-	private class LuaJavaScriptinterface
-	{
+	private class LuaJavaScriptinterface {
 
 		private LuaActivity mMain;
-		public LuaJavaScriptinterface(LuaActivity  main)
-		{
+		public LuaJavaScriptinterface(LuaActivity  main) {
 			mMain = main;
 		}
 
 		@JavascriptInterface
-		public Object callLuaFunnction(String name)
-		{
+		public Object callLuaFunnction(String name) {
 			return mMain.runFunc(name);
 		}
 
 		@JavascriptInterface
-		public Object callLuaFunnction(String name, String arg)
-		{
+		public Object callLuaFunnction(String name, String arg) {
 			return mMain.runFunc(name, arg);
 		}
 
 		@JavascriptInterface
-		public Object doLuaString(String name)
-		{
+		public Object doLuaString(String name) {
 			return mMain.doString(name);
 		}
 	}
 
-	private class SimpleLuaWebViewClient extends WebViewClient
-	{
+	private class SimpleLuaWebViewClient extends WebViewClient {
 
 		private LuaWebView.LuaWebViewClient mLuaWebViewClient;
 
-		public SimpleLuaWebViewClient(LuaWebViewClient wvc)
-		{
+		public SimpleLuaWebViewClient(LuaWebViewClient wvc) {
 			mLuaWebViewClient = wvc;
 		}
 
-		public boolean shouldOverrideUrlLoading(WebView view, String url)
-		{
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
 			return mLuaWebViewClient.shouldOverrideUrlLoading(view, url);
 		}
 
-		public void onPageStarted(WebView view, String url, Bitmap favicon)
-		{
+		public void onPageStarted(WebView view, String url, Bitmap favicon) {
 			mLuaWebViewClient.onPageStarted(view, url, favicon);
 		}
 
-		public void onPageFinished(WebView view, String url)
-		{
+		public void onPageFinished(WebView view, String url) {
 			mLuaWebViewClient.onPageFinished(view, url);
 		}
 
-		public void onLoadResource(WebView view, String url)
-		{
+		public void onLoadResource(WebView view, String url) {
 			mLuaWebViewClient.onLoadResource(view, url);
 		}
 
-		public WebResourceResponse shouldInterceptRequest(WebView view, String url)
-		{
+		public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
 			return mLuaWebViewClient.shouldInterceptRequest(view, url);
 		}
 
 		@Deprecated
 		public void onTooManyRedirects(WebView view, Message cancelMsg,
-									   Message continueMsg)
-		{
+									   Message continueMsg) {
 			cancelMsg.sendToTarget();
 		}
 
 		public void onReceivedError(WebView view, int errorCode,
-									String description, String failingUrl)
-		{
+									String description, String failingUrl) {
 			mLuaWebViewClient.onReceivedError(view, errorCode, description, failingUrl);
 		}
 
 		public void onFormResubmission(WebView view, Message dontResend,
-									   Message resend)
-		{
+									   Message resend) {
 			dontResend.sendToTarget();
 		}
 
 		public void doUpdateVisitedHistory(WebView view, String url,
-										   boolean isReload)
-		{
+										   boolean isReload) {
 			mLuaWebViewClient.doUpdateVisitedHistory(view, url, isReload);
 		}
 
 		public void onReceivedSslError(WebView view, SslErrorHandler handler,
-									   SslError error)
-		{
+									   SslError error) {
 			handler.cancel();
 		}
 
-		public void onProceededAfterSslError(WebView view, SslError error)
-		{
+		public void onProceededAfterSslError(WebView view, SslError error) {
 			mLuaWebViewClient.onProceededAfterSslError(view, error);
 		}
 
 		public void onReceivedClientCertRequest(WebView view,
-												ClientCertRequest handler, String host_and_port)
-		{
+												ClientCertRequest handler, String host_and_port) {
 			handler.cancel();
 		}
 
 		public void onReceivedHttpAuthRequest(WebView view,
-											  HttpAuthHandler handler, String host, String realm)
-		{
+											  HttpAuthHandler handler, String host, String realm) {
 			handler.cancel();
 		}
 
-		public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event)
-		{
+		public boolean shouldOverrideKeyEvent(WebView view, KeyEvent event) {
 			return mLuaWebViewClient.shouldOverrideKeyEvent(view, event);
 		}
 
-		public void onUnhandledKeyEvent(WebView view, KeyEvent event)
-		{
+		public void onUnhandledKeyEvent(WebView view, KeyEvent event) {
 			mLuaWebViewClient.onUnhandledKeyEvent(view, event);
 		}
 
-		public void onScaleChanged(WebView view, float oldScale, float newScale)
-		{
+		public void onScaleChanged(WebView view, float oldScale, float newScale) {
 			mLuaWebViewClient.onScaleChanged(view, oldScale, newScale);
 		}
 
 		public void onReceivedLoginRequest(WebView view, String realm,
-										   String account, String args)
-		{
+										   String account, String args) {
 			mLuaWebViewClient.onReceivedLoginRequest(view, realm, account, args);
 		}
 	}
 
-	public interface LuaWebViewClient
-	{
+	public interface LuaWebViewClient {
 
 		public boolean shouldOverrideUrlLoading(WebView view, String url);
 
@@ -499,22 +519,19 @@ public class LuaWebView extends WebView implements LuaGcable
 
 	}
 
-	class LuaWebChromeClient extends  WebChromeClient
-	{
+	class LuaWebChromeClient extends  WebChromeClient {
 		EditText prompt_input_field=new EditText(mContext);
 
 
 		@Override
-		public boolean onJsAlert(WebView view, String url, String message, final android.webkit.JsResult result)
-		{
+		public boolean onJsAlert(WebView view, String url, String message, final android.webkit.JsResult result) {
 			new AlertDialog.Builder(mContext)
 				.setTitle("javaScript dialog")
 				.setMessage(message)
 				.setPositiveButton(android.R.string.ok,
 				new AlertDialog.OnClickListener()
 				{
-					public void onClick(DialogInterface dialog, int which)
-					{
+					public void onClick(DialogInterface dialog, int which) {
 						result.confirm();
 					}
 				})
@@ -525,24 +542,21 @@ public class LuaWebView extends WebView implements LuaGcable
 		};
 		@Override
 		public boolean onJsConfirm(WebView view, String url,
-								   String message, final JsResult result)
-		{
+								   String message, final JsResult result) {
 			AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 			b.setTitle("Confirm");
 			b.setMessage(message);
 			b.setPositiveButton(android.R.string.ok,
 				new AlertDialog.OnClickListener() {
 					public void onClick(DialogInterface dialog,
-										int which)
-					{
+										int which) {
 						result.confirm();
 					}
 				});
 			b.setNegativeButton(android.R.string.cancel,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
-										int which)
-					{
+										int which) {
 						result.cancel();
 					}
 				});
@@ -554,8 +568,7 @@ public class LuaWebView extends WebView implements LuaGcable
 
 		@Override
 		public boolean onJsPrompt(WebView view, String url, String message,
-								  String defaultValue, final JsPromptResult result)
-		{
+								  String defaultValue, final JsPromptResult result) {
 			prompt_input_field.setText(defaultValue);
 			AlertDialog.Builder b = new AlertDialog.Builder(mContext);
 			b.setTitle("Prompt");
@@ -564,8 +577,7 @@ public class LuaWebView extends WebView implements LuaGcable
 			b.setPositiveButton(android.R.string.ok,
 				new AlertDialog.OnClickListener() {
 					public void onClick(DialogInterface dialog,
-										int which)
-					{
+										int which) {
 						String value = prompt_input_field
 							.getText().toString();
 						result.confirm(value);
@@ -574,49 +586,42 @@ public class LuaWebView extends WebView implements LuaGcable
 			b.setNegativeButton(android.R.string.cancel,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,
-										int which)
-					{
+										int which) {
 						result.cancel();
 					}
 				});
 			b.setOnCancelListener(new DialogInterface.OnCancelListener() {
-					public void onCancel(DialogInterface dialog)
-					{
+					public void onCancel(DialogInterface dialog) {
 						result.cancel();
 					}
 				});
 			b.show();
 			return true;
 		};
-		
+
 		@Override
-		public void onProgressChanged(WebView view, int newProgress)
-		{
+		public void onProgressChanged(WebView view, int newProgress) {
 			//mContext.setProgressBarVisibility(true);
 			//mContext.setProgress(newProgress * 100);
 			//mContext.setSecondaryProgress(newProgress * 100);
-			if(newProgress==100)
-			{
+			if (newProgress == 100) {
 				mProgressbar.setVisibility(View.GONE);
 			}
-			else
-			{
+			else {
 				mProgressbar.setVisibility(View.VISIBLE);
 				mProgressbar.setProgress(newProgress);
 			}
 			super.onProgressChanged(view, newProgress);
 		}
-		
+
 		@Override
-		public void onReceivedTitle(WebView view, String title)
-		{
+		public void onReceivedTitle(WebView view, String title) {
 			//mContext.setTitle(title);
 			super.onReceivedTitle(view, title);
 		}
 
 		@Override
-		public void onReceivedIcon(WebView view, Bitmap icon)
-		{
+		public void onReceivedIcon(WebView view, Bitmap icon) {
 			// TODO: Implement this method
 			//mContext.setIcon(new BitmapDrawable(icon));
 			super.onReceivedIcon(view, icon);
@@ -629,7 +634,7 @@ public class LuaWebView extends WebView implements LuaGcable
 		}  
 		// For Android < 3.0  
 		public void openFileChooser(ValueCallback<Uri> uploadMsg) {  
-			openFileChooser( uploadMsg, "" );  
+			openFileChooser(uploadMsg, "");  
 		}  
 		// For Android  > 4.1.1  
 		public void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture) {  
@@ -637,11 +642,9 @@ public class LuaWebView extends WebView implements LuaGcable
 		}  
 	}
 
-	
-	public void openFile(String dir)
-	{
-		if (open_dlg == null)
-		{
+
+	public void openFile(String dir) {
+		if (open_dlg == null) {
 			open_dlg = new Dialog(getContext());
 			open_list = new ListView(getContext());
 			open_list.setFastScrollEnabled(true);
@@ -651,25 +654,22 @@ public class LuaWebView extends WebView implements LuaGcable
 			open_list.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
 					@Override
-					public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4)
-					{
+					public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4) {
 						String t=((TextView)p2).getText().toString();
-						if (t.equals("../"))
-						{
-							mDir = new File(mDir).getParent()+"/";
+						if (t.equals("../")) {
+							mDir = new File(mDir).getParent() + "/";
 							openFile(mDir);
 							return;
 						}
 						String fn=mDir + t;
 						File f=new File(fn);
-						if (f.isDirectory())
-						{
+						if (f.isDirectory()) {
 							mDir = fn;
 							openFile(mDir);
 							return;
 						}
 						mUploadMessage.onReceiveValue(Uri.parse(fn));
-						}
+					}
 				});
 
 		}
@@ -680,17 +680,14 @@ public class LuaWebView extends WebView implements LuaGcable
 
 
 		String[] fs=d.list();
-		if (fs != null)
-		{
+		if (fs != null) {
 			Arrays.sort(fs);
-			for (String k:fs)
-			{
+			for (String k:fs) {
 				if (new File(mDir + k).isDirectory())
 					ns.add(k + "/");
 			}
 
-			for (String k:fs)
-			{
+			for (String k:fs) {
 				if (new File(mDir + k).isFile())
 					ns.add(k);
 			}
@@ -702,6 +699,6 @@ public class LuaWebView extends WebView implements LuaGcable
 		open_dlg.setTitle(mDir);
 		open_dlg.show();
 	}
-	
-	
+
+
 }

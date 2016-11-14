@@ -1,7 +1,7 @@
 package com.androlua;
 
-import android.content.res.*;
 import android.os.*;
+import com.androlua.util.*;
 import com.luajava.*;
 import java.io.*;
 import java.util.regex.*;
@@ -12,8 +12,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 	@Override
 	public void gc() {
 		// TODO: Implement this method
-		if(isRun)
-			quit();
+		quit();
 	}
 	
 
@@ -117,6 +116,7 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 	{
 		try
 		{
+			
 			if (L == null)
 			{
 				initLua();
@@ -151,8 +151,8 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 			thandler = new ThreadHandler();
 			isRun = true;
 			Looper.loop();
-			isRun = false;
 		}
+		isRun = false;
 		L.gc(LuaState.LUA_GCCOLLECT, 1);
 		System.gc();
 		return ;
@@ -184,8 +184,10 @@ public class LuaThread extends Thread implements Runnable,LuaMetaTable,LuaGcable
 
 	public void quit()
 	{
-		if (isRun)
+		if (isRun){
+			isRun = false;
 			thandler.getLooper().quit();
+		}
 	}
 
 	public void push(int what, String s)

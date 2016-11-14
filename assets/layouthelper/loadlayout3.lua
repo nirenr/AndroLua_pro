@@ -15,12 +15,21 @@ local Gravity=bindClass("android.view.Gravity")
 local OnClickListener=bindClass("android.view.View$OnClickListener")
 local TypedValue=luajava.bindClass("android.util.TypedValue")
 local BitmapDrawable=luajava.bindClass("android.graphics.drawable.BitmapDrawable")
+local TruncateAt=bindClass("android.text.TextUtils$TruncateAt")
 local LuaDrawable=luajava.bindClass "com.androlua.LuaDrawable"
 local ArrayAdapter=bindClass("android.widget.ArrayAdapter")
 local ScaleType=bindClass("android.widget.ImageView$ScaleType")
 local scaleTypes=ScaleType.values()
 local android_R=bindClass("android.R")
 
+local Context=bindClass "android.content.Context"
+local DisplayMetrics=bindClass "android.util.DisplayMetrics"
+
+local wm =context.getSystemService(Context.WINDOW_SERVICE);
+local outMetrics = DisplayMetrics();
+wm.getDefaultDisplay().getMetrics(outMetrics);
+local W = outMetrics.widthPixels;
+local H = outMetrics.heightPixels;
 
 local dm=context.getResources().getDisplayMetrics()
 local id=0x7f000000
@@ -54,8 +63,8 @@ local toint={
 
   --android:visibility
   visible=0,
-  invisible=4,
-  gone=8,
+  invisible=1,
+  gone=2,
 
   wrap_content=-2,
   fill_parent=-1,
@@ -204,6 +213,17 @@ local function checkType(v)
   return tonumber(n),types[ty]
 end
 
+local function checkPercent(v)
+  local n,ty=string.match(v,"^(%-?[%.%d]+)%%([wh])$")
+  if ty==nil then
+    return nil
+  elseif ty=="w" then
+    return tonumber(n)*W/100
+  elseif ty=="h" then
+    return tonumber(n)*H/100
+  end
+end
+
 local function split(s,t)
   local idx=1
   local l=#s
@@ -248,6 +268,11 @@ local function checkNumber(var)
     local i=checkint(var)
     if i then
       return i
+    end
+  
+    local p=checkPercent(var)
+    if p then
+      return p
     end
 
     local h=string.match(var,"^#(%x+)$")
@@ -318,6 +343,14 @@ local function dump2 (t)
   return t
 end
 
+local ver = luajava.bindClass("android.os.Build").VERSION.SDK_INT;
+function setBackground(view,bg)
+  if ver<16 then
+    view.setBackgroundDrawable(bg)
+  else
+    view.setBackground(bg)
+  end
+end
 
 local function setattribute(root,view,params,k,v,ids)
   if k=="layout_x" then
@@ -339,8 +372,6 @@ local function setattribute(root,view,params,k,v,ids)
   elseif k=="items" and type(v)=="table" then --创建列表项目
     local adapter=ArrayListAdapter(context,android_R.layout.simple_list_item_1, String(v))
     view.setAdapter(adapter)
-  elseif k=="text" then
-    view.setText(v)
   elseif k=="textSize" then
     if tonumber(v) then
       view.setTextSize(tonumber(v))
@@ -356,6 +387,8 @@ local function setattribute(root,view,params,k,v,ids)
     end
   elseif k=="textAppearance" then
     view.setTextAppearance(context,checkattr(v))
+  elseif k=="ellipsize" then
+    view.setEllipsize(TruncateAt[string.upper(v)])
   elseif k=="url" then
     view.loadUrl(url)
   elseif k=="src" then
@@ -378,22 +411,22 @@ local function setattribute(root,view,params,k,v,ids)
       elseif rawget(root,v) or rawget(_G,v) then
         v=rawget(root,v) or rawget(_G,v)
         if type(v)=="function" then
-          view.setBackground(LuaDrawable(v))
+          setBackground(view,LuaDrawable(v))
         elseif type(v)=="userdata" then
-          view.setBackground(v)
+          setBackground(view,v)
         end
       else
         if (not v:find("^/")) and luadir then
           v=luadir..v
         end
-       if v:find("%.9%.png") then
-        view.setBackground(NineBitmapDrawable(loadbitmap(v)))
+        if v:find("%.9%.png") then
+          setBackground(view,NineBitmapDrawable(loadbitmap(v)))
         else
-        view.setBackground(BitmapDrawable(loadbitmap(v)))
+          setBackground(view,BitmapDrawable(loadbitmap(v)))
         end
       end
     elseif type(v)=="userdata" then
-      view.setBackground(v)
+      setBackground(view,v)
     elseif type(v)=="number" then
       view.setBackgroundColor(v)
     end
@@ -401,7 +434,11 @@ local function setattribute(root,view,params,k,v,ids)
     view.setInputType(0x81)
   elseif type(k)=="string" and not(k:find("layout_")) and not(k:find("padding")) and k~="style" then --设置属性
     k=string.gsub(k,"^(%w)",function(s)return string.upper(s)end)
-    view["set"..k](checkValue(v))
+    if k=="Text" or k=="Title" or k=="Subtitle" then
+      view["set"..k](v)
+    else
+      view["set"..k](checkValue(v))
+    end
   end
 end
 
@@ -421,12 +458,12 @@ local function loadlayout(t,root,group)
     if t.style:find("^%?") then
       style=getIdentifier(t.style:sub(2,-1))
     else
-        local st,sty=pcall(require,t.style)
-        if st then
-           copytable(sty,t)
-        else
-          style=checkattr(t.style)
-        end
+      local st,sty=pcall(require,t.style)
+      if st then
+        copytable(sty,t)
+      else
+        style=checkattr(t.style)
+      end
     end
   end
   if not t[1] then

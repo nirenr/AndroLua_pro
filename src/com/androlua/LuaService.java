@@ -14,11 +14,69 @@ import com.androlua.LuaService.*;
 import dalvik.system.*;
 import java.util.*;
 
-public class LuaService extends Service implements LuaContext
-{
+public class LuaService extends Service implements LuaContext,LuaBroadcastReceiver.OnReceiveListerer {
+
+	private LuaDexLoader mLuaDexLoader;
+	@Override
+	public ArrayList<ClassLoader> getClassLoaders() {
+		// TODO: Implement this method
+		return mLuaDexLoader.getClassLoaders();
+	}
+
+	public DexClassLoader loadDex(String path) throws LuaException {
+		return mLuaDexLoader.loadDex(path);
+	}
+
+	public HashMap<String,String> getLibrarys(){
+		return mLuaDexLoader.getLibrarys();
+	}
+	
+	public void loadResources(String path) {
+		mLuaDexLoader.loadResources(path);
+	}
+
+	@Override  
+	public AssetManager getAssets() {
+		if (mLuaDexLoader != null && mLuaDexLoader.getAssets() != null)
+			return mLuaDexLoader.getAssets();
+		return super.getAssets(); 
+	} 
+
+	@Override  
+	public Resources getResources() {  
+		if (mLuaDexLoader != null && mLuaDexLoader.getResources() != null)
+			return mLuaDexLoader.getResources();
+		return super.getResources(); 
+	} 
+
+
+	public Intent registerReceiver(LuaBroadcastReceiver receiver, IntentFilter filter) {
+		// TODO: Implement this method
+		return super.registerReceiver(receiver, filter);
+	}
+
+	public Intent registerReceiver(LuaBroadcastReceiver.OnReceiveListerer ltr, IntentFilter filter) {
+		// TODO: Implement this method
+		LuaBroadcastReceiver receiver=new LuaBroadcastReceiver(ltr);
+		return super.registerReceiver(receiver, filter);
+	}
+
+	public Intent registerReceiver(IntentFilter filter) {
+		// TODO: Implement this method
+		if (mReceiver != null)
+			unregisterReceiver(mReceiver);
+		mReceiver = new LuaBroadcastReceiver(this);
+		return super.registerReceiver(mReceiver, filter);
+	}
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		// TODO: Implement this method
+		runFunc("onReceive", context, intent);
+	}
 
 	private ArrayList<LuaGcable> gclist=new ArrayList<LuaGcable>();
-	
+
 	@Override
 	public void regGc(LuaGcable obj) {
 		// TODO: Implement this method
@@ -26,8 +84,7 @@ public class LuaService extends Service implements LuaContext
 	}
 
 	@Override
-	public String getLuaDir(String name)
-	{
+	public String getLuaDir(String name) {
 		// TODO: Implement this method
 		File dir=new File(luaDir + "/" + name);
 		if (!dir.exists())
@@ -38,8 +95,7 @@ public class LuaService extends Service implements LuaContext
 
 
 	@Override
-	public String getLuaExtDir(String name)
-	{
+	public String getLuaExtDir(String name) {
 		// TODO: Implement this method
 		File dir=new File(luaExtDir + "/" + name);
 		if (!dir.exists())
@@ -56,47 +112,41 @@ public class LuaService extends Service implements LuaContext
 	private String luaMdDir;
 
 	@Override
-	public String getLuaDir()
-	{
+	public String getLuaDir() {
 		// TODO: Implement this method
 		return luaDir;
 	}
 
 	@Override
-	public String getLuaExtDir()
-	{
+	public String getLuaExtDir() {
 		// TODO: Implement this method
 		return luaExtDir;
 	}
 
 	@Override
-	public String getLuaLpath()
-	{
+	public String getLuaLpath() {
 		// TODO: Implement this method
 		return luaLpath;
 	}
 
 	@Override
-	public String getLuaCpath()
-	{
+	public String getLuaCpath() {
 		// TODO: Implement this method
 		return luaCpath;
 	}
 
 	@Override
-	public Context getContext()
-	{
+	public Context getContext() {
 		// TODO: Implement this method
 		return this;
 	}
 
 	@Override
-	public LuaState getLuaState()
-	{
+	public LuaState getLuaState() {
 		// TODO: Implement this method
 		return L;
 	}
-	
+
 	LuaBinder mBinder=new LuaBinder();
 
 	private LuaState L;
@@ -116,35 +166,31 @@ public class LuaService extends Service implements LuaContext
 	private String luaExtDir;
 
 	private BroadcastReceiver mReceiver;
-	
+
 	private StringBuilder output = new StringBuilder();
-	
+
 	private static LuaService _this;
-	
-	public void setBinder(LuaBinder mBinder)
-	{
+
+	public void setBinder(LuaBinder mBinder) {
 		this.mBinder = mBinder;
 	}
 
-	public LuaBinder getBinder()
-	{
+	public LuaBinder getBinder() {
 		return mBinder;
 	}
 
 	@Override
-	public IBinder onBind(Intent p1)
-	{
+	public IBinder onBind(Intent p1) {
 		// TODO: Implement this method
 		startForeground(1, new Notification()); 
 		return new LuaBinder();
 	}
 
 	@Override
-	public void onCreate()
-	{
+	public void onCreate() {
 		// TODO: Implement this method
 		super.onCreate();
-		_this=LuaService.this;
+		_this = LuaService.this;
 		//定义文件夹
 		LuaApplication app=(LuaApplication) getApplication();
 		localDir = app.getLocalDir();
@@ -154,73 +200,67 @@ public class LuaService extends Service implements LuaContext
 		luaCpath = app.getLuaCpath();
 		luaDir = localDir;
 		luaLpath = app.getLuaLpath();
-		luaExtDir=app.getLuaExtDir();
-		
-		handler=new MainHandler();
+		luaExtDir = app.getLuaExtDir();
+
+		handler = new MainHandler();
 	}
 
 	@Override
-	public int onStartCommand(Intent intent, int flags, int startId)
-	{
+	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO: Implement this method
-		_this=LuaService.this;
-		if (L == null)
-		{
+		_this = LuaService.this;
+		if (L == null) {
 			startForeground(1, new Notification()); 
 			luaPath = intent.getStringExtra("luaPath");
 			luaDir = intent.getStringExtra("luaDir");
 			luaLpath = (luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;") + luaLpath;
-			
+
 			Uri uri=intent.getData();
-			try
-			{
+			try {
 				initLua();
-				if(uri!=null)
+				mLuaDexLoader = new LuaDexLoader(this);
+				mLuaDexLoader.loadLibs();
+
+				if (uri != null)
 					doFile(uri.getPath());
 				else
 					doFile("service.lua");
-				
+
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				sendMsg(e.getMessage());
 			}
-			
-			
+
+
 		}
-		runFunc("onStartCommand",intent, flags, startId);
-		runFunc("onStart",(Object[])intent.getSerializableExtra("arg"));
+		runFunc("onStartCommand", intent, flags, startId);
+		runFunc("onStart", (Object[])intent.getSerializableExtra("arg"));
 		return super.onStartCommand(intent, flags, startId);
 	}
 
 	@Override
-	public boolean onUnbind(Intent intent)
-	{
+	public boolean onUnbind(Intent intent) {
 		// TODO: Implement this method
 		return super.onUnbind(intent);
 	}
 
 	@Override
-	public void onDestroy()
-	{
+	public void onDestroy() {
 		// TODO: Implement this method
 		unregisterReceiver(mReceiver);
 		super.onDestroy();
 	}
-	
-	public int getWidth()
-	{
+
+	public int getWidth() {
 		return getResources().getDisplayMetrics().widthPixels;
 	}
-	
-	public int getHeight()
-	{
+
+	public int getHeight() {
 		return getResources().getDisplayMetrics().heightPixels;
 	}
-	
+
 	//初始化lua使用的Java函数
-	private void initLua() throws Exception
-	{
+	private void initLua() throws Exception {
 		L = LuaStateFactory.newLuaState();
 		L.openLibs();
 		L.pushJavaObject(this);
@@ -228,7 +268,7 @@ public class LuaService extends Service implements LuaContext
 		L.getGlobal("service");
 		L.setGlobal("this");
 		L.pushContext(this);
-		
+
 
 		L.getGlobal("luajava"); 
 		L.pushString(luaExtDir);
@@ -251,30 +291,24 @@ public class LuaService extends Service implements LuaContext
 		JavaFunction print=new JavaFunction(L) {
 
 			@Override
-			public int execute() throws LuaException
-			{
-				if (L.getTop() < 2)
-				{
+			public int execute() throws LuaException {
+				if (L.getTop() < 2) {
 					sendMsg("");
 					return 0;
 				}
-				for (int i = 2; i <= L.getTop(); i++)
-				{
+				for (int i = 2; i <= L.getTop(); i++) {
 					int type = L.type(i);
 					String val = null;
 					String stype = L.typeName(type);
-					if (stype.equals("userdata"))
-					{
+					if (stype.equals("userdata")) {
 						Object obj = L.toJavaObject(i);
 						if (obj != null)
 							val = obj.toString();
 					}
-					else if (stype.equals("boolean"))
-					{
+					else if (stype.equals("boolean")) {
 						val = L.toBoolean(i) ? "true" : "false";
 					}
-					else
-					{
+					else {
 						val = L.toString(i);
 					}
 					if (val == null)
@@ -287,15 +321,14 @@ public class LuaService extends Service implements LuaContext
 				output.setLength(0);
 				return 0;
 			}
-			
+
 
 		};
-		
+
 		print.register("print");
 		JavaFunction set = new JavaFunction(L) {
 			@Override
-			public int execute() throws LuaException
-			{
+			public int execute() throws LuaException {
 				LuaThread thread = (LuaThread) L.toJavaObject(2);
 
 				thread.set(L.toString(3), L.toJavaObject(4));
@@ -306,22 +339,18 @@ public class LuaService extends Service implements LuaContext
 
 		JavaFunction call = new JavaFunction(L) {
 			@Override
-			public int execute() throws LuaException
-			{
+			public int execute() throws LuaException {
 				LuaThread thread = (LuaThread) L.toJavaObject(2);
 
 				int top=L.getTop();
-				if (top > 3)
-				{
+				if (top > 3) {
 					Object[] args = new Object[top - 3];
-					for (int i=4;i <= top;i++)
-					{
+					for (int i=4;i <= top;i++) {
 						args[i - 4] = L.toJavaObject(i);
 					}
 					thread.call(L.toString(3), args);
 				}
-				else if (top == 3)
-				{
+				else if (top == 3) {
 					thread.call(L.toString(3));
 				}
 
@@ -337,83 +366,70 @@ public class LuaService extends Service implements LuaContext
 	private long lastShow;
 
 	//运行lua脚本
-	public Object doFile(String filePath) 
-	{
+	public Object doFile(String filePath) {
 		return doFile(filePath, new Object[0]);
 	}
 
-	public Object doFile(String filePath, Object[] args) 
-	{
+	public Object doFile(String filePath, Object[] args) {
 		int ok = 0;
-		try
-		{
+		try {
 			if (filePath.charAt(0) != '/')
 				filePath = luaDir + "/" + filePath;
 
 			L.setTop(0);
 			ok = L.LloadFile(filePath);
 
-			if (ok == 0)
-			{
+			if (ok == 0) {
 				L.getGlobal("debug");
 				L.getField(-1, "traceback");
 				L.remove(-2);
 				L.insert(-2);
 				int l=0;
-				if(args!=null)
-					l=args.length;
-				for (int i=0;i < l;i++)
-				{
+				if (args != null)
+					l = args.length;
+				for (int i=0;i < l;i++) {
 					L.pushObjectValue(args[i]);
 				}
 				ok = L.pcall(l, 1, -2 - l);
-				if (ok == 0)
-				{				
+				if (ok == 0) {				
 					return L.toJavaObject(-1);
 				}
 			}
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
-		catch (LuaException e)
-		{			
+		catch (LuaException e) {			
 			sendMsg(e.getMessage());
 		}
 
 		return null;
 	}
 
-	public Object doAsset(String name, Object...args) 
-	{
+	public Object doAsset(String name, Object...args) {
 		int ok = 0;
-		try
-		{
+		try {
 			byte[] bytes = readAsset(name);
 			L.setTop(0);
 			ok = L.LloadBuffer(bytes, name);
 
-			if (ok == 0)
-			{
+			if (ok == 0) {
 				L.getGlobal("debug");
 				L.getField(-1, "traceback");
 				L.remove(-2);
 				L.insert(-2);
 				int l=0;
-				if(args!=null)
-					l=args.length;
-				for (int i=0;i < l;i++)
-				{
+				if (args != null)
+					l = args.length;
+				for (int i=0;i < l;i++) {
 					L.pushObjectValue(args[i]);
 				}
 				ok = L.pcall(l, 0, -2 - l);
-				if (ok == 0)
-				{				
+				if (ok == 0) {				
 					return L.toJavaObject(-1);
 				}
 			}
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
-		catch (Exception e)
-		{			
+		catch (Exception e) {			
 			sendMsg(e.getMessage());
 		}
 
@@ -421,39 +437,32 @@ public class LuaService extends Service implements LuaContext
 	}
 
 //运行lua函数
-	public Object runFunc(String funcName, Object...args)
-	{
-		if (L != null)
-		{
-			try
-			{
+	public Object runFunc(String funcName, Object...args) {
+		if (L != null) {
+			try {
 				L.setTop(0);
 				L.getGlobal(funcName);
-				if (L.isFunction(-1))
-				{
+				if (L.isFunction(-1)) {
 					L.getGlobal("debug");
 					L.getField(-1, "traceback");
 					L.remove(-2);
 					L.insert(-2);
 
 					int l=0;
-					if(args!=null)
-						l=args.length;
-					for (int i=0;i < l;i++)
-					{
+					if (args != null)
+						l = args.length;
+					for (int i=0;i < l;i++) {
 						L.pushObjectValue(args[i]);
 					}
 
 					int ok = L.pcall(l, 1, -2 - l);
-					if (ok == 0)
-					{				
+					if (ok == 0) {				
 						return L.toJavaObject(-1);
 					}
 					throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 				}
 			}
-			catch (LuaException e)
-			{
+			catch (LuaException e) {
 				sendMsg(funcName + " " + e.getMessage());
 			}
 		}	
@@ -463,38 +472,32 @@ public class LuaService extends Service implements LuaContext
 
 
 //运行lua代码
-	public Object doString(String funcSrc, Object... args)
-	{
-		try
-		{
+	public Object doString(String funcSrc, Object... args) {
+		try {
 			L.setTop(0);
 			int ok = L.LloadString(funcSrc);
 
-			if (ok == 0)
-			{
+			if (ok == 0) {
 				L.getGlobal("debug");
 				L.getField(-1, "traceback");
 				L.remove(-2);
 				L.insert(-2);
 
 				int l=0;
-				if(args!=null)
-					l=args.length;
-				for (int i=0;i < l;i++)
-				{
+				if (args != null)
+					l = args.length;
+				for (int i=0;i < l;i++) {
 					L.pushObjectValue(args[i]);
 				}
 
 				ok = L.pcall(l, 1, -2 - l);
-				if (ok == 0)
-				{				
+				if (ok == 0) {				
 					return L.toJavaObject(-1);
 				}
 			}
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1)) ;
 		}
-		catch (LuaException e)
-		{
+		catch (LuaException e) {
 			sendMsg(e.getMessage());
 		}
 		return null;
@@ -502,10 +505,8 @@ public class LuaService extends Service implements LuaContext
 
 
 //生成错误信息
-	private String errorReason(int error)
-	{
-		switch (error)
-		{
+	private String errorReason(int error) {
+		switch (error) {
 			case 6:
 				return "error error";
 			case 5:
@@ -524,8 +525,7 @@ public class LuaService extends Service implements LuaContext
 
 //读取asset文件
 
-	public byte[] readAsset(String name) throws IOException 
-	{
+	public byte[] readAsset(String name) throws IOException {
 		AssetManager am = getAssets();
 		InputStream is = am.open(name);
 		byte[] ret= readAll(is);
@@ -534,13 +534,11 @@ public class LuaService extends Service implements LuaContext
 		return ret;
 	}
 
-	private static byte[] readAll(InputStream input) throws IOException 
-	{
+	private static byte[] readAll(InputStream input) throws IOException {
 		ByteArrayOutputStream output = new ByteArrayOutputStream(4096);
 		byte[] buffer = new byte[4096];
 		int n = 0;
-		while (-1 != (n = input.read(buffer)))
-		{
+		while (-1 != (n = input.read(buffer))) {
 			output.write(buffer, 0, n);
 		}
 		byte[] ret= output.toByteArray();
@@ -548,23 +546,19 @@ public class LuaService extends Service implements LuaContext
 		return ret;
 	}
 
-	public class LuaBinder extends Binder
-	{
-		
-		public LuaService getService()
-		{
+	public class LuaBinder extends Binder {
+
+		public LuaService getService() {
 			return LuaService.this;
 		}
 	}
-	
-	public static LuaService getService()
-	{
+
+	public static LuaService getService() {
 		return _this;
 	}
-	
+
 	//显示信息
-	public void sendMsg(String msg)
-	{
+	public void sendMsg(String msg) {
 		Message message = new Message();
 		Bundle bundle = new Bundle();  
 		bundle.putString("data", msg);  
@@ -574,30 +568,13 @@ public class LuaService extends Service implements LuaContext
 		Log.d("lua", msg);
 	}
 
-	public DexClassLoader loadDex(String path) throws LuaException
-	{
-		if (path.charAt(0) != '/')
-			path = luaDir + "/" + path;
-		if (!new File(path).exists())
-			if (new File(path + ".dex").exists())
-				path += ".dex";
-			else
-			if (new File(path + ".jar").exists())
-				path += ".jar";
-			else
-				throw new LuaException(path + " not found");
-		return new DexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
-	}
-
-	public Object loadLib(String name) throws LuaException
-	{
+	public Object loadLib(String name) throws LuaException {
 		int i=name.indexOf(".");
 		String fn = name;
 		if (i > 0)
 			fn = name.substring(0, i);
 		File f=new File(libDir + "/lib" + fn + ".so");
-		if (!f.exists())
-		{
+		if (!f.exists()) {
 			f = new File(luaDir + "/lib" + fn + ".so");
 			if (!f.exists())
 				throw new LuaException("can not find lib " + name);
@@ -606,22 +583,18 @@ public class LuaService extends Service implements LuaContext
 		LuaObject require=L.getLuaObject("require");
 		return require.call(name);
 	}
-	
-	private void copyFile(String oldPath, String newPath)
-	{ 
-		try
-		{ 
+
+	private void copyFile(String oldPath, String newPath) { 
+		try { 
 			int bytesum = 0; 
 			int byteread = 0; 
 			File oldfile = new File(oldPath); 
-			if (oldfile.exists())
-			{ //文件存在时 
+			if (oldfile.exists()) { //文件存在时 
 				InputStream inStream = new FileInputStream(oldPath); //读入原文件 
 				FileOutputStream fs = new FileOutputStream(newPath); 
 				byte[] buffer = new byte[4096]; 
 				int length; 
-				while ((byteread = inStream.read(buffer)) != -1)
-				{ 
+				while ((byteread = inStream.read(buffer)) != -1) { 
 					bytesum += byteread; //字节数 文件大小 
 					System.out.println(bytesum); 
 					fs.write(buffer, 0, byteread); 
@@ -629,27 +602,23 @@ public class LuaService extends Service implements LuaContext
 				inStream.close(); 
 			} 
 		} 
-		catch (Exception e)
-		{ 
+		catch (Exception e) { 
 			System.out.println("复制文件操作出错"); 
 			e.printStackTrace(); 
 
 		} 
 
 	} 
-	
+
 //显示toast
-	public void showToast(String text)
-	{   
+	public void showToast(String text) {   
 		long now=System.currentTimeMillis();
-        if (toast == null || now - lastShow > 1000)
-		{ 
+        if (toast == null || now - lastShow > 1000) { 
 			toastbuilder.setLength(0);
             toast = Toast.makeText(this, text, 1000);    
 			toastbuilder.append(text);
 		}
-		else
-		{    
+		else {    
 			toastbuilder.append("\n");
 			toastbuilder.append(text);
 			toast.setText(toastbuilder.toString());      
@@ -659,46 +628,38 @@ public class LuaService extends Service implements LuaContext
 		toast.show();
     } 
 
-	private void setField(String key, Object value)
-	{
-		try
-		{
+	private void setField(String key, Object value) {
+		try {
 			L.pushObjectValue(value);
 			L.setGlobal(key);
 		}
-		catch (LuaException e)
-		{
+		catch (LuaException e) {
 			sendMsg(e.getMessage());
 		}
 	}
 
-	public void call(String func)
-	{
+	public void call(String func) {
 		push(2, func);
 
 	}
 
-	public void call(String func, Object[] args)
-	{
+	public void call(String func, Object[] args) {
 		if (args.length == 0)
 			push(2, func);
 		else
 			push(3, func, args);
 	}
 
-	public void set(String key, Object value)
-	{
+	public void set(String key, Object value) {
 		push(1, key, new Object[]{ value});
 	}
 
-	public Object get(String key) throws LuaException
-	{
+	public Object get(String key) throws LuaException {
 		L.getGlobal(key);
 		return L.toJavaObject(-1);
 	}
 
-	public void push(int what, String s)
-	{
+	public void push(int what, String s) {
 		Message message = new Message();
 		Bundle bundle = new Bundle();
 		bundle.putString("data", s);
@@ -709,8 +670,7 @@ public class LuaService extends Service implements LuaContext
 
 	}
 
-	public void push(int what, String s, Object[] args)
-	{
+	public void push(int what, String s, Object[] args) {
 		Message message = new Message();
 		Bundle bundle = new Bundle();
 		bundle.putString("data", s);
@@ -722,15 +682,12 @@ public class LuaService extends Service implements LuaContext
 
 	}
 
-	
-	public class MainHandler extends Handler
-	{
+
+	public class MainHandler extends Handler {
 		@Override 
-		public void handleMessage(Message msg)
-		{ 
+		public void handleMessage(Message msg) { 
 			super.handleMessage(msg); 
-			switch (msg.what)
-			{
+			switch (msg.what) {
 				case 0:
 					{
 

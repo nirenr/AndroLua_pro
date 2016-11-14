@@ -2,10 +2,13 @@ package com.androlua;
 
 import android.content.*;
 import com.luajava.*;
+import java.util.*;
 
 public interface LuaContext
 {
 
+	public ArrayList<ClassLoader> getClassLoaders();
+	
 	public void call(String func, Object...args);
 
 	public void set(String name, Object value);

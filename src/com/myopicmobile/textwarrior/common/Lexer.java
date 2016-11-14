@@ -195,6 +195,8 @@ public class Lexer
 				int idx = 0;
 
 				LuaTokenTypes lastType = null;
+				LuaTokenTypes lastType2 = null;
+				
 				String lastName="";
 				Pair lastPair = null;
 				StringBuilder bul=new StringBuilder();			
@@ -216,17 +218,21 @@ public class Lexer
 						isModule = false;
 					}
 
-					if (isKeyword(type))
+					if(lastType2==type && lastPair!=null){
+						lastPair.setFirst(lastPair.getFirst() + len);
+					}				
+					else if (isKeyword(type))
 					{
 						//关键字
 						tokens.add(new Pair(len, KEYWORD));
 					}
 					else if (type == LuaTokenTypes.LPAREN || type == LuaTokenTypes.RPAREN
 							 || type == LuaTokenTypes.LBRACK || type == LuaTokenTypes.RBRACK
-							 || type == LuaTokenTypes.LCURLY || type == LuaTokenTypes.RCURLY)
+							 || type == LuaTokenTypes.LCURLY || type == LuaTokenTypes.RCURLY
+							 || type == LuaTokenTypes.COMMA || type == LuaTokenTypes.DOT)
 					{
 						//括号
-						tokens.add(new Pair(len, OPERATOR));
+						tokens.add(pair=new Pair(len, OPERATOR));
 					}
 					else if (type == LuaTokenTypes.STRING || type == LuaTokenTypes.LONGSTRING)
 					{
@@ -305,7 +311,7 @@ public class Lexer
 					}
 					else
 					{
-						tokens.add(new Pair(len, NORMAL));
+						tokens.add(pair=new Pair(len, NORMAL));
 					}
 
 					if (type != LuaTokenTypes.WS
@@ -314,6 +320,7 @@ public class Lexer
 					{
 						lastType = type;
 					}
+					lastType2=type;
 					if(pair!=null)
 						lastPair = pair;
 					idx += len;

@@ -2,7 +2,7 @@ package com.luajava;
 
 public interface LuaMetaTable
 {
-	public Object __call(Object...arg);
+	public Object __call(Object...arg) throws LuaException;
 	
 	public Object __index(String key); 
 	

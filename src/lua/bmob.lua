@@ -110,7 +110,7 @@ end
 
 function upload(self,f,c)
   f=File(f)
-  Http.HttpTask("https://api.bmob.cn/1/files/"..f.Name,"POST",nil,nil,header(self),function(code,json)
+  Http.HttpTask("https://api.bmob.cn/2/files/"..f.Name,"POST",nil,nil,header(self),function(code,json)
     if code~=-1 and code>=200 and code<400 then
       json=cjson.decode(json)
     end
@@ -119,7 +119,7 @@ function upload(self,f,c)
 end
 
 function remove(self,i,c)
-  Http.delete("https://api.bmob.cn/1/files/"..i,header(self),function(code,json)
+  Http.delete("https://api.bmob.cn/2/files/"..i,header(self),function(code,json)
     if code~=-1 and code>=200 and code<400 then
       json=cjson.decode(json)
     end

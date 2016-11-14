@@ -72,6 +72,8 @@ public class CardView extends FrameLayout implements CardViewDelegate {
 
     private static final CardViewImpl IMPL;
 
+	private DisplayMetrics dm;
+
     static {
         if (Build.VERSION.SDK_INT >= 21) {
             IMPL = new CardViewApi21();
@@ -201,29 +203,48 @@ public class CardView extends FrameLayout implements CardViewDelegate {
     }
 
     private void initialize(Context context, AttributeSet attrs, int defStyleAttr) {
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,
-                R.style.CardView_Light);
-        int backgroundColor = a.getColor(R.styleable.CardView_cardBackgroundColor, 0);
-        float radius = a.getDimension(R.styleable.CardView_cardCornerRadius, 0);
-        float elevation = a.getDimension(R.styleable.CardView_cardElevation, 0);
-        float maxElevation = a.getDimension(R.styleable.CardView_cardMaxElevation, 0);
-        mCompatPadding = a.getBoolean(R.styleable.CardView_cardUseCompatPadding, false);
-        mPreventCornerOverlap = a.getBoolean(R.styleable.CardView_cardPreventCornerOverlap, true);
-        int defaultPadding = a.getDimensionPixelSize(R.styleable.CardView_contentPadding, 0);
-        mContentPadding.left = a.getDimensionPixelSize(R.styleable.CardView_contentPaddingLeft,
-                defaultPadding);
-        mContentPadding.top = a.getDimensionPixelSize(R.styleable.CardView_contentPaddingTop,
-                defaultPadding);
-        mContentPadding.right = a.getDimensionPixelSize(R.styleable.CardView_contentPaddingRight,
-                defaultPadding);
-        mContentPadding.bottom = a.getDimensionPixelSize(R.styleable.CardView_contentPaddingBottom,
-                defaultPadding);
+        dm=context.getResources().getDisplayMetrics();
+		
+		//TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,
+        //        R.style.CardView_Light);
+        int backgroundColor = 0x00FFFAFAFA;
+		//a.getColor(R.styleable.CardView_cardBackgroundColor, 0);
+        float radius = dp(2);
+		//a.getDimension(R.styleable.CardView_cardCornerRadius, 0);
+        float elevation = dp(2);
+		//a.getDimension(R.styleable.CardView_cardElevation, 0);
+        float maxElevation =dp(2);
+		//a.getDimension(R.styleable.CardView_cardMaxElevation, 0);
+        mCompatPadding = false;
+		//a.getBoolean(R.styleable.CardView_cardUseCompatPadding, false);
+        mPreventCornerOverlap = true;
+		//a.getBoolean(R.styleable.CardView_cardPreventCornerOverlap, true);
+        int defaultPadding = 0;
+		//a.getDimensionPixelSize(R.styleable.CardView_contentPadding, 0);
+        mContentPadding.left = 0;
+		//a.getDimensionPixelSize(R.styleable.CardView_contentPaddingLeft,
+                //defaultPadding);
+        mContentPadding.top = 0;
+		//a.getDimensionPixelSize(R.styleable.CardView_contentPaddingTop,
+                //defaultPadding);
+        mContentPadding.right = 0;
+		//a.getDimensionPixelSize(R.styleable.CardView_contentPaddingRight,
+                //defaultPadding);
+        mContentPadding.bottom = 0;
+		//a.getDimensionPixelSize(R.styleable.CardView_contentPaddingBottom,
+                //defaultPadding);
         if (elevation > maxElevation) {
             maxElevation = elevation;
         }
-        a.recycle();
+        //a.recycle();
         IMPL.initialize(this, context, backgroundColor, radius, elevation, maxElevation);
     }
+
+	private float dp(float n) {
+		// TODO: Implement this method
+		return TypedValue.applyDimension(1,n,dm);
+	}
+	
 
     /**
      * Updates the background color of the CardView

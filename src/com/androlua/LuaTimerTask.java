@@ -1,11 +1,9 @@
 package com.androlua;
 
-import android.content.res.*;
-import android.os.*;
+import com.androlua.util.*;
 import com.luajava.*;
 import java.io.*;
 import java.util.regex.*;
-import java.util.*;
 
 public class LuaTimerTask extends TimerTaskX
 {

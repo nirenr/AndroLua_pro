@@ -1,29 +1,14 @@
 package android.widget;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import android.app.Activity;
-import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.RotateAnimation;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-import com.androlua.*;
+import android.content.*;
+import android.os.*;
+import android.util.*;
 import android.view.*;
-import android.view.ViewGroup.*;
-import android.view.View.*;
+import android.view.animation.*;
 import android.webkit.*;
-import android.widget.PullingLayout.*;
+import android.widget.*;
+import com.androlua.*;
+import java.util.*;
 
 
 /**
@@ -95,7 +80,7 @@ public class PullingLayout extends RelativeLayout {
 	// 正在刷新的图标
 	private View refreshingView;
 	// 刷新结果图标
-	private View refreshStateImageView;
+	private ImageView refreshStateImageView;
 	// 刷新结果：成功或失败
 	private TextView refreshStateTextView;
 
@@ -106,7 +91,7 @@ public class PullingLayout extends RelativeLayout {
 	// 正在加载的图标
 	private View loadingView;
 	// 加载结果图标
-	private View loadStateImageView;
+	private ImageView loadStateImageView;
 	// 加载结果：成功或失败
 	private TextView loadStateTextView;
 
@@ -177,7 +162,6 @@ public class PullingLayout extends RelativeLayout {
 				timer.cancel();
 				requestLayout();
 			}
-			Log.d("handle", "handle");
 			// 刷新布局,会自动调用onLayout
 			requestLayout();
 			// 没有拖拉或者回弹完成
@@ -228,16 +212,28 @@ public class PullingLayout extends RelativeLayout {
 	private void initView(Context context) {
 		mContext = context;
 		mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		super.addView(mInflater.inflate(R.layout.refresh_head, null), new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		//super.addView(mInflater.inflate(R.layout.refresh_head, null), new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		super.addView(new HeadView(mContext),new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		pullableLayout = new FrameLayout(mContext);
 		super.addView(pullableLayout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-		super.addView(mInflater.inflate(R.layout.load_more, null), new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
+		//super.addView(mInflater.inflate(R.layout.load_more, null), new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		super.addView(new FootView(mContext),new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+		refreshView = getChildAt(0);
+		pullableLayout = (FrameLayout) getChildAt(1);
+		loadmoreView = getChildAt(2);
+		initView();
+		
 		timer = new MyTimer(updateHandler);
-		rotateAnimation = (RotateAnimation) AnimationUtils.loadAnimation(
-			context, R.anim.reverse_anim);
-		refreshingAnimation = (RotateAnimation) AnimationUtils.loadAnimation(
-			context, R.anim.rotating);
+		rotateAnimation = new RotateAnimation(0,180,Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);
+		rotateAnimation.setDuration(100);
+		rotateAnimation.setRepeatCount(0);
+		rotateAnimation.setFillAfter(true);
+		
+		refreshingAnimation = new RotateAnimation(0,180,Animation.RELATIVE_TO_SELF,0.5f,Animation.RELATIVE_TO_SELF,0.5f);
+		refreshingAnimation.setDuration(1500);
+		refreshingAnimation.setRepeatCount(-1);
+		refreshingAnimation.setFillAfter(true);
+		
 		// 添加匀速转动动画
 		LinearInterpolator lir = new LinearInterpolator();
 		rotateAnimation.setInterpolator(lir);
@@ -264,24 +260,24 @@ public class PullingLayout extends RelativeLayout {
 			case SUCCEED:
 				// 刷新成功
 				refreshStateImageView.setVisibility(View.VISIBLE);
-				refreshStateTextView.setText(R.string.refresh_succeed);
+				refreshStateTextView.setText(string.refresh_succeed);
 				refreshStateImageView
-					.setBackgroundResource(R.drawable.refresh_succeed);
+					.setBackgroundResource(R.drawable.succeed);
 				break;
 			case NOTHING:
 				// 没有更新
 				refreshStateImageView.setVisibility(View.VISIBLE);
-				refreshStateTextView.setText(R.string.refresh_nothing);
+				refreshStateTextView.setText(string.refresh_nothing);
 				refreshStateImageView
-					.setBackgroundResource(R.drawable.refresh_failed);
+					.setBackgroundResource(R.drawable.failed);
 				break;
 			case FAIL:
 			default:
 				// 刷新失败
 				refreshStateImageView.setVisibility(View.VISIBLE);
-				refreshStateTextView.setText(R.string.refresh_fail);
+				refreshStateTextView.setText(string.refresh_fail);
 				refreshStateImageView
-					.setBackgroundResource(R.drawable.refresh_failed);
+					.setBackgroundResource(R.drawable.failed);
 				break;
 		}
 		if (pullDownY > 0) {
@@ -316,21 +312,21 @@ public class PullingLayout extends RelativeLayout {
 			case SUCCEED:
 				// 加载成功
 				loadStateImageView.setVisibility(View.VISIBLE);
-				loadStateTextView.setText(R.string.load_succeed);
-				loadStateImageView.setBackgroundResource(R.drawable.load_succeed);
+				loadStateTextView.setText(string.load_succeed);
+				loadStateImageView.setBackgroundResource(R.drawable.succeed);
 				break;
 			case NOTHING:
 				// 没有更多内容
 				loadStateImageView.setVisibility(View.VISIBLE);
-				loadStateTextView.setText(R.string.load_nothing);
-				loadStateImageView.setBackgroundResource(R.drawable.load_failed);
+				loadStateTextView.setText(string.load_nothing);
+				loadStateImageView.setBackgroundResource(R.drawable.failed);
 				break;
 			case FAIL:
 			default:
 				// 加载失败
 				loadStateImageView.setVisibility(View.VISIBLE);
-				loadStateTextView.setText(R.string.load_fail);
-				loadStateImageView.setBackgroundResource(R.drawable.load_failed);
+				loadStateTextView.setText(string.load_fail);
+				loadStateImageView.setBackgroundResource(R.drawable.failed);
 				break;
 		}
 		if (pullUpY < 0) {
@@ -356,18 +352,18 @@ public class PullingLayout extends RelativeLayout {
 			case INIT:
 				// 下拉布局初始状态
 				refreshStateImageView.setVisibility(View.GONE);
-				refreshStateTextView.setText(R.string.pull_to_refresh);
+				refreshStateTextView.setText(string.pull_to_refresh);
 				pullView.clearAnimation();
 				pullView.setVisibility(View.VISIBLE);
 				// 上拉布局初始状态
 				loadStateImageView.setVisibility(View.GONE);
-				loadStateTextView.setText(R.string.pullup_to_load);
+				loadStateTextView.setText(string.pullup_to_load);
 				pullUpView.clearAnimation();
 				pullUpView.setVisibility(View.VISIBLE);
 				break;
 			case RELEASE_TO_REFRESH:
 				// 释放刷新状态
-				refreshStateTextView.setText(R.string.release_to_refresh);
+				refreshStateTextView.setText(string.release_to_refresh);
 				pullView.startAnimation(rotateAnimation);
 				break;
 			case REFRESHING:
@@ -376,11 +372,11 @@ public class PullingLayout extends RelativeLayout {
 				refreshingView.setVisibility(View.VISIBLE);
 				pullView.setVisibility(View.INVISIBLE);
 				refreshingView.startAnimation(refreshingAnimation);
-				refreshStateTextView.setText(R.string.refreshing);
+				refreshStateTextView.setText(string.refreshing);
 				break;
 			case RELEASE_TO_LOAD:
 				// 释放加载状态
-				loadStateTextView.setText(R.string.release_to_load);
+				loadStateTextView.setText(string.release_to_load);
 				pullUpView.startAnimation(rotateAnimation);
 				break;
 			case LOADING:
@@ -389,7 +385,7 @@ public class PullingLayout extends RelativeLayout {
 				loadingView.setVisibility(View.VISIBLE);
 				pullUpView.setVisibility(View.INVISIBLE);
 				loadingView.startAnimation(refreshingAnimation);
-				loadStateTextView.setText(R.string.loading);
+				loadStateTextView.setText(string.loading);
 				break;
 			case DONE:
 				// 刷新或加载完毕，啥都不做
@@ -742,29 +738,28 @@ public class PullingLayout extends RelativeLayout {
 
 	private void initView() {
 		// 初始化下拉布局
-		pullView = refreshView.findViewById(R.id.pull_icon);
+		pullView = refreshView.findViewById(HeadView.id.pull_icon);
 		refreshStateTextView = (TextView) refreshView
-			.findViewById(R.id.state_tv);
-		refreshingView = refreshView.findViewById(R.id.refreshing_icon);
-		refreshStateImageView = refreshView.findViewById(R.id.state_iv);
+			.findViewById(HeadView.id.state_tv);
+		refreshingView = refreshView.findViewById(HeadView.id.refreshing_icon);
+		refreshStateImageView = (ImageView) refreshView.findViewById(HeadView.id.state_iv);
 		// 初始化上拉布局
-		pullUpView = loadmoreView.findViewById(R.id.pullup_icon);
+		pullUpView = loadmoreView.findViewById(FootView.id.pullup_icon);
 		loadStateTextView = (TextView) loadmoreView
-			.findViewById(R.id.loadstate_tv);
-		loadingView = loadmoreView.findViewById(R.id.loading_icon);
-		loadStateImageView = loadmoreView.findViewById(R.id.loadstate_iv);
+			.findViewById(FootView.id.loadstate_tv);
+		loadingView = loadmoreView.findViewById(FootView.id.loading_icon);
+		loadStateImageView = (ImageView) loadmoreView.findViewById(FootView.id.loadstate_iv);
 	}
 
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
-		Log.d("Test", "Test");
 		if (!isLayout) {
 			// 这里是第一次进来的时候做一些初始化
-			refreshView = getChildAt(0);
-			pullableLayout = (FrameLayout) getChildAt(1);
-			loadmoreView = getChildAt(2);
+			//refreshView = getChildAt(0);
+			//pullableLayout = (FrameLayout) getChildAt(1);
+			//loadmoreView = getChildAt(2);
 			isLayout = true;
-			initView();
+			//initView();
 			refreshDist = ((ViewGroup) refreshView).getChildAt(0)
 				.getMeasuredHeight();
 			loadmoreDist = ((ViewGroup) loadmoreView).getChildAt(0)
@@ -799,6 +794,19 @@ public class PullingLayout extends RelativeLayout {
 		pullableLayout.addView(child);
 	}
 
+	
+	public void setTextColor(int color) {
+		// TODO: Implement this method
+		refreshStateTextView.setTextColor(color);
+		loadStateTextView.setTextColor(color);
+		//pullView.getBackground().setColorFilter(color,PorterDuff.Mode.MULTIPLY);
+		//pullUpView.getBackground().setColorFilter(color,PorterDuff.Mode.MULTIPLY);
+	}
+
+	
+	
+	
+	
 	class MyTimer {
 		private Handler handler;
 		private Timer timer;
@@ -875,6 +883,32 @@ public class PullingLayout extends RelativeLayout {
 		public boolean onPullDown(View view);
 	}
 	
-	
+	static class string {
+
+		public static String refresh_succeed="刷新成功";
+
+		public static String refresh_nothing="暂无更新";
+
+		public static String refresh_fail="刷新失败";
+
+		public static String load_succeed="加载成功";
+
+		public static String load_nothing="没有更多内容";
+
+		public static String load_fail="加载失败";
+
+		public static String pullup_to_load="上拉加载更多";
+
+		public static String release_to_refresh="释放立即刷新";
+
+		public static String refreshing="正在刷新...";
+
+		public static String release_to_load="释放立即加载";
+
+		public static String pull_to_refresh="下拉刷新";
+
+		public static String loading="正在加载...";
+		
+	}
 }
 

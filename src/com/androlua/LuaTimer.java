@@ -1,7 +1,7 @@
 package com.androlua;
 
+import com.androlua.util.*;
 import com.luajava.*;
-import java.util.*;
 
 public class LuaTimer extends TimerX implements LuaGcable
 {

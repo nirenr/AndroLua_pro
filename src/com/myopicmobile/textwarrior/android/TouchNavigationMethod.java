@@ -133,6 +133,8 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 				distanceX=0;
 			
 			scrollView(distanceX, distanceY);
+			//_textField.smoothScrollBy((int)distanceX, (int)distanceY);
+			
 		}
 
 		//TODO find out if ACTION_UP events are actually passed to onScroll
@@ -221,7 +223,9 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 		{
 			newY = 0;
 		}
-		_textField.scrollTo(newX, newY);
+		//_textField.scrollTo(newX, newY);
+		_textField.smoothScrollTo(newX, newY);
+		
 	}
 
 	@Override
@@ -334,6 +338,12 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 	{
 		if (!_isCaretTouched)
 		{
+			
+			if(fling==1)
+				velocityY=0;
+			else if(fling==-1)
+				velocityX=0;
+			
 			_textField.flingScroll((int) -velocityX, (int) -velocityY);
 		}
 		onUp(e2);

@@ -37,8 +37,32 @@ import java.util.*;
  * @author Thiago Ponte
  */
 public final class LuaJavaAPI {
-	static HashMap <String,Method[]>methodsMap = new HashMap<String,Method[]>();
-	static HashMap <String,Method[]>methodCache = new HashMap<String,Method[]>();
+	public static HashMap <String,Method[]>methodsMap = new HashMap<String,Method[]>();
+	public static HashMap <String,Method[]>methodCache = new HashMap<String,Method[]>();
+
+	private  static Class<?> LuaState_class=LuaState.class;
+
+	private  static Class<?> String_class=String.class;
+
+	private  static Class<?> List_class=List.class;
+
+	private  static Class<?> ArrayList_class=ArrayList_class;
+
+	private  static Class<?> HashMap_class=HashMap.class;
+
+	private  static Class<?> Map_class=Map.class;
+
+	private  static Class<?> LuaFunction_class=LuaFunction.class;
+
+	private  static Class<?> LuaObject_class=LuaObject.class;
+
+	private  static Class<?> LuaTable_class=LuaTable.class;
+
+	private  static Class<?> Number_class=Number.class;
+
+	private  static Class<?> Character_class=Character.class;
+
+
 
 	private LuaJavaAPI() {
 	}
@@ -76,7 +100,7 @@ public final class LuaJavaAPI {
 				if (checkClass(L, obj, searchName) != 0)
 					return 3;
 
-			if ((type ==0 || type==6) && obj instanceof LuaMetaTable) {
+			if ((type == 0 || type == 6) && obj instanceof LuaMetaTable) {
 				Object res=((LuaMetaTable)obj).__index(searchName);
 				L.pushObjectValue(res);
 				return 6;
@@ -144,7 +168,7 @@ public final class LuaJavaAPI {
 			}
 
 			// Void function returns null
-			if (ret == null && method.getReturnType().equals(void.class))
+			if (ret == null && method.getReturnType().equals(Void.TYPE))
 				return 0;
 
 			// push result
@@ -413,21 +437,21 @@ public final class LuaJavaAPI {
 		}
 		catch (Exception e) {
 			if (className.equals("boolean"))
-				clazz = boolean.class;
+				clazz = Boolean.TYPE;
 			else if (className.equals("byte"))
-				clazz = byte.class;
+				clazz = Byte.TYPE;
 			else if (className.equals("char"))
-				clazz = char.class;
+				clazz = Character.TYPE;
 			else if (className.equals("short"))
-				clazz = short.class;
+				clazz = Short.TYPE;
 			else if (className.equals("int"))
-				clazz = int.class;
+				clazz = Integer.TYPE;
 			else if (className.equals("long"))
-				clazz = long.class;
+				clazz = Long.TYPE;
 			else if (className.equals("float"))
-				clazz = float.class;
+				clazz = Float.TYPE;
 			else if (className.equals("double"))
-				clazz = double.class;
+				clazz = Double.TYPE;
 			else 
 				throw new LuaException("Class not found: " + className);
 		}
@@ -485,14 +509,49 @@ public final class LuaJavaAPI {
 			if (clazz.isInterface()) {
 				return createProxyObject(L, clazz);
 			}
-			else if (List.class.isAssignableFrom(clazz)) {
+			else if (clazz.isPrimitive()) {
+				return createArray(L, clazz);
+			}
+			else if (List_class.isAssignableFrom(clazz)) {
 				return createList(L, clazz);
 			}
-			else if (Map.class.isAssignableFrom(clazz)) {
+			else if (Map_class.isAssignableFrom(clazz)) {
 				return createMap(L, clazz);
 			}
 			else {
-				return createArray(L, clazz);
+				if (L.objLen(-1) == 0)
+					return createArray(L, clazz);
+				else if (clazz.isAssignableFrom(new LuaTable(L,-1).get(1).getClass()))
+					return createArray(L, clazz);
+				else
+					return getObjInstance(L, clazz);
+
+
+				/*
+				 LuaTable tab=new LuaTable(L, -1);
+				 tab.push();
+				 if(tab.isList()){
+				 if(tab.isEmpty())
+				 return createArray(L, clazz);
+				 else if(clazz.isAssignableFrom(tab.get(1).getClass()))
+				 return createArray(L, clazz);
+				 else
+				 return getObjInstance(L, clazz);
+				 }
+				 else{
+				 L.setTop(1);
+				 getObjInstance(L, clazz);
+				 LuaObject obj=L.getLuaObject(-1);
+				 Set<LuaTable.LuaEntry> sets=(Set<LuaTable.LuaEntry>)tab.entrySet();
+				 for (LuaTable.LuaEntry entry:sets){
+				 try{
+				 obj.setField((String)entry.getKey(),entry.getValue());
+				 }
+				 catch(Exception e)
+				 {}
+				 }
+				 return 1;
+				 }*/
 			}
 		}
 
@@ -566,7 +625,7 @@ public final class LuaJavaAPI {
 			}
 
 			try {
-				Method mt = clazz.getMethod(methodName, new Class[] {LuaState.class});
+				Method mt = clazz.getMethod(methodName, new Class[] {LuaState_class});
 				Object obj = mt.invoke(null, new Object[] {L});
 
 				if (obj != null && obj instanceof Integer) {
@@ -657,7 +716,7 @@ public final class LuaJavaAPI {
 
 			// gets method and arguments
 			for (int i = 0; i < constructors.length; i++) {
-				Class[] parameters = constructors[i].getParameterTypes();
+				Class<?>[] parameters = constructors[i].getParameterTypes();
 				if (parameters.length != top - 1)
 					continue;
 
@@ -1044,7 +1103,7 @@ public final class LuaJavaAPI {
 				int n = L.objLen(idx);
 				Object array = Array.newInstance(type, n);
 
-				if (type == String.class) { 
+				if (type == String_class) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1052,7 +1111,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == double.class) { 
+				else if (type == Double.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1060,7 +1119,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == float.class) { 
+				else if (type == Float.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1068,7 +1127,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == long.class) { 
+				else if (type == Long.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1076,7 +1135,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == int.class) { 
+				else if (type == Integer.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1084,7 +1143,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}
-				else if (type == short.class) { 
+				else if (type == Short.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1092,7 +1151,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == char.class) { 
+				else if (type == Character.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1100,7 +1159,7 @@ public final class LuaJavaAPI {
 						L.pop(1);
 					}
 				}  
-				else if (type == byte.class) { 
+				else if (type == Byte.TYPE) { 
 					for (int i = 1;i <= n;i++) {
 						L.pushNumber(i);
 						L.getTable(idx);
@@ -1136,8 +1195,8 @@ public final class LuaJavaAPI {
 		synchronized (L) {
 			int n = L.objLen(idx);
 			try {
-				if (type.equals(List.class))
-					type = ArrayList.class;
+				if (type.equals(List_class))
+					type = ArrayList_class;
 				List<Object> list =(List<Object>) type.newInstance();
 				for (int i = 1;i <= n;i++) {
 					L.pushNumber(i);
@@ -1166,8 +1225,8 @@ public final class LuaJavaAPI {
 		// TODO: Implement this method
 		synchronized (L) {
 			try {
-				if (clazz.equals(Map.class))
-					clazz = HashMap.class;
+				if (clazz.equals(Map_class))
+					clazz = HashMap_class;
 				Map<Object,Object> map = (Map<Object, Object>) clazz.newInstance();
 				L.pushNil();
 				while (L.next(idx) != 0) {
@@ -1196,7 +1255,7 @@ public final class LuaJavaAPI {
 							okType = false;
 						}
 					}
-					else if (!parameter.isAssignableFrom(Boolean.class)) {
+					else if (!parameter.isAssignableFrom(Boolean.TYPE)) {
 						okType = false;
 					}
 					obj = L.toBoolean(idx);
@@ -1204,7 +1263,7 @@ public final class LuaJavaAPI {
 				break;
 			case 4: //string
 				{
-					if (!parameter.isAssignableFrom(String.class)) {
+					if (!parameter.isAssignableFrom(String_class)) {
 						okType = false;
 					}
 					else {
@@ -1214,7 +1273,7 @@ public final class LuaJavaAPI {
 				break;
 			case 6: //function
 				{
-					if (!parameter.isAssignableFrom(LuaFunction.class)) {
+					if (!parameter.isAssignableFrom(LuaFunction_class)) {
 						okType = false;
 					}
 					else {
@@ -1224,7 +1283,7 @@ public final class LuaJavaAPI {
 				break;
 			case 5: //table
 				{
-					if (parameter.isAssignableFrom(LuaTable.class)) {
+					if (parameter.isAssignableFrom(LuaTable_class)) {
 						obj = L.getLuaObject(idx);
 					}
 					else if (parameter.isArray()) {
@@ -1233,7 +1292,7 @@ public final class LuaJavaAPI {
 					else if (parameter.isInterface()) {
 						obj = createProxyObject(L, parameter, idx);
 					}
-					else if (Map.class.isAssignableFrom(parameter)) {
+					else if (Map_class.isAssignableFrom(parameter)) {
 						obj = createMap(L, parameter, idx);
 					}
 					else {
@@ -1263,7 +1322,7 @@ public final class LuaJavaAPI {
 						if (userObj == null) {
 							obj = null;
 						}
-						else if (parameter.isPrimitive() && (Number.class.isAssignableFrom(userObj.getClass()) || Character.class.isAssignableFrom(userObj.getClass()))) {
+						else if (parameter.isPrimitive() && (Number_class.isAssignableFrom(userObj.getClass()) || Character_class.isAssignableFrom(userObj.getClass()))) {
 							obj = userObj;
 						}
 						else if (parameter.isAssignableFrom(userObj.getClass())) {
@@ -1274,7 +1333,7 @@ public final class LuaJavaAPI {
 						}
 					}
 					else {
-						if (!parameter.isAssignableFrom(LuaObject.class)) {
+						if (!parameter.isAssignableFrom(LuaObject_class)) {
 							okType = false;
 						}
 						else {
@@ -1304,7 +1363,7 @@ public final class LuaJavaAPI {
 	private static int toPrimitive(LuaState L, Class type, int idx) throws LuaException {
 		Object obj=null;
 
-		if (type == char.class && L.type(idx) == LuaState.LUA_TSTRING) {
+		if (type == Character.TYPE && L.type(idx) == LuaState.LUA_TSTRING) {
 			String s = L.toString(idx);
 			if (s.length() == 1)
 				obj = s.charAt(0);
@@ -1314,28 +1373,28 @@ public final class LuaJavaAPI {
 		else if (!L.isNumber(idx)) {
 			throw new LuaException(L.toString(idx) + " is not number");
 		}
-		else if (type == double.class) { 
+		else if (type == Double.TYPE) { 
 			obj = L.toNumber(idx);
 		}  
-		else if (type == float.class) { 
+		else if (type == Float.TYPE) { 
 			obj = (float)L.toNumber(idx);
 		}  
-		else if (type == long.class) { 
+		else if (type == Long.TYPE) { 
 			obj = L.toInteger(idx);
 		}  
-		else if (type == int.class) { 
+		else if (type == Integer.TYPE) { 
 			obj = (int)L.toInteger(idx);
 		}
-		else if (type == short.class) { 
+		else if (type == Short.TYPE) { 
 			obj = (short)L.toInteger(idx);
 		}  
-		else if (type == char.class) { 
+		else if (type == Character.TYPE) { 
 			obj = (char)L.toInteger(idx);
 		}  
-		else if (type == byte.class) { 
+		else if (type == Byte.TYPE) { 
 			obj =  (byte)L.toInteger(idx);
 		}  
-		else if (type == boolean.class) {
+		else if (type == Boolean.TYPE) {
 			obj = L.toBoolean(idx);
 		}
 		L.pushJavaObject(obj);

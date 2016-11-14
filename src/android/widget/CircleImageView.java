@@ -72,6 +72,8 @@ public class CircleImageView extends ImageView {
     private boolean mBorderOverlay;
     private boolean mDisableCircularTransformation;
 
+	private float mElevation;
+
     public CircleImageView(Context context) {
         super(context);
 
@@ -107,6 +109,15 @@ public class CircleImageView extends ImageView {
         }
     }
 
+	public void setElevation2(float elevation) {
+		
+		mElevation=elevation;
+        mFillPaint.setShadowLayer(elevation, 0, elevation/2, 0xff000000);
+		invalidate();
+		//setPadding(getPaddingLeft(),getPaddingTop(),getPaddingRight(),getPaddingBottom()-(int)radius);
+	}
+	
+	
     @Override
     public ScaleType getScaleType() {
         return SCALE_TYPE;
@@ -138,11 +149,11 @@ public class CircleImageView extends ImageView {
         }
 
         if (mFillColor != Color.TRANSPARENT) {
-            canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mFillPaint);
+            canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius-mElevation, mFillPaint);
         }
-        canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mBitmapPaint);
+        canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius-mElevation, mBitmapPaint);
         if (mBorderWidth > 0) {
-            canvas.drawCircle(mBorderRect.centerX(), mBorderRect.centerY(), mBorderRadius, mBorderPaint);
+            canvas.drawCircle(mBorderRect.centerX(), mBorderRect.centerY(), mBorderRadius-mElevation, mBorderPaint);
         }
     }
 
@@ -326,7 +337,7 @@ public class CircleImageView extends ImageView {
             if (drawable instanceof ColorDrawable) {
                 bitmap = Bitmap.createBitmap(COLORDRAWABLE_DIMENSION, COLORDRAWABLE_DIMENSION, BITMAP_CONFIG);
             } else {
-                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), BITMAP_CONFIG);
+                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth()-(int)(mElevation*2), drawable.getIntrinsicHeight()-(int)(mElevation*2), BITMAP_CONFIG);
             }
 
             Canvas canvas = new Canvas(bitmap);

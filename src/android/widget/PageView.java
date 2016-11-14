@@ -361,7 +361,9 @@ public class PageView extends ViewGroup {
         mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
 
         setAccessibilityDelegate( new AccessibilityDelegate());
-
+		if (Build.VERSION.SDK_INT < 16)
+		 	return;
+			
         if (getImportantForAccessibility()
                 == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
             setImportantForAccessibility(

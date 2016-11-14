@@ -25,16 +25,26 @@ local LuaDrawable=luajava.bindClass "com.androlua.LuaDrawable"
 local ArrayListAdapter=bindClass("android.widget.ArrayListAdapter")
 local ArrayPageAdapter=bindClass("android.widget.ArrayPageAdapter")
 local ScaleType=bindClass("android.widget.ImageView$ScaleType")
+local TruncateAt=bindClass("android.text.TextUtils$TruncateAt")
 local scaleTypes=ScaleType.values()
 local android_R=bindClass("android.R")
 android={R=android_R}
+
+local Context=bindClass "android.content.Context"
+local DisplayMetrics=bindClass "android.util.DisplayMetrics"
+
+local wm =context.getSystemService(Context.WINDOW_SERVICE);
+local outMetrics = DisplayMetrics();
+wm.getDefaultDisplay().getMetrics(outMetrics);
+local W = outMetrics.widthPixels;
+local H = outMetrics.heightPixels;
 
 local function alyloader(path)
   local alypath=package.path:gsub("%.lua",".aly")
   path,msg=package.searchpath(path,alypath)
   if msg then
     return msg
-    end
+  end
   local f=io.open(path)
   local s=f:read("*a")
   f:close()
@@ -222,9 +232,21 @@ local types={
 }
 
 local function checkType(v)
-  local n,ty=string.match(v,"^(%-?%d+)(%a%a)$")
+  local n,ty=string.match(v,"^(%-?[%.%d]+)(%a%a)$")
   return tonumber(n),types[ty]
 end
+
+local function checkPercent(v)
+  local n,ty=string.match(v,"^(%-?[%.%d]+)%%([wh])$")
+  if ty==nil then
+    return nil
+  elseif ty=="w" then
+    return tonumber(n)*W/100
+  elseif ty=="h" then
+    return tonumber(n)*H/100
+  end
+end
+
 
 local function split(s,t)
   local idx=1
@@ -267,6 +289,12 @@ local function checkNumber(var)
     if toint[var] then
       return toint[var]
     end
+
+    local p=checkPercent(var)
+    if p then
+      return p
+    end
+
     local i=checkint(var)
     if i then
       return i
@@ -340,6 +368,14 @@ local function dump2 (t)
   return t
 end
 
+local ver = luajava.bindClass("android.os.Build").VERSION.SDK_INT;
+function setBackground(view,bg)
+  if ver<16 then
+    view.setBackgroundDrawable(bg)
+  else
+    view.setBackground(bg)
+  end
+end
 
 local function setattribute(root,view,params,k,v,ids)
   if k=="layout_x" then
@@ -388,6 +424,8 @@ local function setattribute(root,view,params,k,v,ids)
     end
   elseif k=="textAppearance" then
     view.setTextAppearance(context,checkattr(v))
+  elseif k=="ellipsize" then
+    view.setEllipsize(TruncateAt[string.upper(v)])
   elseif k=="url" then
     view.loadUrl(url)
   elseif k=="src" then
@@ -408,24 +446,24 @@ local function setattribute(root,view,params,k,v,ids)
       elseif rawget(root,v) or rawget(_G,v) then
         v=rawget(root,v) or rawget(_G,v)
         if type(v)=="function" then
-          view.setBackground(LuaDrawable(v))
+          setBackground(view,LuaDrawable(v))
         elseif type(v)=="userdata" then
-          view.setBackground(v)
+          setBackground(view,v)
         end
       else
         if (not v:find("^/")) and luadir then
-           v=luadir..v
+          v=luadir..v
         end
         if v:find("%.9%.png") then
-        view.setBackground(NineBitmapDrawable(loadbitmap(v)))
+          setBackground(view,NineBitmapDrawable(loadbitmap(v)))
         else
-        view.setBackground(BitmapDrawable(loadbitmap(v)))
+          setBackground(view,BitmapDrawable(loadbitmap(v)))
         end
       end
     elseif type(v)=="userdata" then
-      view.setBackground(v)
+      setBackground(view,v)
     elseif type(v)=="number" then
-      view.setBackgroundColor(v)
+      setBackground(view,v)
     end
   elseif k=="onClick" then --设置onClick事件接口
     local listener
@@ -442,6 +480,8 @@ local function setattribute(root,view,params,k,v,ids)
           listener=OnClickListener{onClick=l}
         elseif type(l)=="userdata" then
           listener=l
+        else
+          listener=OnClickListener{onClick=function(a)(root[v] or _G[v])(a)end}
         end
         ltrs[v]=listener
       end
@@ -452,9 +492,9 @@ local function setattribute(root,view,params,k,v,ids)
   elseif type(k)=="string" and not(k:find("layout_")) and not(k:find("padding")) and k~="style" then --设置属性
     k=string.gsub(k,"^(%w)",function(s)return string.upper(s)end)
     if k=="Text" or k=="Title" or k=="Subtitle" then
-    view["set"..k](v)
+      view["set"..k](v)
     else
-    view["set"..k](checkValue(v))
+      view["set"..k](checkValue(v))
     end
   end
 end
@@ -470,79 +510,79 @@ end
 
 
 local function loadlayout(t,root,group)
-    if type(t)=="string" then
-      t=require(t)
-    end
-    root=root or _G
-    local view,style
-    
-    if t.style then
-      if t.style:find("^%?") then
-        style=getIdentifier(t.style:sub(2,-1))
-      else
-        local st,sty=pcall(require,t.style)
-        if st then
-           copytable(sty,t)
-        else
-          style=checkattr(t.style)
-        end
-      end
-    end
-    if not t[1] then
-      error(string.format("loadlayout error: Fist value Must be a Class, checked import package.\n\tat %s",dump2(t)),0)
-    end
-    
-    if style then
-      view = t[1](context,nil,style)
-    else
-      view = t[1](context) --创建view
-    end
-
-    local params=ViewGroup.LayoutParams(checkValue(t.layout_width) or -2,checkValue(t.layout_height) or -2) --设置layout属性
-    if group then
-      params=group.LayoutParams(params)
-    end
-
-    --设置layout_margin属性
-    if t.layout_margin or t.layout_marginStart or t.layout_marginEnd or t.layout_marginLeft or t.layout_marginTop or t.layout_marginRight or t.layout_marginBottom then
-      params.setMargins(checkValues( t.layout_marginLeft or t.layout_margin or 0,t.layout_marginTop or t.layout_margin or 0,t.layout_marginRight or t.layout_margin or 0,t.layout_marginBottom or t.layout_margin or 0))
-    end
-
-    --设置padding属性
-    if t.padding or t.paddingLeft or t.paddingTop or t.paddingRight or t.paddingBottom then
-      view.setPadding(checkValues(t.paddingLeft or t.padding or 0, t.paddingTop or t.padding or 0, t.paddingRight or t.padding or 0, t.paddingBottom or t.padding or 0))
-    end
-    if t.paddingStart or t.paddingEnd then
-      view.setPaddingRelative(checkValues(t.paddingStart or t.padding or 0, t.paddingTop or t.padding or 0, t.paddingEnd or t.padding or 0, t.paddingBottom or t.padding or 0))
-    end
-
-    for k,v in pairs(t) do
-      if tonumber(k) and (type(v)=="table" or type(v)=="string") then --创建子view
-        view.addView(loadlayout(v,root,t[1]))
-      elseif k=="id" then --创建view的全局变量
-        rawset(root,v,view)
-        local id=ids.id
-        ids.id=ids.id+1
-        view.setId(id)
-        ids[v]=id
-        
-      else
-        local e,s=pcall(setattribute,root,view,params,k,v,ids)
-        if not e then
-          local _,i=s:find(":%d+:")
-          s=s:sub(i or 1,-1)
-          error(string.format("loadlayout error %s \n\tat %s\n\tat  key=%s value=%s\n\tat %s",s,view.toString(),k,v,dump2(t)),0)
-        end
-      end
-    end
-
-    --if group then
-    --group.addView(view,params)
-    --else
-    view.setLayoutParams(params)
-    return view
-    --end
+  if type(t)=="string" then
+    t=require(t)
   end
+  root=root or _G
+  local view,style
+
+  if t.style then
+    if t.style:find("^%?") then
+      style=getIdentifier(t.style:sub(2,-1))
+    else
+      local st,sty=pcall(require,t.style)
+      if st then
+        copytable(sty,t)
+      else
+        style=checkattr(t.style)
+      end
+    end
+  end
+  if not t[1] then
+    error(string.format("loadlayout error: Fist value Must be a Class, checked import package.\n\tat %s",dump2(t)),0)
+  end
+
+  if style then
+    view = t[1](context,nil,style)
+  else
+    view = t[1](context) --创建view
+  end
+
+  local params=ViewGroup.LayoutParams(checkValue(t.layout_width) or -2,checkValue(t.layout_height) or -2) --设置layout属性
+  if group then
+    params=group.LayoutParams(params)
+  end
+
+  --设置layout_margin属性
+  if t.layout_margin or t.layout_marginStart or t.layout_marginEnd or t.layout_marginLeft or t.layout_marginTop or t.layout_marginRight or t.layout_marginBottom then
+    params.setMargins(checkValues( t.layout_marginLeft or t.layout_margin or 0,t.layout_marginTop or t.layout_margin or 0,t.layout_marginRight or t.layout_margin or 0,t.layout_marginBottom or t.layout_margin or 0))
+  end
+
+  --设置padding属性
+  if t.padding or t.paddingLeft or t.paddingTop or t.paddingRight or t.paddingBottom then
+    view.setPadding(checkValues(t.paddingLeft or t.padding or 0, t.paddingTop or t.padding or 0, t.paddingRight or t.padding or 0, t.paddingBottom or t.padding or 0))
+  end
+  if t.paddingStart or t.paddingEnd then
+    view.setPaddingRelative(checkValues(t.paddingStart or t.padding or 0, t.paddingTop or t.padding or 0, t.paddingEnd or t.padding or 0, t.paddingBottom or t.padding or 0))
+  end
+
+  for k,v in pairs(t) do
+    if tonumber(k) and (type(v)=="table" or type(v)=="string") then --创建子view
+      view.addView(loadlayout(v,root,t[1]))
+    elseif k=="id" then --创建view的全局变量
+      rawset(root,v,view)
+      local id=ids.id
+      ids.id=ids.id+1
+      view.setId(id)
+      ids[v]=id
+
+    else
+      local e,s=pcall(setattribute,root,view,params,k,v,ids)
+      if not e then
+        local _,i=s:find(":%d+:")
+        s=s:sub(i or 1,-1)
+        error(string.format("loadlayout error %s \n\tat %s\n\tat  key=%s value=%s\n\tat %s",s,view.toString(),k,v,dump2(t)),0)
+      end
+    end
+  end
+
+  --if group then
+  --group.addView(view,params)
+  --else
+  view.setLayoutParams(params)
+  return view
+  --end
+end
 
 
 return loadlayout

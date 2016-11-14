@@ -1,4 +1,4 @@
-package com.androlua;
+package com.androlua.util;
 
 
 import java.io.FileInputStream;
@@ -76,6 +76,7 @@ public class RSASecurity {
 		Key publicKey;
 		ObjectInputStream ois = null;
 		try {
+		
 			/** 将文件中的公钥对象读出 */
 			ois = new ObjectInputStream(new FileInputStream(
 											PUBLIC_KEY_FILE));

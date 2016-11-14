@@ -7,6 +7,8 @@ import android.view.Window.*;
 
 public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 
+	private Object[] loadeds;
+
 	@Override
 	public void gc() {
 		// TODO: Implement this method
@@ -46,6 +48,12 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 		mLuaContext = luaContext;
 		mBuffer = func.dump();
 		mCallback = callback;
+		LuaState l=func.getLuaState();
+		LuaObject g=l.getLuaObject("luajava");
+		LuaObject loaded=g.getField("imported");
+		if(!loaded.isNil()){
+			loadeds=loaded.asArray();
+		}
 	}
 
 	public LuaAsyncTask(LuaContext luaContext, LuaObject func, LuaObject update, LuaObject callback) throws LuaException {
@@ -127,6 +135,20 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 		catch (LuaException e) {
 			mLuaContext.sendMsg(e.getMessage());
 		}
+		
+		if(loadeds!=null){
+			LuaObject require=L.getLuaObject("require");
+			try {
+				require.call("import");
+				LuaObject _import=L.getLuaObject("import");
+				for(Object s:loadeds)
+					_import.call(s.toString());
+			}
+			catch (LuaException e) {
+				
+			}
+		}
+
 		try {
 			L.setTop(0);
 			int ok = L.LloadBuffer(mBuffer, "LuaAsyncTask");

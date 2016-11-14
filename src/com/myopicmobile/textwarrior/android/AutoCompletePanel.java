@@ -7,6 +7,7 @@ import android.widget.*;
 import android.widget.AdapterView.*;
 import com.myopicmobile.textwarrior.common.*;
 import java.util.*;
+import android.util.*;
 
 public class AutoCompletePanel {
 
@@ -160,20 +161,40 @@ public class AutoCompletePanel {
 		private int _h;
 		private Flag _abort;
 
+		private DisplayMetrics dm;
+
 		public MyAdapter(android.content.Context context, int resource) {
 			super(context, resource);
 			_abort = new Flag();
 			setNotifyOnChange(false);
+			dm=context.getResources().getDisplayMetrics();
+			
 		}
 
 		public void abort() {
 			_abort.set();
 		}
 
+		
+		private int dp(float n) {
+			// TODO: Implement this method
+			return (int)TypedValue.applyDimension(1,n,dm);
+		}
+		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			// TODO: Implement this method
 			TextView view=(TextView) super.getView(position, convertView, parent);
+			/*TextView view=null;
+			if(convertView==null){
+				 view=new TextView(_context);
+				 view.setTextSize(16);
+				 view.setPadding(dp(8),dp(3),dp(8),dp(3));
+			}
+			else{
+				view=(TextView) convertView;
+			}
+			view.setText(getItem(position));*/
 			view.setTextColor(_textColor);
 			return view;
 		}
@@ -279,6 +300,8 @@ public class AutoCompletePanel {
 						//int y = _textField.getPaintBaseline(_textField.getCaretRow()) - _textField.getScrollY();
 						int y = _textField.getCaretY() + _textField.rowHeight() / 2 - _textField.getScrollY();
 						setHeight(getItemHeight() * Math.min(2, results.count));
+						//setHeight((int)(Math.min(_textField.getContentHeight()*0.4,getItemHeight() * Math.min(6, results.count))));
+						
 						setHorizontalOffset(_textField.getCaretX() - _textField.getScrollX());
 						setVerticalOffset(y - _textField.getHeight());//_textField.getCaretY()-_textField.getScrollY()-_textField.getHeight());
 						notifyDataSetChanged();

@@ -3,7 +3,7 @@ package com.luajava;
 import java.util.*;
 import java.util.Map.*;
 
-public class LuaTable extends LuaObject implements Map {
+public class LuaTable <K extends java.lang.Object, V extends java.lang.Object>extends LuaObject implements Map {
 
 	@Override
 	public void clear() {
@@ -20,12 +20,12 @@ public class LuaTable extends LuaObject implements Map {
 	}
 
 	@Override
-	public boolean containsKey(Object p1) {
+	public boolean containsKey(Object key) {
 		// TODO: Implement this method
 		boolean b=false;
 		push();
 		try {
-			L.pushObjectValue(p1);
+			L.pushObjectValue(key);
 			b = L.getTable(-2) == LuaState.LUA_TNIL;
 			L.pop(1);
 		}
@@ -37,20 +37,20 @@ public class LuaTable extends LuaObject implements Map {
 	}
 
 	@Override
-	public boolean containsValue(Object p1) {
+	public boolean containsValue(Object value) {
 		// TODO: Implement this method
 		return false;
 	}
 
 	@Override
-	public Set entrySet() {
+	public Set<LuaEntry<K,V>> entrySet() {
 		// TODO: Implement this method
-		HashSet<LuaEntry> sets=new HashSet<LuaEntry>();
+		HashSet<LuaEntry<K,V>> sets=new HashSet<LuaEntry<K,V>>();
 		push();
 		L.pushNil();
 		while (L.next(-2) != 0) {
 			try {
-				sets.add(new LuaEntry(L.toJavaObject(-2), L.toJavaObject(-1)));
+				sets.add(new LuaEntry<K,V>((K)L.toJavaObject(-2), (V)L.toJavaObject(-1)));
 			}
 			catch (LuaException e) {}
 			L.pop(1);
@@ -60,14 +60,14 @@ public class LuaTable extends LuaObject implements Map {
 	}
 
 	@Override
-	public Object get(Object p1) {
+	public V get(Object key) {
 		// TODO: Implement this method
 		push();
-		Object obj=null;
+		V obj=null;
 		try {
-			L.pushObjectValue(p1);
+			L.pushObjectValue(key);
 			L.getTable(-2);
-			obj = L.toJavaObject(-1);
+			obj = (V) L.toJavaObject(-1);
 			L.pop(1);
 		}
 		catch (LuaException e) {}
@@ -83,21 +83,21 @@ public class LuaTable extends LuaObject implements Map {
 		L.pushNil();
 		boolean b=L.next(-2) == 0;
 		if (b)
-			L.pop(3);
-		else
 			L.pop(1);
+		else
+			L.pop(3);
 		return b;
 	}
 
 	@Override
-	public Set keySet() {
+	public Set<K> keySet() {
 		// TODO: Implement this method
-		HashSet<Object> sets=new HashSet<Object>();
+		HashSet<K> sets=new HashSet<K>();
 		push();
 		L.pushNil();
 		while (L.next(-2) != 0) {
 			try {
-				sets.add(L.toJavaObject(-2));
+				sets.add((K)L.toJavaObject(-2));
 			}
 			catch (LuaException e) {}
 			L.pop(1);
@@ -107,17 +107,17 @@ public class LuaTable extends LuaObject implements Map {
 	}
 
 	@Override
-	public Object put(Object p1, Object p2) {
+	public V put(K key, V value) {
 		// TODO: Implement this method
 		push();
 		try {
-			L.pushObjectValue(p1);
-			L.pushObjectValue(p2);
+			L.pushObjectValue(key);
+			L.pushObjectValue(value);
 			L.setTable(-3);
 		}
 		catch (LuaException e) {}
 		L.pop(1);
-		return p1;
+		return null;
 	}
 
 	@Override
@@ -126,11 +126,42 @@ public class LuaTable extends LuaObject implements Map {
 	}
 
 	@Override
-	public Object remove(Object p1) {
+	public V remove(Object key) {
 		// TODO: Implement this method
+		push();
+		try {
+			L.pushObjectValue(key);
+			L.setTable(-2);
+		}
+		catch (LuaException e) {}
+		L.pop(1);
 		return null;
 	}
 
+	public boolean isList() {
+		push();
+		int len=L.rawLen(-1);
+		if(len!=0){
+			pop();
+			return true;
+		}
+		L.pushNil();
+		boolean b=L.next(-2) == 0;
+		if (b)
+			L.pop(1);
+		else
+			L.pop(3);
+		return b;
+	}
+
+	public int length() {
+		// TODO: Implement this method
+		push();
+		int len=L.rawLen(-1);
+		pop();
+		return len;
+	}
+	
 	@Override
 	public int size() {
 		// TODO: Implement this method
@@ -167,35 +198,33 @@ public class LuaTable extends LuaObject implements Map {
 		registerValue(-1);
 	}
 
+	public class LuaEntry <K,V> implements Entry {
 
+		private K mKey;
 
-	private class LuaEntry implements Entry {
-
-		private Object mKey;
-
-		private Object mValue;
+		private V mValue;
 
 		@Override
-		public Object getKey() {
+		public K getKey() {
 			// TODO: Implement this method
 			return mKey;
 		}
 
 		@Override
-		public Object getValue() {
+		public V getValue() {
 			// TODO: Implement this method
 			return mValue;
 		}
 
 		@Override
-		public Object setValue(Object value) {
+		public V setValue(V value) {
 			// TODO: Implement this method
-			Object old=mValue;
+			V old=mValue;
 			mValue = value;
 			return old;
 		}
 
-		public LuaEntry(Object k, Object v) {
+		public LuaEntry(K k, V v) {
 			mKey = k;
 			mValue = v;
 		}

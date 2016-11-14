@@ -6,23 +6,38 @@ import android.content.res.*;
 import android.graphics.*;
 import android.net.*;
 import android.os.*;
-import android.support.multidex.*;
 import android.util.*;
 import android.view.*;
 import android.view.ViewGroup.*;
 import android.widget.*;
+import com.androlua.util.*;
 import com.luajava.*;
 import dalvik.system.*;
 import java.io.*;
-import java.lang.reflect.*;
 import java.util.*;
 import java.util.zip.*;
-import android.content.res.Resources.*;
 
 public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnReceiveListerer,LuaContext {
-	private static HashMap<String,LuaDexClassLoader> dexCache=new HashMap<String,LuaDexClassLoader>();
+
+	private LuaDexLoader mLuaDexLoader;
 	private static ArrayList<String> prjCache=new ArrayList<String>();
 
+	private int mWidth;
+
+	private int mHeight;
+
+	private ListView list;
+
+	private ArrayListAdapter<String> adapter;
+
+	@Override
+	public ArrayList<ClassLoader> getClassLoaders() {
+		// TODO: Implement this method
+		return mLuaDexLoader.getClassLoaders();
+	}
+	public HashMap<String,String> getLibrarys() {
+		return mLuaDexLoader.getLibrarys();
+	}
 	private LuaState L;
 	private String luaPath;
 	public String luaDir;
@@ -63,7 +78,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	private LuaBroadcastReceiver mReceiver;
 
 	private String luaLpath;
-	
+
 	private String luaMdDir;
 
 	private boolean isUpdata;
@@ -79,9 +94,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	private Resources mResources;
 
 	private Resources.Theme mTheme;
-	
+
 	private ArrayList<LuaGcable> gclist=new ArrayList<LuaGcable>();
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		setTheme(android.R.style.Theme_Holo_Light_NoActionBar);
@@ -92,18 +107,40 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		StrictMode.ThreadPolicy policy=new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		//设置print界面
-		super.onCreate(savedInstanceState);
+		super.onCreate(null);
+		
+		WindowManager wm =(WindowManager) getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		wm.getDefaultDisplay().getMetrics(outMetrics);
+		mWidth = outMetrics.widthPixels;
+		mHeight = outMetrics.heightPixels;
+		
 		layout = new LinearLayout(this);
-		layout.setBackgroundColor(Color.WHITE);
+		//layout.setBackgroundColor(Color.WHITE);
 		ScrollView scroll=new ScrollView(this);
 		scroll.setFillViewport(true);
 		status = new TextView(this);
+
 		status.setTextColor(Color.BLACK);
 		scroll.addView(status, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-		layout.addView(scroll, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		//layout.addView(scroll, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		status.setText("");
 		status.setTextIsSelectable(true);
-
+		list=new ListView(this);
+		list.setFastScrollEnabled(true);
+		adapter=new ArrayListAdapter<String>(this,android.R.layout.simple_list_item_1){
+			@Override
+			public View getView(int position, View convertView, ViewGroup parent) {
+				TextView view=(TextView) super.getView( position,  convertView,  parent) ;
+				if(convertView==null)
+					view.setTextIsSelectable(true);
+				return view;
+			}
+		};
+		list.setAdapter(adapter);
+		layout.addView(list, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		
+		
 		//定义文件夹
 		LuaApplication app=(LuaApplication) getApplication();
 		localDir = app.getLocalDir();
@@ -115,10 +152,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		luaLpath = app.getLuaLpath();
 		luaExtDir = app.getLuaExtDir();
 
+
 		handler = new MainHandler();
-		
+
 		try {
 			status.setText("");
+			adapter.clear();
 			Intent intent=getIntent();
 			Object[] arg=(Object[]) intent.getSerializableExtra("arg");
 			if (arg == null)
@@ -128,7 +167,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 			luaLpath = (luaDir + "/?.lua;" + luaDir + "/lua/?.lua;" + luaDir + "/?/init.lua;") + luaLpath;
 			initLua();
-			MultiDex.installLibs(this);
+			mLuaDexLoader = new LuaDexLoader(this);
+			mLuaDexLoader.loadLibs();
+			//MultiDex.installLibs(this);
 
 			doFile(luaPath, arg);
 			isCreate = true;
@@ -153,6 +194,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 			setContentView(layout);
 			return;
 		}
+		
 		mOnKeyDown = L.getLuaObject("onKeyDown");
 		if (mOnKeyDown.isNil())
 			mOnKeyDown = null;
@@ -168,12 +210,13 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 	}
 
+
 	@Override
 	public void regGc(LuaGcable obj) {
 		// TODO: Implement this method
 		gclist.add(obj);
 	}
-	
+
 	public String getLuaPath() {
 		// TODO: Implement this method
 		Intent intent=getIntent();
@@ -187,15 +230,17 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		File f=new File(path);
 
 		luaDir = new File(luaPath).getParent();
-		if (f.getName().equals("main.lua") && new File(luaDir + "/init.lua").exists())
+		if (f.getName().equals("main.lua") && !new File(luaDir + "/init.lua").exists()) {
 			if (!prjCache.contains(luaDir))
 				prjCache.add(luaDir);
-			else
-				for (String p:prjCache)
-					if (luaDir.indexOf(p) == 0) {
-						luaDir = p;
-						break;
-					}
+		}
+		else {
+			for (String p:prjCache)
+				if (luaDir.indexOf(p) == 0) {
+					luaDir = p;
+					break;
+				}
+		}
 		return path;
 	}
 
@@ -319,76 +364,28 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		zipInputStream.close();  
 	}  
 
-	public void loadResources(String path) {  
-		try {
-			AssetManager assetManager = AssetManager.class.newInstance();  
-			Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class); 
-			int ok=addAssetPath.invoke(assetManager, path);  
-			if(ok==0)
-				return;
-			mAssetManager = assetManager;  
-			Resources superRes = super.getResources();  
-			mResources = new Resources(mAssetManager, superRes.getDisplayMetrics(),  
-									   superRes.getConfiguration());  
-			mTheme = mResources.newTheme();  
-			mTheme.setTo(super.getTheme());  
-		}
-		catch (Exception e) {  
-			e.printStackTrace();  
-		} 
-	} 
+	public DexClassLoader loadDex(String path) throws LuaException {
+		return mLuaDexLoader.loadDex(path);
+	}
+
+
+	public void loadResources(String path) {
+		mLuaDexLoader.loadResources(path);
+	}
 
 	@Override  
-	public AssetManager getAssets() {  
-		return mAssetManager == null ? super.getAssets() : mAssetManager;  
+	public AssetManager getAssets() {
+		if (mLuaDexLoader != null && mLuaDexLoader.getAssets() != null)
+			return mLuaDexLoader.getAssets();
+		return super.getAssets(); 
 	} 
 
 	@Override  
 	public Resources getResources() {  
-		return mResources == null ? super.getResources() : mResources;  
+		if (mLuaDexLoader != null && mLuaDexLoader.getResources() != null)
+			return mLuaDexLoader.getResources();
+		return super.getResources(); 
 	} 
-
-	public DexClassLoader loadDex(String path) throws LuaException {
-		LuaDexClassLoader dex=dexCache.get(path);
-		if (dex != null)
-			return dex;
-
-		if (path.charAt(0) != '/')
-			path = luaDir + "/" + path;
-		if (!new File(path).exists())
-			if (new File(path + ".dex").exists())
-				path += ".dex";
-			else
-			if (new File(path + ".jar").exists())
-				path += ".jar";
-			else
-				throw new LuaException(path + " not found");
-		if (path.endsWith(".jar"))
-			loadResources(path);
-		dex = new LuaDexClassLoader(path, odexDir, getApplicationInfo().nativeLibraryDir, getClassLoader());
-		dexCache.put(path, dex);
-		return dex;
-	}
-
-	private static class LuaDexClassLoader extends DexClassLoader {
-		private static HashMap<String,Class<?>> classCache=new HashMap<String,Class<?>>();
-
-		public LuaDexClassLoader(java.lang.String dexPath, java.lang.String optimizedDirectory, java.lang.String libraryPath, java.lang.ClassLoader parent) {
-			super(dexPath, optimizedDirectory, libraryPath, parent);
-		}
-
-		@Override
-		protected Class<?> findClass(String name) throws ClassNotFoundException {
-			// TODO: Implement this method
-			Class<?> cls=classCache.get(name);
-			if (cls == null) {
-				cls = super.findClass(name);
-				classCache.put(name, cls);
-			}
-			return cls;
-		}
-	}
-
 
 	public Object loadLib(String name) throws LuaException {
 		int i=name.indexOf(".");
@@ -469,11 +466,11 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	protected void onDestroy() {
 		if (mReceiver != null)
 			unregisterReceiver(mReceiver);
-		
-		for (LuaGcable obj:gclist){
+
+		for (LuaGcable obj:gclist) {
 			obj.gc();
 		}
-		
+
 		runFunc("onDestroy");
 		super.onDestroy();
 		System.gc();
@@ -496,7 +493,9 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 					arg[0] = name;
 					for (int i=0;i < res.length;i++)
 						arg[i + 1] = res[i];
-					runFunc("onResult", arg);
+					Object ret=runFunc("onResult", arg);
+					if (ret != null && ret.getClass() == Boolean.class && (Boolean)ret)
+						return;
 				}
 			}
 		}
@@ -613,18 +612,24 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		// TODO: Implement this method
-		runFunc("onConfigurationChanged", newConfig);
 		super.onConfigurationChanged(newConfig);
+		WindowManager wm =(WindowManager) getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		wm.getDefaultDisplay().getMetrics(outMetrics);
+		mWidth = outMetrics.widthPixels;
+		mHeight = outMetrics.heightPixels;
+		
+		runFunc("onConfigurationChanged", newConfig);
 	}
 
 
 
 	public int getWidth() {
-		return getResources().getDisplayMetrics().widthPixels;
+		return mWidth;
 	}
 
 	public int getHeight() {
-		return getResources().getDisplayMetrics().heightPixels;
+		return mHeight;
 	}
 
 
@@ -700,11 +705,11 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		Intent intent = new Intent(this, LuaActivity.class);
 		intent.putExtra(NAME, path);
 		if (path.charAt(0) != '/')
-			path = luaDir + "/" + path + ".lua";
+			path = luaDir + "/" + path;
 		File f=new File(path);
 		if (f.isDirectory() && new File(path + "/main.lua").exists())
 			path += "/main.lua";
-		else if (!f.exists() && !path.endsWith(".lua"))
+		else if ((f.isDirectory() || !f.exists()) && !path.endsWith(".lua"))
 			path += ".lua";
 		if (!new File(path).exists())
 			throw new FileNotFoundException(path);
@@ -714,7 +719,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		if (arg != null)
 			intent.putExtra("arg", arg);
 		startActivityForResult(intent, req);
-		overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+		//overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
 	}
 
 
@@ -739,7 +744,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 		File f=new File(path);
 		if (f.isDirectory() && new File(path + "/main.lua").exists())
 			path += "/main.lua";
-		else if (!f.exists() && !path.endsWith(".lua"))
+		else if ((f.isDirectory() || !f.exists()) && !path.endsWith(".lua"))
 			path += ".lua";
 		if (!new File(path).exists())
 			throw new FileNotFoundException(path);
@@ -1258,6 +1263,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 						if (mDebug)
 							showToast(data);
 						status.append(data + "\n");
+						adapter.add(data);
 					}
 					break;
 				case 1:

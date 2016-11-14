@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest android:versionCode="320" android:versionName="3.2.160830" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest android:versionCode="322" android:versionName="3.2.2" package="com.androlua" xmlns:android="http://schemas.android.com/apk/res/android">
 	<uses-sdk android:minSdkVersion="14" android:targetSdkVersion="21"/>
 	<uses-permission android:name="android.permission.CALL_PHONE"/>
 	<uses-permission android:name="android.permission.SEND_SMS"/>
@@ -39,6 +39,7 @@
 	<uses-permission android:name="android.permission.READ_FRAME_BUFFER" />
 	<uses-permission android:name="android.permission.PERSISTENT_ACTIVITY" />
 	<uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+	<uses-permission android:name="android.permission.SET_WALLPAPER" />
 	<application android:icon="@drawable/icon"
 		android:label="AndroLua+"
 		android:largeHeap="true"
@@ -54,7 +55,8 @@
 			>
 			<!--intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
-				<category android:name="android.intent.category.LAUNCHER"/>
+			android:hardwareAccelerated="false"
+			<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter-->
 			<intent-filter >
 				<action  android:name = "android.intent.action.VIEW"  />
@@ -119,7 +121,7 @@
 		<activity
 			android:name="com.androlua.Welcome"
 			android:label="AndroLua+"
-			android:theme="@style/WelcomeTheme"
+			android:theme="@android:style/Theme.NoDisplay"
 			android:screenOrientation="portrait" >
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>

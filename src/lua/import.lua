@@ -2,8 +2,10 @@ local require=require
 local table=require "table"
 local packages = {}
 local loaded = {}
+local imported={}
 luajava.package=packages
 luajava.loaded=loaded
+luajava.imported=imported
 local _G=_G
 local insert = table.insert
 local new = luajava.new
@@ -12,6 +14,20 @@ local loaders = {}
 local dexes = {}
 
 local luacontext=activity or service
+dexes = luajava.astable(luacontext.getClassLoaders())
+local libs=luacontext.getLibrarys()
+
+local function libsloader(path)
+  local p=libs[path:match("^%a+")]
+  if p then
+    return assert(package.loadlib(p,"luaopen_"..(path:gsub("%.","_")))),p
+  else
+    return "\n\tno file ./libs/lib"..path..".so"
+  end
+  end
+table.insert(package.searchers,libsloader)
+
+
 
 local function massage_classname (classname)
   if classname:find('_') then
@@ -120,11 +136,13 @@ local function env_import(env)
       local class=luacontext.loadDex(dexname).loadClass(classname)
       local classname = package:match('([^%.$]+)$')
       _env[classname]=class
+      append(imported,package)
       return class
     end
     local i = package:find('%*$')
     if i then -- a wildcard; put into the package list, including the final '.'
       append(packages,package:sub(1,-2))
+      append(imported,package)
       return import_pacckage(package:sub(1,-2))
     else
       local classname = package:match('([^%.$]+)$')
@@ -132,6 +150,9 @@ local function env_import(env)
       if class then
         if class ~= true then
           --findtable(package)=class
+          if type(class)~="table" then
+          append(imported,package)
+          end
           _env[classname]=class
         end
         return class
@@ -229,7 +250,7 @@ end
 local NIL={}
 setmetatable(NIL,{__tostring=function()return "nil" end})
 
-function printstack()
+local function printstack()
   local stacks={}
   for m=2,16 do
     local dbs={}
@@ -248,10 +269,20 @@ function printstack()
       if v==nil then
         v=NIL
       end
-      ups[n]=v
+      if string.byte(n)==40 then
+        if ups[n]==nil then
+          ups[n]={}
+        end
+        table.insert(ups[n],v)
+      else
+        ups[n]=v
+      end
     end
+  
     local lps={}
     dbs.localvalues=lps
+    lps.vararg={}
+    --lps.temporary={}
     for n=-1,-255,-1 do
       local k,v=debug.getlocal(m,n)
       if k==nil then
@@ -260,7 +291,7 @@ function printstack()
       if v==nil then
         v=NIL
       end
-     lps[k]=v
+      table.insert(lps.vararg,v)
     end
     for n=1,255 do
       local n,v=debug.getlocal(m,n)
@@ -270,7 +301,16 @@ function printstack()
       if v==nil then
         v=NIL
       end
-     lps[n]=v
+      if string.byte(n)==40 then
+        if lps[n]==nil then
+          lps[n]={}
+        end
+        table.insert(lps[n],v)
+      else
+        lps[n]=v
+      end
+      --table.insert(lps,string.format("%s=%s",n,v))
+
     end
   end
   print(dump(stacks))

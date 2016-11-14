@@ -66,15 +66,18 @@
 #define LUAGCMETAMETHODTAG "__gc"
 /* Constant that defines where in the metatable should I place the function
    name */
-#define LUAJAVAOBJFUNCCALLED "__FunctionCalled"
+#define LUAJAVAOBJECTMETA "JavaObject"
 
 #define LUAJAVAOBJECT "__Object"
 
 
 static jclass throwable_class = NULL;
 static jmethodID get_message_method = NULL;
+static jmethodID throwable_tostring_method = NULL;
+
 static jclass java_function_class = NULL;
 static jmethodID java_function_method = NULL;
+
 static jclass luajava_api_class = NULL;
 static jclass java_lang_class = NULL;
 static jclass java_string_class = NULL;
@@ -171,9 +174,15 @@ jlong checkIndex(lua_State *L) {
 }
 
 jobject *checkJavaObject(lua_State *L, int idx) {
-  if (!isJavaObject(L, idx))
-    luaL_typerror(L, idx, "java Object");
-  return (jobject *)lua_touserdata(L, idx);
+  //if (!isJavaObject(L, idx))
+    //luaL_typerror(L, idx, "java Object");
+  //return (jobject *)lua_touserdata(L, idx);
+  jobject *obj;
+  obj = (jobject *)luaL_checkudata(L, idx, LUAJAVAOBJECTMETA);
+  if (*obj == NULL){
+    luaL_argerror(L, idx, "JavaObject expected, got null");
+  }
+  return obj;
 }
 
 void checkError(JNIEnv *javaEnv, lua_State *L) {
@@ -188,11 +197,10 @@ void checkError(JNIEnv *javaEnv, lua_State *L) {
     jstr = (*javaEnv)->CallObjectMethod(javaEnv, exp, get_message_method);
 
     if (jstr == NULL) {
-      jmethodID methodId;
-
-      methodId = (*javaEnv)->GetMethodID(javaEnv, throwable_class, "toString",
+      if (throwable_tostring_method == NULL)
+        throwable_tostring_method = (*javaEnv)->GetMethodID(javaEnv, throwable_class, "toString",
                                          "()Ljava/lang/String;");
-      jstr = (*javaEnv)->CallObjectMethod(javaEnv, exp, methodId);
+      jstr = (*javaEnv)->CallObjectMethod(javaEnv, exp, throwable_tostring_method);
     }
 
     cStr = (*javaEnv)->GetStringUTFChars(javaEnv, jstr, NULL);
@@ -397,7 +405,7 @@ static inline const char *getObjectName(lua_State *L, JNIEnv *env,
     jclass cls;
     char c;
     if ((*env)->IsInstanceOf(env, obj, java_lang_class) == JNI_TRUE) {
-      c = '#';
+      c = '.';
       cls = (jclass)obj;
     } else {
       c = '@';
@@ -413,7 +421,7 @@ static inline const char *getObjectName(lua_State *L, JNIEnv *env,
     checkError(env, L);
     const char *cStr = (*env)->GetStringUTFChars(env, jstr, NULL);
     lua_pushstring(L, NAME);
-    name = lua_pushfstring(L, "%c %s", c, cStr);
+    name = lua_pushfstring(L, "%s%c", cStr, c);
     lua_rawset(L, -3);
 	
     (*env)->ReleaseStringUTFChars(env, jstr, cStr);
@@ -475,9 +483,13 @@ int objectIndex(lua_State *L) {
       lua_rawseti(L, 3, (int)obj);
 	}
     lua_pushvalue(L, 2);
-    lua_rawget(L, -2);
-    int mtype = lua_type(L, -1);
-
+    int mtype = lua_rawget(L, -2);
+    //int mtype = lua_type(L, -1);
+    if (mtype == LUA_TFUNCTION){
+      lua_pushvalue(L, 1);
+	  lua_setupvalue(L, -2, 2);
+	  return 1;
+    }
     if (mtype != LUA_TNIL)
       return 1;
 
@@ -491,7 +503,7 @@ int objectIndex(lua_State *L) {
       lua_rawseti(L, 3, 0);
 	}
     lua_remove(L, 3);
-    tag = lua_pushfstring(L, "%s %s", name, key);
+    tag = lua_pushfstring(L, "%s%s", name, key);
 	/* lua stack：1,object;2,key;3,objtable;4,cache;5,tag */
 
 	lua_pushvalue(L, -1);
@@ -521,7 +533,8 @@ int objectIndex(lua_State *L) {
     }
 
     if (ret == 2 || type == 2) {
-      lua_pushvalue(L, 1);
+      //lua_pushinteger(L, (int)obj);
+	  lua_pushvalue(L, 1);
       lua_pushcclosure(L, &callMethod, 2);
       lua_pushvalue(L, 2);
       lua_pushvalue(L, -2);
@@ -559,21 +572,36 @@ int callMethod(lua_State *L) {
 
   /* Gets the JNI Environment */
   javaEnv = checkEnv(L);
-
-  /* Gets the object reference */
-  obj = checkJavaObject(L, lua_upvalueindex(2));
-  //*obj = (jobject)lua_touserdata(L, lua_upvalueindex(2));
-
+  
   /* Gets the methodName */
   methodName = lua_tostring(L, lua_upvalueindex(1));
-  // checkJavaObject(L, lua_upvalueindex(1));
+
+  /* Gets the object reference */
+  int udx = lua_upvalueindex(2);
+  //obj = checkJavaObject(L, udx);
+  //checkJavaObject(L, lua_upvalueindex(1));
+  //obj = (jobject*)(int)lua_tointeger(L, lua_upvalueindex(2));
+  obj = (jobject *)luaL_testudata(L, udx, LUAJAVAOBJECTMETA);
+  if (obj == NULL){
+    luaL_error(L, "can not call the function %s", methodName);
+  }
+  
   str = (*javaEnv)->NewStringUTF(javaEnv, methodName);
 
   ret = (*javaEnv)->CallStaticIntMethod(javaEnv, luajava_api_class, call_method,
                                         stateIndex, *obj, str);
   (*javaEnv)->DeleteLocalRef(javaEnv, str);
   checkError(javaEnv, L);
-
+  
+  /* if no ret, return self */
+  if (ret == 0) {
+	  lua_pushvalue(L, udx);
+	  ret = 1;
+  }
+  
+  /* clear upvalue ref */
+  lua_pushnil(L);
+  lua_replace(L, udx);
   /* pushes new object into lua stack */
   return ret;
 }
@@ -648,9 +676,7 @@ int gc(lua_State *L) {
   lua_pop(L, 1);
   /* Gets the JNI Environment */
   javaEnv = checkEnv(L);
-
   (*javaEnv)->DeleteGlobalRef(javaEnv, *pObj);
-  // free(pObj);
   *pObj = NULL;
   return 0;
 }
@@ -690,8 +716,9 @@ int javaBindClass(lua_State *L) {
   checkError(javaEnv, L);
 
   /* pushes new object into lua stack */
-
-  return pushJavaObject(L, classInstance);
+  pushJavaObject(L, classInstance);
+  (*javaEnv)->DeleteLocalRef(javaEnv, classInstance);
+  return 1;
 }
 
 /***************************************************************************
@@ -1134,10 +1161,12 @@ int pushJavaObject(lua_State *L, jobject javaObject) {
   JNIEnv *javaEnv = checkEnv(L);
 
   globalRef = (*javaEnv)->NewGlobalRef(javaEnv, javaObject);
+  checkError(javaEnv,L);
+//LOGD("Java object %d %d",&javaObject,&globalRef);
 
   userData = (jobject *)lua_newuserdata(L, sizeof(jobject));
   *userData = globalRef;
-  luaL_setmetatable(L, "_javaObjectMeta");
+  luaL_setmetatable(L, LUAJAVAOBJECTMETA);
   return 1;
   /*
   lua_newtable(L);
@@ -1314,7 +1343,7 @@ LUALIB_API int luaopen_luajava(lua_State *L) {
   luaL_register(L, "luajava", ljlib);
   set_info(L);
 
-  luaL_newmetatable(L, "_javaObjectMeta");
+  luaL_newmetatable(L, LUAJAVAOBJECTMETA);
   luaL_setfuncs(L, ljobjectmeta, 0);
   lua_pushstring(L, LUAJAVAOBJECTIND);
   lua_pushboolean(L, 1);

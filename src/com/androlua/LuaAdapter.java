@@ -11,197 +11,241 @@ import java.io.*;
 import android.util.*;
 import android.view.animation.*;
 import android.content.*;
+import java.lang.reflect.*;
+import com.androlua.LuaAdapter.*;
+import com.luajava.LuaTable.*;
 
-public class LuaAdapter extends BaseAdapter
-{
-
-	private LuaContext mContext;
-
-	private LuaObject mResource;
+public class LuaAdapter extends BaseAdapter {
 
 	private LuaState L;
+	private LuaContext mContext;
 
-	private LuaObject loadlayout;
 
-	private ArrayList<? extends Map<String, ?>> mData;
+	private LuaTable mLayout;
+	private LuaTable<Integer,LuaTable<String,Object>> mData;
+	private LuaTable<String,Object> mTheme;
 
-	private String[] mFrom;
 
-	private String[] mField;
+	private LuaFunction<View> loadlayout;
 
-	private String[] mTo;
+	private LuaFunction insert;
 
+	private LuaFunction remove;
+
+	private LuaFunction<Animation> mAnimationUtil;
+
+	private HashMap<View,Animation> mAnimCache = new HashMap<View,Animation>();
+
+	private HashMap<View,Boolean> mStyleCache = new HashMap<View,Boolean>();
+	
 	private boolean mNotifyOnChange=true;
 
-	private Animation mAnimation;
+	private boolean updateing;
 
-	public void setAnimation(Animation animation)
-	{
-		this.mAnimation = animation;
+
+	public LuaAdapter(LuaContext context, LuaTable layout) throws LuaException {
+		this(context, null, layout);
 	}
 
-	public Animation getAnimation()
-	{
-		return mAnimation;
+	public LuaAdapter(LuaContext context, LuaTable<Integer,LuaTable<String,Object>> data, LuaTable layout) throws LuaException {
+		mContext = context;
+		mLayout = layout;
+		L = context.getLuaState();
+		if (data == null)
+			data = new LuaTable<Integer,LuaTable<String,Object>>(L);
+		mData = data;
+		loadlayout = (LuaFunction<View>)L.getLuaObject("loadlayout").getFunction();
+		insert = L.getLuaObject("table").getField("insert").getFunction();
+		remove = L.getLuaObject("table").getField("remove").getFunction();
+		L.newTable();
+		loadlayout.call(mLayout, L.getLuaObject(-1) , AbsListView.class);
+		L.pop(1);
+		
+	}
+
+	public void setAnimationUtil(LuaFunction<Animation> animation) {
+		mAnimCache.clear();
+		mAnimationUtil = animation;
 	}
 
 	@Override
-	public int getCount()
-	{
+	public int getCount() {
 		// TODO: Implement this method
-		return mData.size();
+		return mData.length();
 	}
 
 	@Override
-	public Object getItem(int p1)
-	{
+	public Object getItem(int position) {
 		// TODO: Implement this method
-		return mData.get(p1);
+		return mData.get(position + 1);
 	}
 
 	@Override
-	public long getItemId(int id)
-	{
+	public long getItemId(int position) {
 		// TODO: Implement this method
-		return id;
+		return position + 1;
 	}
 
-	public void add(HashMap<java.lang.String, ?> map) throws Exception
-	{
-		if (mData instanceof ArrayList)
-			((ArrayList<Map<String, ?>>)mData).add(map);
-		else 
-			throw new Exception("Con not add items");
-		if (mNotifyOnChange) notifyDataSetChanged();
-	}
-
-	public void insert(int idx,HashMap<java.lang.String, ?> map) throws Exception
-	{
-		if (mData instanceof ArrayList)
-			((ArrayList<Map<String, ?>>)mData).add(idx,map);
-		else 
-			throw new Exception("Con not add items");
-		if (mNotifyOnChange) notifyDataSetChanged();
+	public LuaTable<Integer,LuaTable<String,Object>> getData(){
+		return mData;
 	}
 	
-	public void remove(int idx) throws Exception
-	{
-		if (mData instanceof ArrayList)
-			((ArrayList<Map<String, ?>>)mData).remove(idx);
-		else 
-			throw new Exception("Con not add items");
+	public void add(LuaTable<String,Object> item) throws Exception {
+		mData.put(mData.length() + 1, item);
 		if (mNotifyOnChange) notifyDataSetChanged();
 	}
-	
-	public void clear()
-	{
+
+	public void insert(int position, LuaTable<String,Object> item) throws Exception {
+		insert.call(mData, position + 1, item);
+		if (mNotifyOnChange) notifyDataSetChanged();
+	}
+
+	public void remove(int position) throws Exception {
+		remove.call(mData, position + 1);
+		if (mNotifyOnChange) notifyDataSetChanged();
+	}
+
+	public void clear() {
 		mData.clear();
 		if (mNotifyOnChange) notifyDataSetChanged();
 	}
-	
+
 	public void setNotifyOnChange(boolean notifyOnChange) {
         mNotifyOnChange = notifyOnChange;
 		if (mNotifyOnChange) notifyDataSetChanged();
 	}
-	
+
 	@Override
-	public View getDropDownView(int position, View convertView, ViewGroup parent)
-	{
+	public void notifyDataSetChanged() {
+		// TODO: Implement this method
+		super.notifyDataSetChanged();
+		if (updateing == false) {
+			updateing = true;
+			new Handler().postDelayed(new Runnable(){
+					@Override
+					public void run() {
+						// TODO: Implement this method
+						updateing = false;
+					}
+				}, 500);
+		}
+	}
+
+
+	@Override
+	public View getDropDownView(int position, View convertView, ViewGroup parent) {
 		// TODO: Implement this method
 		return getView(position, convertView, parent);
 	}
 
-	
-	
+	public void setStyle(LuaTable<String,Object> theme) {
+		mStyleCache.clear();
+		mTheme = theme;
+	}
+
 	@Override
-	public View getView(int position, View convertView, ViewGroup parent)
-	{
+	public View getView(int position, View convertView, ViewGroup parent) {
 		// TODO: Implement this method
 		View view = null;
 		LuaObject holder = null;
-		if (convertView == null)
-		{
-			try
-			{
+		if (convertView == null) {
+			try {
 				L.newTable();
 				holder = L.getLuaObject(-1);
 				L.pop(1);
-				view = (View)loadlayout.call(mResource, holder, AbsListView.class);
+				view = loadlayout.call(mLayout, holder, AbsListView.class);
 				view.setTag(holder);
 			}
-			catch (LuaException e)
-			{
+			catch (LuaException e) {
 				return new View(mContext.getContext());
 			}
 		}
-		else
-		{
+		else {
 			view = convertView;
 			holder = (LuaObject)view.getTag();
 		}
-		if (mField != null)
-		{
 
-			for (int i=0;i < mFrom.length;i++)
-			{
-				try
-				{
-					String[] to = null;
-					if (mTo != null)
-						to = mTo;
-					else
-						to = mFrom;
+		LuaTable<String, Object> hm=mData.get(position + 1);
+		
+		if (hm == null) {
+			Log.d("lua", position + " is null");
+			return view;
+		}
 
-					LuaObject obj=holder.getField(to[i]);
-					if (obj.isJavaObject())
-						if(mField[i].equals("Src"))
-							setHelper((View)obj.getObject(),mData.get(position).get(mFrom[i]));
-						else
-							obj.setField(mField[i], mData.get(position).get(mFrom[i]));
-				}
-				catch (LuaException e)
-				{
-					Log.d("lua",e.getMessage());
+		boolean bool=mStyleCache.get(view) == null;
+		if(bool)
+			mStyleCache.put(view,true);
+			
+		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) hm.entrySet();
+		for (LuaTable.LuaEntry<String, Object> entry: sets) { 
+			try {
+				String key=entry.getKey();
+				Object value = entry.getValue();
+				LuaObject obj=holder.getField(key);
+				if (obj.isJavaObject()) {
+					if(mTheme!=null && bool){
+						setHelper((View)obj.getObject(),mTheme.get(key));
+					}
+					setHelper((View)obj.getObject(), value);
 				}
 			}
+			catch (Exception e) {
+				Log.d("lua", e.getMessage());
+			}
 		}
-		else
-		{
-			Map hm=mData.get(position);
-			//Set<Map.Entry> sets =hm.entrySet(); 
-			for (Object ety: hm.entrySet())
-			{ 
 
-				try
-				{
-					Map.Entry entry =(Map.Entry) ety;
-					String key=(String)entry.getKey();
-					Object value = entry.getValue();
-					LuaObject obj=holder.getField(key);
-					if (obj.isJavaObject())
-						setHelper((View)obj.getObject(), value);
+		if (updateing) {
+			return view;
+		}
 
+		if (mAnimationUtil != null && convertView != null) {
+			Animation anim=mAnimCache.get(convertView);
+			if (anim == null) {
+				try {
+					anim = mAnimationUtil.call();
+					mAnimCache.put(convertView, anim);
 				}
-				catch (Exception e)
-				{
-					Log.d("lua",e.getMessage());
+				catch (Exception e) {
+					Log.d("lua", e.getMessage());
 				}
 			}
-
+			if (anim != null) {
+				view.clearAnimation();
+				view.startAnimation(anim);
+			}
 		}
-		if(mAnimation!=null)
-			view.startAnimation(mAnimation);
 		return view;
 	}
 
-	private void setHelper(View view, Object value)
-	{
-		if (view instanceof TextView)
-			((TextView)view).setText(value.toString());
-		else if (view instanceof ImageView)
-		{
-			try
-			{
+	private void setFilds(View view, LuaTable<String, Object> fields) {
+		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) fields.entrySet();
+		for (LuaTable.LuaEntry<String, Object> entry2: sets) { 
+			try {
+				String key2=entry2.getKey();
+				Object value2 = entry2.getValue();
+				if (key2.toLowerCase().equals("src"))
+					setHelper(view, value2);
+				else
+					javaSetter(view, key2, value2);
+			}
+			catch (Exception e2) {
+				Log.d("lua", e2.getMessage());
+			}
+		}
+	}
+
+	private void setHelper(View view, Object value) {
+		if (value instanceof LuaTable) {
+			setFilds(view, (LuaTable<String, Object>)value);
+		}
+		else if (view instanceof TextView) {
+			if (value instanceof CharSequence)
+				((TextView)view).setText((CharSequence)value);
+			else
+				((TextView)view).setText(value.toString());
+		}
+		else if (view instanceof ImageView) {
+			try {
 				if (value instanceof Bitmap)
 					((ImageView)view).setImageBitmap((Bitmap)value);
 				else if (value instanceof String)
@@ -211,71 +255,109 @@ public class LuaAdapter extends BaseAdapter
 				else if (value instanceof Number)
 					((ImageView)view).setImageResource(((Number)value).intValue());
 			}
-			catch (Exception e)
-			{
-				Log.d("lua",e.getMessage());
+			catch (Exception e) {
+				Log.d("lua", e.getMessage());
 			}
 
 		}
 	}
 
-	
-	
-	public LuaAdapter(LuaContext context, LuaObject resource) throws LuaException
-	{
-		mContext = context;
-		mData = new ArrayList<Map<String, ?>>();
-		mResource = resource;
-		L = context.getLuaState();
-		loadlayout = L.getLuaObject("loadlayout");
-		L.newTable();
-		loadlayout.call(mResource, L.getLuaObject(-1) , AbsListView.class);
-		L.pop(1);
+
+	private int javaSetter(Object obj, String methodName, Object value) throws LuaException {
+		Class clazz = obj.getClass();
+
+		String className=clazz.getName();
+		Method[] methods = LuaJavaAPI.methodsMap.get(className);
+		if (methods == null) {
+			methods = clazz.getMethods();
+			LuaJavaAPI.methodsMap.put(className, methods);
+		}
+		
+		if (methodName.length() > 2 && methodName.substring(0, 2).equals("on") && value instanceof LuaFunction)		
+			return javaSetListener(obj, methodName, methods, value);
+		
+		return javaSetMethod(obj, methodName, methods, value);
 	}
 
-
-	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource) throws LuaException
-	{
-		mContext = context;
-		mData = new ArrayList<Map<String, ?>>(data);
-		mResource = resource;
-		L = context.getLuaState();
-		loadlayout = L.getLuaObject("loadlayout");
-		L.newTable();
-		loadlayout.call(mResource, L.getLuaObject(-1) , AbsListView.class);
-		L.pop(1);
-	}
-
-	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] field) throws LuaException
-	{
-		mContext = context;
-		mData = new ArrayList<Map<String, ?>>(data);
-		mFrom = from;
-		mField = field;
-		mResource = resource;
-		L = context.getLuaState();
-		loadlayout = L.getLuaObject("loadlayout");
-		L.newTable();
-		loadlayout.call(mResource, L.getLuaObject(-1) , AbsListView.class);
-		L.pop(1);
-	}
-
-	public LuaAdapter(LuaContext context, java.util.List<? extends java.util.Map<java.lang.String, ?>> data, LuaObject resource, java.lang.String[] from, String[] to, String[] field) throws LuaException
-	{
-		mContext = context;
-		mData = new ArrayList<Map<String, ?>>(data);
-		mFrom = from;
-		mField = field;
-		mTo = to;
-		mResource = resource;
-		L = context.getLuaState();
-		loadlayout = L.getLuaObject("loadlayout");
-		L.newTable();
-		loadlayout.call(mResource, L.getLuaObject(-1) , AbsListView.class);
-		L.pop(1);
+	private int javaSetListener(Object obj, String methodName, Method[] methods, Object value) throws LuaException {
+		String name="setOn" + methodName.substring(2) + "Listener";
+			for (Method m:methods) {
+				if (!m.getName().equals(name))
+					continue;
+				
+				Class<?>[] tp=m.getParameterTypes();
+				if (tp.length == 1 && tp[0].isInterface()) {
+					L.newTable();
+					L.pushObjectValue(value);
+					L.setField(-2, methodName);
+					try {
+						Object listener = L.getLuaObject(-1).createProxy(tp[0]);
+						m.invoke(obj, new Object[]{listener});
+						return 1;
+					}
+					catch (Exception e) {
+						throw new LuaException(e);
+					}					
+				}
+			}			
+		return 0;
 	}
 
 	
+	private int javaSetMethod(Object obj, String methodName, Method[] methods , Object value) throws LuaException {
+		String name="set" + methodName;
+		Class<?> type = value.getClass();
+		StringBuilder buf=new StringBuilder();
+		for (Method m:methods) {
+			if (!m.getName().equals(name))
+				continue;
+
+			Class<?>[] tp=m.getParameterTypes();
+			if (tp.length != 1)
+				continue;
+
+			if (tp[0].isPrimitive()) {
+				try {
+					if (value instanceof Double || value instanceof Float) {
+						m.invoke(obj, new Object[]{LuaState.convertLuaNumber(((Number)value).doubleValue(), tp[0])});
+					}
+					else if (value instanceof Long || value instanceof Integer) {
+						m.invoke(obj, new Object[]{LuaState.convertLuaNumber(((Number)value).longValue(), tp[0])});
+					}
+					else {
+						continue;
+					}
+					return 1;
+				}
+				catch (Exception e) {
+					buf.append(e.getMessage());
+					buf.append("\n");
+					continue;
+				}
+
+			}
+
+			if (!tp[0].isAssignableFrom(type))
+				continue;
+
+			try {
+				m.invoke(obj, new Object[]{value});
+				return 1;
+			}
+			catch (Exception e) {
+				buf.append(e.getMessage());
+				buf.append("\n");
+				continue;
+			}
+		}
+		if (buf.length() > 0)
+			throw new LuaException("Invalid setter " + methodName + ". Invalid Parameters.\n" + buf.toString() + type.toString());
+		else
+			throw new LuaException("Invalid setter " + methodName + " is not a method.\n");
+
+	}
+
+
 	private Handler mHandler=new Handler(){
 		@Override
 		public void handleMessage(Message msg) {
@@ -283,97 +365,45 @@ public class LuaAdapter extends BaseAdapter
 		}
 
 	};
+
+
 	private HashMap<String,Boolean> loaded=new HashMap<String,Boolean>();
-	private class AsyncLoader extends Thread
-	{
+
+	private class AsyncLoader extends Thread {
 
 		private String mPath;
 
 		private LuaContext mContext;
 
-		public Bitmap getBitmap(LuaContext context, String path) throws IOException
-		{
+		public Bitmap getBitmap(LuaContext context, String path) throws IOException {
 			// TODO: Implement this method
-			mContext=context;
-			mPath=path;
-			if(!path.startsWith("http://"))
-				return LuaBitmap.getBitmap(context,path);
-			if(LuaBitmap.checkCache(context,path))
-				return LuaBitmap.getBitmap(context,path);
-			if(!loaded.containsKey(mPath)){
+			mContext = context;
+			mPath = path;
+			if (!path.startsWith("http://"))
+				return LuaBitmap.getBitmap(context, path);
+			if (LuaBitmap.checkCache(context, path))
+				return LuaBitmap.getBitmap(context, path);
+			if (!loaded.containsKey(mPath)) {
 				start();
-				loaded.put(mPath,true);
+				loaded.put(mPath, true);
 			}			
-			return Bitmap.createBitmap(0,0,Bitmap.Config.RGB_565);
+			return Bitmap.createBitmap(0, 0, Bitmap.Config.RGB_565);
 		}
 
 		@Override
-		public void run()
-		{
+		public void run() {
 			// TODO: Implement this method
-			try
-			{
+			try {
 				LuaBitmap.getBitmap(mContext, mPath);
 				mHandler.sendEmptyMessage(0);
 			}
-			catch (IOException e)
-			{
+			catch (IOException e) {
 				mContext.sendMsg(e.getMessage());
 			}
 
 		}
 
 	}
-	
-	public class AsyncImageLoader
-	{
 
-		private HashMap<String, SoftReference<Drawable>> imageCache;
 
-		public AsyncImageLoader()
-		{
-			imageCache = new HashMap<String, SoftReference<Drawable>>();
-		}
-
-		public Drawable loadDrawable(final String imageUrl, final ImageCallback imageCallback)
-		{
-			if (imageCache.containsKey(imageUrl))
-			{
-				SoftReference<Drawable> softReference = imageCache.get(imageUrl);
-				Drawable drawable = softReference.get();
-				if (drawable != null)
-				{
-					return drawable;
-				}
-			}
-			final Handler handler = new Handler() {
-				@Override
-				public void handleMessage(Message message)
-				{
-					imageCallback.imageLoaded((Drawable) message.obj, imageUrl);
-				}
-			};
-			new Thread() {
-				@Override
-				public void run()
-				{
-					try
-					{
-						Drawable drawable = new BitmapDrawable(LuaBitmap.getHttpBitmap(imageUrl));
-						imageCache.put(imageUrl, new SoftReference<Drawable>(drawable));
-						Message message = handler.obtainMessage(0, drawable);
-						handler.sendMessage(message);
-					}
-					catch (IOException e)
-					{}
-				}
-			}.start();
-			return null;
-		}
-
-	}
-	public interface ImageCallback
-	{
-        public void imageLoaded(Drawable imageDrawable, String imageUrl);
-    }
 }

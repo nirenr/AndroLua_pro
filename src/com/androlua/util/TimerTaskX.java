@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-package com.androlua;
+package com.androlua.util;
 
 /**
  * The {@code TimerTask} class represents a task to run at a specified time. The task

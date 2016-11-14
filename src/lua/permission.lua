@@ -42,6 +42,7 @@ permission={
   READ_FRAME_BUFFER=true,
   PERSISTENT_ACTIVITY=true,
   DOWNLOAD_WITHOUT_NOTIFICATION=true,
+  SET_WALLPAPER=true
 }
 
 permission_info={
@@ -86,6 +87,7 @@ permission_info={
   PERSISTENT_ACTIVITY="永久活动",
   INSTALL_SHORTCUT="安装快捷方式",
   DOWNLOAD_WITHOUT_NOTIFICATION="直接下载",
+  SET_WALLPAPER="设置壁纸"
 }
 
 

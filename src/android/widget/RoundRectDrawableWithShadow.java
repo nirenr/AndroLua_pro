@@ -28,6 +28,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import com.androlua.*;
+import android.util.*;
 
 /**
  * A rounded rectangle drawable which also includes a shadow around.
@@ -85,11 +86,18 @@ class RoundRectDrawableWithShadow extends Drawable {
      */
     private boolean mPrintedShadowClipWarning = false;
 
+	private DisplayMetrics dm;
+
     RoundRectDrawableWithShadow(Resources resources, int backgroundColor, float radius,
             float shadowSize, float maxShadowSize) {
-        mShadowStartColor = resources.getColor(R.color.cardview_shadow_start_color);
-        mShadowEndColor = resources.getColor(R.color.cardview_shadow_end_color);
-        mInsetShadow = resources.getDimensionPixelSize(R.dimen.cardview_compat_inset_shadow);
+        mShadowStartColor = 0x37000000;
+		//resources.getColor(R.color.cardview_shadow_start_color);
+        mShadowEndColor = 0x03000000;
+		dm=resources.getDisplayMetrics();
+		
+		//resources.getColor(R.color.cardview_shadow_end_color);
+        mInsetShadow = (int)dp(1);
+		//resources.getDimensionPixelSize(R.dimen.cardview_compat_inset_shadow);
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         mPaint.setColor(backgroundColor);
         mCornerShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
@@ -100,7 +108,12 @@ class RoundRectDrawableWithShadow extends Drawable {
         mEdgeShadowPaint.setAntiAlias(false);
         setShadowSize(shadowSize, maxShadowSize);
     }
-
+	
+	private float dp(float n) {
+		// TODO: Implement this method
+		return TypedValue.applyDimension(1,n,dm);
+	}
+	
     /**
      * Casts the value to an even integer.
      */

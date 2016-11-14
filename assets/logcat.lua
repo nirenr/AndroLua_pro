@@ -76,12 +76,47 @@ func.Clear=function()
 end
 
 scroll=ScrollView(activity)
+scroll=ListView(activity)
+
+scroll.FastScrollEnabled=true
 logview=TextView(activity)
 logview.TextIsSelectable=true
-scroll.addView(logview)
+--scroll.addView(logview)
+--scroll.addHeaderView(logview)
+local r="%[ *%d+%-%d+ *%d+:%d+:%d+%.%d+ *%d+: *%d+ *%a/[^ ]+ *%]"
+
 function show(s)
-  logview.setText(s)
+ -- logview.setText(s)
+  --print(s)
+  local a=LuaArrayAdapter(activity,{TextView,
+    textIsSelectable=true,
+    textSize="18sp",
+    })
+  local l=1
+  for i in s:gfind(r) do 
+    if l~=1 then
+     a.add(s:sub(l,i-1))
+     end
+     l=i
+    end
+       a.add(s:sub(l))
+
+   scroll.Adapter=a
 end
 
 func.Lua()
 activity.setContentView(scroll)
+import "android.content.*"
+cm=activity.getSystemService(activity.CLIPBOARD_SERVICE)
+
+function copy(str)
+  local cd = ClipData.newPlainText("label",str)
+  cm.setPrimaryClip(cd)
+  Toast.makeText(activity,"已复制的剪切板",1000).show()
+end
+--[[
+scroll.onItemLongClick=function(l,v)
+  local s=tostring(v.Text)
+  copy(s)
+  return true
+end]]

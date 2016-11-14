@@ -16,7 +16,6 @@ class LuaCameraView extends SurfaceView
 	public LuaCameraView(Context context) 
 	{ 
 		super(context);
-		Log.i("yao", "CameraView");
 		// 操作surface的holder	
 		holder = this.getHolder();
 		// 创建SurfaceHolder.Callback对象

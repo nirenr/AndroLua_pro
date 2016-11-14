@@ -1,13 +1,11 @@
 package com.androlua;
-import android.graphics.*;
 import android.os.*;
+import com.androlua.util.*;
+import com.luajava.*;
 import java.io.*;
 import java.net.*;
-import com.luajava.*;
-import com.androlua.Http.*;
-import java.util.*;
 import java.nio.charset.*;
-import java.util.Map.*;
+import java.util.*;
 
 public class Http {
 
@@ -298,7 +296,7 @@ public class Http {
 					BufferedReader reader=new BufferedReader(new InputStreamReader(is, mCharset));
 					StringBuffer buf=new StringBuffer();
 					String line;
-					while ((line = reader.readLine()) != null)
+					while ((line = reader.readLine()) != null && !isCancelled())
 						buf.append(line + '\n');
 					is.close();
 					return new Object[]{code,new String(buf),cok.toString(),hs};
@@ -308,6 +306,7 @@ public class Http {
 				}
 			}
 			catch (Exception e) {
+				e.printStackTrace();
 				return new Object[]{-1,e.getMessage()};
 			}
 

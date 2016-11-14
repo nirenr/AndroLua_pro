@@ -15,6 +15,7 @@ layout={
     },
     {
       HorizontalScrollView;
+      horizontalScrollBarEnabled=false,
       {
         LinearLayout;
         id="ps_bar";

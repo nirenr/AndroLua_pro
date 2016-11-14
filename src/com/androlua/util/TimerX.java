@@ -15,7 +15,7 @@
  *  limitations under the License.
  */
 
-package com.androlua;
+package com.androlua.util;
 
 /**
  * Timers schedule one-shot or recurring {@link TimerTask tasks} for execution.

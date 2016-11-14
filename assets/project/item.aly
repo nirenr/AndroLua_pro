@@ -3,30 +3,39 @@
   layout_width="fill";
   {
     ImageView;
-    id="icon";
-    padding="2dp";
     layout_width="64dp";
     layout_height="64dp";
+    padding="2dp";
+    id="icon";
   };
   {
-    FrameLayout;
+    LinearLayout;
+    orientation="vertical";
+    --layout_height="64dp";
     padding="2dp";
     layout_width="fill";
-    layout_height="64dp";
     {
       TextView;
-      id="title";
       layout_width="fill";
+      textSize="20dp";
       singleLine="true";
-      textSize="20sp";
+      id="title";
     };
     {
       TextView;
-      textSize="14sp";
-      id="description";
+     -- layout_gravity="bottom";
       layout_width="fill";
+      textSize="12dp";
       singleLine="true";
+      id="path";
+    };
+    {
+      TextView;
       layout_gravity="bottom";
+      layout_width="fill";
+      textSize="14dp";
+      singleLine="true";
+      id="description";
     };
   };
 };

@@ -14,6 +14,19 @@ import android.util.*;
 public class LuaApplication extends Application implements LuaContext
 {
 
+	private static LuaApplication mApp;
+	
+	public static LuaApplication getInstance(){
+		return mApp;
+	}
+	
+	@Override
+	public ArrayList<ClassLoader> getClassLoaders() {
+		// TODO: Implement this method
+		return null;
+	}
+
+
 	@Override
 	public void regGc(LuaGcable obj) {
 		// TODO: Implement this method
@@ -78,6 +91,7 @@ public class LuaApplication extends Application implements LuaContext
     @Override  
     public void onCreate() {
 		super.onCreate();  
+		mApp=this;
 		CrashHandler crashHandler = CrashHandler.getInstance();  
 		// 注册crashHandler  
 		crashHandler.init(getApplicationContext());

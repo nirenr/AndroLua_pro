@@ -346,7 +346,7 @@ public class LuaObject {
 		}
 	}
 
-	public LuaTable getTable() {
+	public LuaTable<?,?> getTable() {
 		synchronized (L) {
 			push();
 			LuaTable td = new LuaTable(L, -1);
@@ -355,7 +355,7 @@ public class LuaObject {
 		}
 	}
 	
-	public LuaFunction getFunction() {
+	public LuaFunction<?> getFunction() {
 		synchronized (L) {
 			push();
 			LuaFunction ft = new LuaFunction(L, -1);

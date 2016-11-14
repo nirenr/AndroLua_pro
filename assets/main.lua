@@ -14,6 +14,169 @@ import "android.graphics.drawable.*"
 require "layout"
 activity.setTitle('AndroLua+')
 
+
+function onVersionChanged(n,o)
+  local dlg=AlertDialogBuilder(activity)
+  local title="更新"..o..">"..n
+  local msg=[[
+    3.2.2
+    优化FloatWindow焦点切换。
+    修复bug。
+    3.2.1
+    增加RippleLayout。
+    增加LuaExpandableListAdapter适配器。
+    优化ToolBar显示效果。
+    修复垃圾回收bug。
+    修复jar资源加载异常的bug。
+    
+    3.2
+    更新Lua5.3.3。
+    增加onVersionChanged回调函数。
+    增加onResult回调函数。
+    优化搜索选中效果。
+    增加ide支持高亮与补全Java类。
+    修复横竖屏切换bug。
+    增加Http异步网络模块。
+    修复在最左边删除，看不到待删除字符的问题。
+    修复ToolBar不能设置空白标题的bug。
+    优化PageLayouts与SlidingLayout.
+    增加PullingLayout布局。
+    增加线程自动回收机制。
+    增加PageView。
+    增加LuaFragment。
+    增加级联风格调用。
+    修复未实现接口函数调用出错的bug。
+    增加支持自动导入libs目录so模块。
+    增加支持TextView跑马灯。
+    修复加载dex异常的bug。
+    增加设置壁纸权限。
+    优化task用法，自动导入外部代码导入的包与类。
+    优化启动闪图逻辑。
+    增加启动图不全屏时，自动适应空白区域颜色。
+    优化内核，性能提高40%。
+    优化打开工程逻辑。
+    打开工程支持搜索。
+    增加比例尺寸。
+    优化log显示效果。
+    优化第一次启动闪图效果。
+    增加ide最近打开功能。
+    增加记录最近打开文件光标位置功能。
+    更新帮助。
+
+    3.1
+    增加可视布局设计器，
+    升级内核，速度提高20%，
+    http模块支持自定义UA与header
+    优化luajava错误提示，
+    增加工程导出/导入，
+    修复打开文件的bug，
+    增加后台服务，
+    优化错误提示，
+    修复类型转换bug，
+    增加Ticker主线程回调定时器，
+    编辑器自动夜间模式，
+    编辑器支持自定义配色，
+    增加导入dex函数，
+    loadbitmap加载网络图片支持本地缓存，
+    LuaArrayAdapter和LuaAdapter适配器支持异步加载图片与缓存，
+    增加Java方法浏览器，
+    增加导包提示，
+
+    3.0.0
+    支持打包apk的权限配置，
+    增加Map对象的简洁使用，
+    完善luajavaa.astable函数，全面支持array List Map，
+    增加在方法调用时Lua表自动转换为Java数组或接口，
+    增加LuaArrayAdapter和LuaAdapter适配器，
+    LuaWebView支WebClient，在js调用Lua函数，
+    timer支持设置时间间隔，
+    newActivity支持传递参数，
+    http增加download和upload，
+    日志支持清除，
+    Java方法支持table与array，map与interface自动转换，
+    增强取长度运算符，可以获取Java对象大小，
+    更换运行方式，
+    支持打包文件夹，
+    打包自动分析使用的c模块，
+    增加tointeger函数，
+    setContentView支持布局表参数，
+
+    2.1.0
+    去除广告，欢迎捐赠，
+    修复接口方法错误无法显示错误信息的问题，
+    修复import函数一处逻辑错误，
+    修复onKeyDown等回调方法不能返回值的bug，
+    优化luajava性能，
+    优化IDE编辑器性能，
+    修复IDE打开文件bug，
+    增加setXXXListener控件事件快速设置，
+    重写task与thread函数
+    增加timer函数，
+    修复数字类型转换bug，
+    增加查看logcat输出功能，
+    布局表支持绝对布局，
+    布局表支持ListView预设项目，
+    布局表支持style属性，
+    布局表支持?android获取系统资源，
+    修复astable索引0的bug，
+    IDE增加函数导航，
+    IDE增加搜索与转到，
+
+    2.0.4
+    增加luajava.astable方法，
+    增加each与enum迭代器
+    布局表支持相对布局，
+    布局表gravity属性支持或( | )操作，
+    优化IDE逻辑，
+
+    2.0.3
+    修复IDE布局bug
+
+    2.0.2
+    增加getter与setter快速调用，用于简化控件属性设置，
+    修复Java方法返回null没有返回值的bug，
+    更新布局表算法，支持布局间距，
+    优化Java方法缓存机制，效率提高一倍，布局表效率提高8倍，
+
+    2.0.1
+    布局表增加自绘制背景，
+    修复自动缩进算法错误，
+    增加百度广告，仅在打包时出现，不影响使用，希望大家支持，
+
+    2.0
+    更新Lua5.3.1，
+    更新luajava3.0，
+    增加打包apk功能，
+    增加布局表，
+    增加线程，
+    增加更多回调方法，
+    更新支持高亮，自动缩进，自动补全编辑器，
+
+    更多请参考帮助
+
+  ]]
+  if o=="" then
+    title="欢迎使用AndroLua+ "..n
+    msg=[[
+    AndroLua+是由nirenr开发的在安卓使用Lua语言开发应用的工具，该项目基于开源项目luajava和AndroLua优化加强，修复了原版的bug，并加入了很多新的特性，使开发更加简单高效，使用该软件完全免费，如果你喜欢这个项目欢迎捐赠或者宣传他。
+    用户协议
+    作者不对使用该软件产生的任何直接或间接损失负责。
+    勿使用该程序编写恶意程序以损害他人。
+    继续使用表示你已知晓并同意该协议。
+    
+]]..msg
+    end
+  dlg.setTitle(title)
+
+  dlg.setMessage(msg)
+  dlg.setPositiveButton("确定",nil)
+  dlg.setNegativeButton("帮助",{onClick=func.help})
+  dlg.setNeutralButton("捐赠",{onClick=func.donation})
+  dlg.show()
+end
+
+
+
 --activity.setTheme(android.R.style.Theme_Holo_Light)
 local version = Build.VERSION.SDK_INT;
 local h=tonumber(os.date("%H"))
@@ -46,10 +209,13 @@ end
 activity.getWindow().setSoftInputMode(0x10)
 
 --activity.getActionBar().show()
+history={}
+luahist=luajava.luadir.."/lua.hist"
 luadir=luajava.luaextdir.."/" or "/sdcard/androlua/"
 luaconf=luajava.luadir.."/lua.conf"
 luaproj=luajava.luadir.."/lua.proj"
 pcall(dofile,luaconf)
+pcall(dofile,luahist)
 luapath=luapath or luadir.."new.lua"
 luadir=luapath:match("^(.-)[^/]+$")
 pcall(dofile,luaproj)
@@ -86,12 +252,18 @@ activity.setContentView(loadlayout(layout))
 
 lcode=[[
 {
-  LinearLayout,
-  orientation="vertical",
+  RippleLayout,
+  layout_width="fill",
   {
-    TextView,
-    text="hello AndroLua+",
-    layout_width="fill"
+    LinearLayout,
+    orientation="vertical",
+    layout_width="fill",
+    layout_height="fill",
+    {
+      TextView,
+      text="hello AndroLua+",
+      layout_width="fill",
+    },
   },
 }
 ]]
@@ -100,17 +272,6 @@ user_permission={
   "INTERNET",
   "WRITE_EXTERNAL_STORAGE",
 }
-]]
-about=[[
-AndroLua是基于LuaJava开发的安卓平台轻量级脚本编程语言工具，既具有Lua简洁优雅的特质，又支持绝大部分安卓API，可以使你在手机上快速编写小型应用。
-官方QQ群：236938279
-http://jq.qq.com/?_wv=1027&k=dcofRr
-百度贴吧：
-http://c.tieba.baidu.com/mo/m?kw=androlua
-项目地址：
-http://sf.net/p/androlua
-点击链接支持我的工作，一块也可以哦：
-https://qr.alipay.com/apt7ujjb4jngmu3z9a
 ]]
 
 
@@ -131,6 +292,9 @@ m={
   {MenuItem,
     title="打开",
     id="file_open",},
+  {MenuItem,
+    title="最近",
+    id="file_history",},
   {SubMenu,
     title="文件...",
     {MenuItem,
@@ -209,8 +373,8 @@ m={
       title="联系作者",
       id="more_qq",},
     {MenuItem,
-      title="论坛",
-      id="more_bbs",},
+      title="关于",
+      id="more_about",},
   },
 }
 optmenu={}
@@ -288,6 +452,7 @@ function reopen(path)
 end
 
 function read(path)
+  
   local f=io.open(path,"r")
   if f==nil then
     --Toast.makeText(activity, "打开文件出错."..path, Toast.LENGTH_LONG ).show()
@@ -301,19 +466,40 @@ function read(path)
     return 
   end
   editor.setText(str)
+  
   activity.getActionBar().setSubtitle(".."..path:match("(/[^/]+/[^/]+)$"))
   luapath=path
+  if history[luapath] then
+    editor.setSelection(history[luapath])
+  end
+  table.insert(history,1,luapath)
+  for n=2,#history do
+    if n>50 then
+      history[n]=nil
+    elseif history[n]==luapath then
+      table.remove(history,n)
+     end
+  end
   write(luaconf,string.format("luapath=%q",path))
   if luaproject and path:find(luaproject,1,true) then
     --Toast.makeText(activity, "打开文件."..path, Toast.LENGTH_SHORT ).show()
     return
   end
 
+  local dir=luadir
   local p={}
-  local e=pcall(loadfile(luadir.."init.lua","bt",p))
+  local e=pcall(loadfile(dir.."init.lua","bt",p))
+  while not e do
+    dir,n=dir:gsub("[^/]+/$","")
+    if n==0 then
+      break
+      end
+    e=pcall(loadfile(dir.."init.lua","bt",p))
+  end
+
   if e then
     activity.setTitle(p.appname)
-    luaproject=luadir
+    luaproject=dir
     write(luaproj,string.format("luaproject=%q",luaproject))
     --Toast.makeText(activity, "打开工程."..p.appname, Toast.LENGTH_SHORT ).show()
   else
@@ -336,6 +522,7 @@ function write(path,str)
 end
 
 function save()
+  history[luapath]=editor.getSelectionEnd()
   local str=""
   local f=io.open(luapath,"r")
   if f then
@@ -459,33 +646,9 @@ function list(v,p)
 end
 
 function list2(v,p)
-  local f=File(p)
-  if not f then
-    open_title.setText(p)
-    local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String{})
+    local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(history))
     v.setAdapter(adapter)
-    return
-  end
-
-  local fs=f.listFiles()
-  fs=fs or String[0]
-  Arrays.sort(fs)
-  local t={}
-  local td={}
-  local tf={}
-  for n=0,#fs-1 do
-    local name=fs[n].getName()
-    if fs[n].isDirectory() then
-      table.insert(td,name)
-      --elseif name:find("%.lua$") or name:find("%.aly$") or name:find("%.alp$") then
-      --table.insert(tf,name)
-    end
-  end
-  table.sort(td,sort)
-  local adapter=ArrayAdapter(activity,android.R.layout.simple_list_item_1, String(td))
-  v.setAdapter(adapter)
-  plist=td
-  --open_dlg2.setItems(td)
+    plist=history
 end
 
 
@@ -604,6 +767,9 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     local ls=f.listFiles()
     for n=0,#ls-1 do
       local name=ls[n].getName()
+      if name:find("[^%w%._]") then
+        table.insert(errbuffer,"文件名仅支持字母数字与下划线："..name)
+      end
       if name:find("%.apk$") or name:find("%.luac$") or name:find("^%.") then
       elseif name:find("%.lua$") then
         checklib(luapath..dir..name)
@@ -704,6 +870,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       end
     end
     addDir(out,"",f)
+    --[[
     local wel=File(luapath.."welcome.png")
     if wel.exists() then
       entry=ZipEntry("res/drawable/welcome.png")
@@ -711,6 +878,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       replace["res/drawable/welcome.png"]=true
       copy(FileInputStream(wel),out)
     end
+    ]]
     local wel=File(luapath.."icon.png")
     if wel.exists() then
       entry=ZipEntry("res/drawable/icon.png")
@@ -738,7 +906,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
           [activity.getPackageName()]=packagename,
           [info.nonLocalizedLabel]=appname,
           [ver]=appver,
-          [".*\\\\.alp"]="",
+          [".*\\\\.alp"]=p.path_pattern or "",
           [".*\\\\.lua"]="",
           [".*\\\\.luac"]="",
         }
@@ -789,7 +957,7 @@ function export(pdir)
   require "import"
   import "java.util.zip.*"
   import "java.io.*"
-  function copy(input,output)
+  local function copy(input,output)
     local b=byte[2^16]
     local l=input.read(b)
     while l>1 do
@@ -892,7 +1060,7 @@ function importx(path,tp)
   require "import"
   import "java.util.zip.*"
   import "java.io.*"
-  function copy(input,output)
+  local function copy(input,output)
     local b=byte[2^16]
     local l=input.read(b)
     while l>1 do
@@ -991,6 +1159,14 @@ func.new=function()
   create_dlg.show()
 end
 
+func.history=function()
+  save()
+  create_open_dlg2()
+  list2(listview2)
+  open_edit.Text=""
+  open_dlg2.show()
+end
+  
 func.create=function()
   save()
   create_project_dlg()
@@ -998,10 +1174,12 @@ func.create=function()
 end
 func.openproject=function()
   save()
+  activity.newActivity("project")
+--[[
   create_open_dlg2()
-  open_edit=""
   list2(listview2, luaprojectdir)
-  open_dlg2.show()
+  open_edit.Text=""
+  open_dlg2.show()]]
 end
 
 func.export=function()
@@ -1121,7 +1299,7 @@ func.info=function()
     Toast.makeText(activity, "仅支持修改工程属性.", Toast.LENGTH_SHORT ).show()
     return
   end
-  activity.newActivity("projectinfo/main",{luaproject})
+  activity.newActivity("projectinfo",{luaproject})
 end
 
 func.logcat=function()
@@ -1157,15 +1335,24 @@ func.donation=function()
   end)
 end
 
-func.qq=function()
-  local url="mqqwpa://im/chat?chat_type=wpa&uin=946049229"
-  activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+key2=[[N_9Rrnm8jJcdcXs7TQsXQBVA8Liq8mhU]]
+
+key=[[QRDW1jiyM81x-T8RMIgeX1g_v76QSo6a]]
+function joinQQGroup(key)
+  import "android.content.Intent"
+  import "android.net.Uri"
+  local intent = Intent();
+  intent.setData(Uri.parse("mqqopensdkapi://bizAgent/qm/qr?url=http%3A%2F%2Fqm.qq.com%2Fcgi-bin%2Fqm%2Fqr%3Ffrom%3Dapp%26p%3Dandroid%26k%3D"..key));
+  activity.startActivity(intent);
 end
 
-func.bbs=function()
-  local url="http://androlua.com"
-  activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+func.qq=function()
+  joinQQGroup(key)
 end
+
+func.about=function()
+  onVersionChanged("","")
+  end
 
 func.plugin=function()
   activity.newActivity("plugin/main",{luaproject,luapath})
@@ -1181,6 +1368,7 @@ function onMenuItemSelected(id,item)
     [optmenu.undo]=func.undo,
     [optmenu.redo]=func.redo,
     [optmenu.file_open]=func.open,
+    [optmenu.file_history]=func.history,
     [optmenu.file_save]=func.save,
     [optmenu.file_new]=func.new,
     [optmenu.file_build]=func.luac,
@@ -1201,7 +1389,7 @@ function onMenuItemSelected(id,item)
     [optmenu.more_manual]=func.manual,
     [optmenu.more_donation]=func.donation,
     [optmenu.more_qq]=func.qq,
-    [optmenu.more_bbs]=func.bbs,
+    [optmenu.more_about]=func.about,
     [optmenu.plugin]=func.plugin,
   }
 end
@@ -1236,6 +1424,16 @@ function onNewIntent(intent)
   end
 end
 
+function onResult(name,path)
+  --print(name,path)
+  if name=="project" then
+  luadir=path.."/"
+  read(path.."/main.lua")
+  elseif name=="projectinfo" then
+  activity.setTitle(path)
+  end
+end
+
 function onActivityResult(req,res,intent)
   if res==10000 then
     read(luapath)
@@ -1244,8 +1442,10 @@ function onActivityResult(req,res,intent)
   end
   if res~=0 then
     local data=intent.getStringExtra("data")
-    local _,_,line=data:find(":(%d+):")
-    editor.gotoLine (tonumber(line))
+    local _,_,path,line=data:find("\n[	 ]*([^\n]-):(%d+):")
+    if path==luapath then
+      editor.gotoLine (tonumber(line))
+    end
     local classes=require "javaapi.android"
     local c=data:match("a nil value %(global '(%w+)'%)")
     if c then
@@ -1277,8 +1477,11 @@ end
 function onStop()
   save()
   --Toast.makeText(activity, "文件已保存."..luapath, Toast.LENGTH_SHORT ).show()
-  f=io.open(luaconf,"wb")
+  local f=io.open(luaconf,"wb")
   f:write( string.format("luapath=%q\nlast=%d",luapath, editor. getSelectionEnd() ))
+  f:close()
+  local f=io.open(luahist,"wb")
+  f:write(string.format("history=%s",dump(history)))
   f:close()
 end
 
@@ -1376,7 +1579,7 @@ function create_open_dlg2()
   open_dlg2=AlertDialogBuilder(activity)
   --open_dlg2.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
 
-  open_dlg2.setTitle("打开工程")
+  open_dlg2.setTitle("最近打开")
   open_dlg2.setView(loadlayout(layout.open2))
 
   --listview2=open_dlg2.ListView
@@ -1403,11 +1606,10 @@ function create_open_dlg2()
 
   listview2.setOnItemClickListener(AdapterView.OnItemClickListener{
     onItemClick=function(parent, v, pos,id)
-      luadir=luaprojectdir..tostring(v.Text).."/"
-      read(string.format("%smain.lua",luadir))
+      luadir=v.Text:gsub("[^/]+$","")
+      read(v.Text)
       open_dlg2.hide()
-      Toast.makeText(activity, "打开工程."..tostring(v.Text), Toast.LENGTH_SHORT ).show()
-    end
+     end
   })
 end
 
@@ -1459,7 +1661,7 @@ end
 import "android.content.*"
 cm=activity.getSystemService(activity.CLIPBOARD_SERVICE)
 
-function copy(str)
+function copyClip(str)
   local cd = ClipData.newPlainText("label",str)
   cm.setPrimaryClip(cd)
   Toast.makeText(activity,"已复制到剪切板",1000).show()
@@ -1474,7 +1676,7 @@ function create_import_dlg()
   import_dlg.setPositiveButton("确定",nil)
 
   import_dlg.ListView.onItemLongClick=function(l,v)
-    copy(v.Text)
+    copyClip(v.Text)
     return true
   end
 end
@@ -1521,7 +1723,7 @@ function newButton(text)
   local pd=btn.TextSize/2
   btn.setPadding(pd,pd/2,pd,pd/4)
   btn.Text=text
-  btn.setBackground(sd)
+  btn.setBackgroundDrawable(sd)
   btn.onClick=click
   return btn
 end

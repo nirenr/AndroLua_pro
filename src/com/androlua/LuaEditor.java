@@ -41,6 +41,7 @@ public class LuaEditor extends FreeScrollingTextField {
 		if (tf.exists())
 			setItalicTypeface(Typeface.createFromFile(tf));
 		DisplayMetrics dm=context.getResources().getDisplayMetrics();
+		
 		float size=TypedValue.applyDimension(2, BASE_TEXT_SIZE_PIXELS, dm);
 		setTextSize((int)size);
 		setShowLineNumbers(true);
@@ -141,8 +142,28 @@ public class LuaEditor extends FreeScrollingTextField {
 		return  _hDoc.subSequence(getSelectionStart(), getSelectionEnd() - getSelectionStart()).toString();
 	}
 
-
-
+    @Override
+    public boolean onKeyShortcut(int keyCode, KeyEvent event) {
+        final int filteredMetaState = event.getMetaState() & ~KeyEvent.META_CTRL_MASK;
+        if (KeyEvent.metaStateHasNoModifiers(filteredMetaState)) {
+            switch (keyCode) {
+				case KeyEvent.KEYCODE_A:
+					selectAll();
+					return true;
+				case KeyEvent.KEYCODE_X:
+					cut();
+					return true;
+				case KeyEvent.KEYCODE_C:
+					copy();
+					return true;
+				case KeyEvent.KEYCODE_V:
+					paste();
+					return true;
+            }
+        }
+        return super.onKeyShortcut(keyCode, event);
+    }
+	
 
 	public void gotoLine() {
 		// TODO: Implement this method

@@ -47,10 +47,10 @@ for k,v in ipairs(ps) do
 end
 
 local fs=luajava.astable(android.R.style.getFields())
-local tss={}
+local tss={"Theme"}
 for k,v in ipairs(fs) do
   local nm=v.Name
-  if nm:find("^Theme") then
+  if nm:find("^Theme_") then
     table.insert(tss,nm)
   end
 end
@@ -110,7 +110,8 @@ function onOptionsItemSelected(item)
   f:write(ss)
   f:close()
   Toast.makeText(activity, "已保存.", Toast.LENGTH_SHORT ).show()
-  activity.finish()
+  activity.result({appname.Text})
+
 end
 
 lastclick=os.time()-2

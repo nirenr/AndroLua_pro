@@ -33,6 +33,17 @@ package com.luajava;
  */
 public class LuaState
 {
+	
+	private  static Class<?> Number_class=Number.class;
+
+	private  static Class<?> Byte_class=Byte.class;
+	private  static Class<?> Short_class=Short.class;
+	private  static Class<?> Integer_class=Integer.class;
+	private  static Class<?> Long_class=Long.class;
+	private  static Class<?> Float_class=Float.class;
+	private  static Class<?> Double_class=Double.class;
+	
+	
 	private final static String LUAJAVA_LIB = "luajava";
 
 	final public static int LUAI_MAXSTACK	=	1000000;
@@ -1120,7 +1131,13 @@ public class LuaState
 	 */
 	public LuaObject getLuaObject(String globalName)
 	{
-		return new LuaObject(this, globalName);
+		pushGlobalTable();
+		pushString(globalName);
+		rawGet(-2);
+		LuaObject obj=getLuaObject(-1);
+		pop(2);
+		return obj;
+		//return new LuaObject(this, globalName);
 	}
 
 	/**
@@ -1221,30 +1238,30 @@ public class LuaState
 				return db.shortValue();
 			}
 		}
-		else if (retType.isAssignableFrom(Number.class))
+		else if (retType.isAssignableFrom(Number_class))
 		{
 			// Checks all possibilities of number types
-			if (retType.isAssignableFrom(Integer.class))
+			if (retType.isAssignableFrom(Integer_class))
 			{
 				return new Integer(db.intValue());
 			}
-			else if (retType.isAssignableFrom(Long.class))
+			else if (retType.isAssignableFrom(Long_class))
 			{
 				return new Long(db.longValue());
 			}
-			else if (retType.isAssignableFrom(Float.class))
+			else if (retType.isAssignableFrom(Float_class))
 			{
 				return new Float(db.floatValue());
 			}
-			else if (retType.isAssignableFrom(Double.class))
+			else if (retType.isAssignableFrom(Double_class))
 			{
 				return db;
 			}
-			else if (retType.isAssignableFrom(Byte.class))
+			else if (retType.isAssignableFrom(Byte_class))
 			{
 				return new Byte(db.byteValue());
 			}
-			else if (retType.isAssignableFrom(Short.class))
+			else if (retType.isAssignableFrom(Short_class))
 			{
 				return new Short(db.shortValue());
 			}
@@ -1284,30 +1301,30 @@ public class LuaState
 				return lg.shortValue();
 			}
 		}
-		else if (retType.isAssignableFrom(Number.class))
+		else if (retType.isAssignableFrom(Number_class))
 		{
 			// Checks all possibilities of number types
-			if (retType.isAssignableFrom(Integer.class))
+			if (retType.isAssignableFrom(Integer_class))
 			{
 				return new Integer(lg.intValue());
 			}
-			else if (retType.isAssignableFrom(Long.class))
+			else if (retType.isAssignableFrom(Long_class))
 			{
 				return new Long(lg.longValue());
 			}
-			else if (retType.isAssignableFrom(Float.class))
+			else if (retType.isAssignableFrom(Float_class))
 			{
 				return new Float(lg.floatValue());
 			}
-			else if (retType.isAssignableFrom(Double.class))
+			else if (retType.isAssignableFrom(Double_class))
 			{
 				return lg;
 			}
-			else if (retType.isAssignableFrom(Byte.class))
+			else if (retType.isAssignableFrom(Byte_class))
 			{
 				return new Byte(lg.byteValue());
 			}
-			else if (retType.isAssignableFrom(Short.class))
+			else if (retType.isAssignableFrom(Short_class))
 			{
 				return new Short(lg.shortValue());
 			}
@@ -1319,25 +1336,22 @@ public class LuaState
 	
 	public void pushPrimitive()
  	{
-		pushJavaObject(boolean.class);
+		pushJavaObject(Boolean.TYPE);
 		setGlobal("boolean");
-		pushJavaObject(byte.class);
+		pushJavaObject(Byte.TYPE);
 		setGlobal("byte");
-		pushJavaObject(char.class);
+		pushJavaObject(Character.TYPE);
 		setGlobal("char");
-		pushJavaObject(short.class);
+		pushJavaObject(Short.TYPE);
 		setGlobal("short");
-		pushJavaObject(int.class);
+		pushJavaObject(Integer.TYPE);
 		setGlobal("int");
-		pushJavaObject(long.class);
+		pushJavaObject(Long.TYPE);
 		setGlobal("long");
-		pushJavaObject(float.class);
+		pushJavaObject(Float.TYPE);
 		setGlobal("float");
-		pushJavaObject(double.class);
+		pushJavaObject(Double.TYPE);
 		setGlobal("double");
-		Object obj=null;
-		pushJavaObject(obj);
-		setGlobal("null");
 	}
 
 }

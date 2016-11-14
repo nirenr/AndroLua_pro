@@ -84,6 +84,8 @@ import android.widget.*;
 import android.view.*;
 import com.myopicmobile.textwarrior.common.*;
 import android.graphics.*;
+import android.os.*;
+import android.view.animation.*;
 
 /**
  * A custom text view that uses a solid shaded caret (aka cursor) instead of a
@@ -1372,17 +1374,65 @@ implements Document.TextFieldMetrics{
 	public void computeScroll() {
 		if (_scroller.computeScrollOffset()){
 			scrollTo(_scroller.getCurrX(), _scroller.getCurrY());
+			postInvalidateOnAnimation();
 		}
 	}
 
+	
+	/**
+     * Like {@link View#scrollBy}, but scroll smoothly instead of immediately.
+     *
+     * @param dx the number of pixels to scroll by on the X axis
+     * @param dy the number of pixels to scroll by on the Y axis
+     */
+	private long mLastScroll;
+	
+	
+    public final void smoothScrollBy(int dx, int dy) {
+        if (getHeight() == 0) {
+            // Nothing to do.
+            return;
+        }
+        long duration = AnimationUtils.currentAnimationTimeMillis() - mLastScroll;
+        if (duration > 250) {
+            //final int maxY = getMaxScrollX();
+            final int scrollY = getScrollY();
+			final int scrollX = getScrollX();
+			
+            //dy = Math.max(0, Math.min(scrollY + dy, maxY)) - scrollY;
+
+            _scroller.startScroll(scrollX, scrollY, dx, dy);
+            postInvalidateOnAnimation();
+        } else {
+            if (!_scroller.isFinished()) {
+                _scroller.abortAnimation();
+            }
+            scrollBy(dx, dy);
+        }
+        mLastScroll = AnimationUtils.currentAnimationTimeMillis();
+    }
+
+    /**
+     * Like {@link #scrollTo}, but scroll smoothly instead of immediately.
+     *
+     * @param x the position where to scroll on the X axis
+     * @param y the position where to scroll on the Y axis
+     */
+    public final void smoothScrollTo(int x, int y) {
+        smoothScrollBy(x - getScrollX(), y - getScrollY());
+    }
+	
+	
 	/**
 	 * Start fling scrolling
 	 */
 	void flingScroll(int velocityX, int velocityY) {
+		
 		_scroller.fling(getScrollX(), getScrollY(), velocityX, velocityY,
 						0, getMaxScrollX(), 0, getMaxScrollY());
 		// Keep on drawing until the animation has finished.
-		postInvalidate();
+		//postInvalidate();
+		postInvalidateOnAnimation();
 	}
 
 	public boolean isFlingScrolling() {
@@ -3080,6 +3130,9 @@ implements Document.TextFieldMetrics{
 			
 			return false;
 		}
+
+			
+		
 		
 		public boolean sendKeyEvent(KeyEvent event){
 			switch(event.getKeyCode()){

@@ -510,7 +510,7 @@ function onMenuItemSelected(id,item)
   if t=="复制" then
     local cd = ClipData.newPlainText("label",dumplayout2(layout.main))
     cm.setPrimaryClip(cd)
-    Toast.makeText(activity,"已复制的剪切板",1000).show()
+    Toast.makeText(activity,"已复制到剪切板",1000).show()
   elseif t=="编辑" then
     editlayout(dumplayout2(layout.main))
   elseif t=="预览" then
