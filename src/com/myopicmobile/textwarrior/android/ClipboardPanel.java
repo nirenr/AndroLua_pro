@@ -4,6 +4,7 @@ import android.content.*;
 import android.view.View.*;
 import android.view.*;
 import com.myopicmobile.textwarrior.common.ColorScheme.Colorable;
+import android.content.res.*;
 
 public class ClipboardPanel {
 	protected FreeScrollingTextField _textField;
@@ -13,6 +14,8 @@ public class ClipboardPanel {
 	public ClipboardPanel(FreeScrollingTextField textField) {
 		_textField = textField;
 		_context = textField.getContext();
+		
+		
 	}
 
 
@@ -38,20 +41,32 @@ public class ClipboardPanel {
 						// TODO: Implement this method
 						_clipboardActionMode = mode;
 						mode.setTitle(android.R.string.selectTextMode);
+						TypedArray array = _context.getTheme().obtainStyledAttributes(new int[] {  
+																						  android.R.attr.actionModeSelectAllDrawable, 
+																						  android.R.attr.actionModeCutDrawable, 
+																						  android.R.attr.actionModeCopyDrawable, 
+																						  android.R.attr.actionModePasteDrawable, 
+																					  }); 
 						menu.add(0, 0, 0, _context.getString(android.R.string.selectAll))
 							.setShowAsActionFlags(2)
-							.setAlphabeticShortcut('a');
+							.setAlphabeticShortcut('a')
+							.setIcon(array.getDrawable(0));
 
 						menu.add(0, 1, 0, _context.getString(android.R.string.cut))
 							.setShowAsActionFlags(2)
-							.setAlphabeticShortcut('x');
+							.setAlphabeticShortcut('x')
+							.setIcon(array.getDrawable(1));
 
 						menu.add(0, 2, 0, _context.getString(android.R.string.copy))
 							.setShowAsActionFlags(2)
-							.setAlphabeticShortcut('c');
+							.setAlphabeticShortcut('c')
+							.setIcon(array.getDrawable(2));
+						
 						menu.add(0, 3, 0, _context.getString(android.R.string.paste))
 							.setShowAsActionFlags(2)
-							.setAlphabeticShortcut('v');
+							.setAlphabeticShortcut('v')
+							.setIcon(array.getDrawable(3));
+						array.recycle();
 						return true;
 					}
 

@@ -544,7 +544,7 @@ int objectIndex(lua_State *L) {
       lua_pushvalue(L, -2);
       lua_rawset(L, 3);
     } else if (ret == 0) {
-      luaL_error(L, "%s is not a field or mothod", key);
+      luaL_error(L, "%s is not a field or mothod", tag);
     }
 
   } else {

@@ -85,7 +85,7 @@ public class FloatWindow {
 
 	private void setFocus(boolean f) {
 		if (f) {
-			if (mLayoutParams.flags != (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)) {
+			if (mLayoutParams.flags == (WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)) {
 				mWindowManager.removeView(mLayout);
 				mWindowManager.addView(mLayout, mLayoutParams);
 				mLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
@@ -267,6 +267,12 @@ public class FloatWindow {
 			// TODO: Implement this method
 			ry = (int) e.getRawY();//获取触摸绝对Y位置
 			rx = (int) e.getRawX();//获取触摸绝对X位置
+			if (e.getAction() == MotionEvent.ACTION_OUTSIDE) {
+				setFocus(false);
+			}
+			else if (e.getAction() == MotionEvent.ACTION_DOWN) {	
+				setFocus(true);
+			}
 			if (e.getAction() == MotionEvent.ACTION_DOWN) {	
 				if (getWidth() - e.getX() < m) {
 					zoomX = true;

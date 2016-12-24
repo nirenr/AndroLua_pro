@@ -193,9 +193,9 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 			return view;
 		}
 
-		
-		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) hm.entrySet();
-		for (LuaTable.LuaEntry<String, Object> entry: sets) { 
+
+		Set<Map.Entry<String, Object>> sets= hm.entrySet();
+		for (Map.Entry<String, Object> entry: sets) {
 			try {
 				String key=entry.getKey();
 				Object value = entry.getValue();
@@ -260,8 +260,8 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 			return view;
 		}
 
-		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) hm.entrySet();
-		for (LuaTable.LuaEntry<String, Object> entry: sets) { 
+		Set<Map.Entry<String, Object>> sets= hm.entrySet();
+		for (Map.Entry<String, Object> entry: sets) {
 			try {
 				String key=entry.getKey();
 				Object value = entry.getValue();
@@ -305,8 +305,8 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 	}
 
 	private void setFilds(View view, LuaTable<String, Object> fields) {
-		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) fields.entrySet();
-		for (LuaTable.LuaEntry<String, Object> entry2: sets) { 
+		Set<Map.Entry<String, Object>> sets= fields.entrySet();
+		for (Map.Entry<String, Object> entry2: sets) {
 			try {
 				String key2=entry2.getKey();
 				Object value2 = entry2.getValue();
@@ -411,7 +411,9 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 					else if (value instanceof Long || value instanceof Integer) {
 						m.invoke(obj, new Object[]{LuaState.convertLuaNumber(((Number)value).longValue(), tp[0])});
 					}
-					else {
+					else if (value instanceof Boolean ){
+						m.invoke(obj, new Object[]{(Boolean)value});
+					}else {
 						continue;
 					}
 					return 1;
@@ -516,7 +518,7 @@ public class LuaExpandableListAdapter extends BaseExpandableListAdapter {
 				mHandler.sendEmptyMessage(0);
 			}
 			catch (IOException e) {
-				mContext.sendMsg(e.getMessage());
+				mContext.sendError("AsyncLoader",e);
 			}
 
 		}

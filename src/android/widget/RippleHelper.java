@@ -72,7 +72,7 @@ public class RippleHelper extends Drawable implements View.OnTouchListener {
 				Rect rect=getBounds();
 				mWidth=(int)Math.hypot(rect.bottom, rect.right);
 				mStep = Math.max(mWidth / 60, 1);
-
+				mRadius=0;
 				mTask.setEnabled(true);
 				//mEnabled = true;
 				mX = event.getX();
@@ -150,6 +150,7 @@ public class RippleHelper extends Drawable implements View.OnTouchListener {
 				mRadius += mStep * 4;
 				mView.postInvalidate();
 				if (mRadius / mWidth >=1) {
+					mRadius=mWidth;
 					mOldAlpha = mPaint2.getAlpha();
 					mAlpha = mOldAlpha;
 					state = 3;

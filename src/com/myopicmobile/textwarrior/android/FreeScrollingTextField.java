@@ -1374,7 +1374,7 @@ implements Document.TextFieldMetrics{
 	public void computeScroll() {
 		if (_scroller.computeScrollOffset()){
 			scrollTo(_scroller.getCurrX(), _scroller.getCurrY());
-			postInvalidateOnAnimation();
+			postInvalidate();
 		}
 	}
 
@@ -1402,7 +1402,7 @@ implements Document.TextFieldMetrics{
             //dy = Math.max(0, Math.min(scrollY + dy, maxY)) - scrollY;
 
             _scroller.startScroll(scrollX, scrollY, dx, dy);
-            postInvalidateOnAnimation();
+            postInvalidate();
         } else {
             if (!_scroller.isFinished()) {
                 _scroller.abortAnimation();
@@ -1431,8 +1431,8 @@ implements Document.TextFieldMetrics{
 		_scroller.fling(getScrollX(), getScrollY(), velocityX, velocityY,
 						0, getMaxScrollX(), 0, getMaxScrollY());
 		// Keep on drawing until the animation has finished.
-		//postInvalidate();
-		postInvalidateOnAnimation();
+		postInvalidate();
+		//postInvalidateOnAnimation();
 	}
 
 	public boolean isFlingScrolling() {
@@ -2176,8 +2176,7 @@ implements Document.TextFieldMetrics{
 	 * Some navigation methods use sensors or have states for their widgets.
 	 * They should be notified of application lifecycle events so they can
 	 * start/stop sensing and load/store their GUI state.
-	 *
-	 * Not public. Should only be called by {@link TextWarriorApplication}
+
 	 */
 	void onPause() {
 		_navMethod.onPause();
@@ -2626,7 +2625,7 @@ implements Document.TextFieldMetrics{
 		/**
 		 * Moves the caret to an edge of selected text and scrolls it to view.
 		 *
-		 * @param beginning If true, moves the caret to the beginning of
+		 * @param start If true, moves the caret to the beginning of
 		 * the selection. Otherwise, moves the caret to the end of the selection.
 		 * In all cases, the caret is scrolled to view if it is not visible.
 		 */

@@ -2,7 +2,6 @@ package com.androlua;
 
 import android.content.*;
 import android.content.res.*;
-import com.androlua.util.*;
 import com.luajava.*;
 import dalvik.system.*;
 import java.io.*;
@@ -107,7 +106,7 @@ public class LuaDexLoader {
 		try {
 			AssetManager assetManager = AssetManager.class.newInstance();  
 			Method addAssetPath = assetManager.getClass().getMethod("addAssetPath", String.class); 
-			int ok=addAssetPath.invoke(assetManager, path);  
+			int ok=(int)addAssetPath.invoke(assetManager, path);
 			if (ok == 0)
 				return;
 			mAssetManager = assetManager;  

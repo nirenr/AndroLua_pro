@@ -155,7 +155,7 @@ public class LuaArrayAdapter extends ArrayListAdapter {
 				mHandler.sendEmptyMessage(0);
 			}
 			catch (IOException e) {
-				mContext.sendMsg(e.getMessage());
+				mContext.sendError("AsyncLoader",e);
 			}
 
 		}

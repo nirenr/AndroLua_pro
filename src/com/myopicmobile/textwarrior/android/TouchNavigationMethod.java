@@ -89,6 +89,50 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 		return true;
 	}
 
+	@Override
+	public void onShowPress(MotionEvent e) {
+
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e){
+		int x = screenToViewX((int) e.getX());
+	int y = screenToViewY((int) e.getY());
+	int charOffset = _textField.coordToCharIndex(x, y);
+
+	if (_textField.isSelectText())
+	{
+		int strictCharOffset = _textField.coordToCharIndexStrict(x, y);
+		if (_textField.inSelectionRange(strictCharOffset) ||
+				isNearChar(x, y, _textField.getSelectionStart()) ||
+				isNearChar(x, y, _textField.getSelectionEnd()))
+		{
+			// do nothing
+		}
+		else
+		{
+			_textField.selectText(false);
+			if (strictCharOffset >= 0)
+			{
+				_textField.moveCaret(charOffset);
+			}
+		}
+	}
+	else
+	{
+		if (charOffset >= 0)
+		{
+			_textField.moveCaret(charOffset);
+		}
+	}
+	boolean displayIME = true;
+	if (displayIME)
+	{
+		_textField.showIME(true);
+	}
+	return true;
+}
+
 	/**
 	 * Note that up events from a fling are NOT captured here.
 	 * Subclasses have to call super.onUp(MotionEvent) in their implementations
@@ -228,109 +272,6 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 		
 	}
 
-	@Override
-	public boolean onSingleTapConfirmed(MotionEvent e)
-	{
-		int x = screenToViewX((int) e.getX());
-		int y = screenToViewY((int) e.getY());
-		int charOffset = _textField.coordToCharIndex(x, y);
-
-		if (_textField.isSelectText())
-		{
-			int strictCharOffset = _textField.coordToCharIndexStrict(x, y);
-			if (_textField.inSelectionRange(strictCharOffset) ||
-				isNearChar(x, y, _textField.getSelectionStart()) ||
-				isNearChar(x, y, _textField.getSelectionEnd()))
-			{
-				// do nothing
-			}
-			else
-			{
-				_textField.selectText(false);
-				if (strictCharOffset >= 0)
-				{
-					_textField.moveCaret(charOffset);
-				}
-			}
-		}
-		else
-		{
-			if (charOffset >= 0)
-			{
-				_textField.moveCaret(charOffset);
-			}
-		}
-		boolean displayIME = true;
-		if (displayIME)
-		{
-			_textField.showIME(true);
-		}
-		return true;
-	}
-
-	@Override
-	public boolean onDoubleTap(MotionEvent e)
-	{
-		_isCaretTouched = true;
-		int x = screenToViewX((int) e.getX());
-		int y = screenToViewY((int) e.getY());
-		int charOffset = _textField.coordToCharIndex(x, y);
-
-		/*if (_textField.isSelectText())
-		{
-			if (_textField.inSelectionRange(charOffset))
-			{
-				_textField.moveCaret(charOffset);
-				_textField.selectText(false);
-			}
-			else if (charOffset >= 0)
-			{
-				_textField.setSelectionRange(charOffset, 0);
-			}
-			else
-			{
-				_textField.selectText(false);
-				_isCaretTouched = false;
-			}
-		}
-		else*/
-		{
-			if (charOffset >= 0)
-			{
-				_textField.moveCaret(charOffset);
-				DocumentProvider doc=_textField.createDocumentProvider();
-				int start;int end;
-				for (start = charOffset;start >= 0;start--)
-				{
-					char c=doc.charAt(start);
-					if(!Character.isJavaIdentifierPart(c))
-						break;
-				}
-				if (start != charOffset)
-					start++;
-				for (end = charOffset;end >= 0;end++)
-				{
-					char c=doc.charAt(end);
-					if(!Character.isJavaIdentifierPart(c))
-							break;
-				}
-				_textField.selectText(true);
-				_textField.setSelectionRange(start, end - start);
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean onDoubleTapEvent(MotionEvent e)
-	{
-		if (_isCaretTouched && e.getAction() == MotionEvent.ACTION_MOVE)
-		{
-			dragCaret(e);
-			return true;
-		}
-		return super.onDoubleTapEvent(e);
-	}
 
 	@Override
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -405,9 +346,61 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 	@Override
 	public void onLongPress(MotionEvent e)
 	{
-		// TODO: Implement this method
-		super.onLongPress(e);
 		onDoubleTap(e);
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent e) {
+		// TODO: Implement this method
+		// TODO: Implement this method
+		_isCaretTouched = true;
+		int x = screenToViewX((int) e.getX());
+		int y = screenToViewY((int) e.getY());
+		int charOffset = _textField.coordToCharIndex(x, y);
+
+		/*if (_textField.isSelectText())
+		 {
+		 if (_textField.inSelectionRange(charOffset))
+		 {
+		 _textField.moveCaret(charOffset);
+		 _textField.selectText(false);
+		 }
+		 else if (charOffset >= 0)
+		 {
+		 _textField.setSelectionRange(charOffset, 0);
+		 }
+		 else
+		 {
+		 _textField.selectText(false);
+		 _isCaretTouched = false;
+		 }
+		 }
+		 else*/
+		{
+			if (charOffset >= 0)
+			{
+				_textField.moveCaret(charOffset);
+				DocumentProvider doc=_textField.createDocumentProvider();
+				int start;int end;
+				for (start = charOffset;start >= 0;start--)
+				{
+					char c=doc.charAt(start);
+					if(!Character.isJavaIdentifierPart(c))
+						break;
+				}
+				if (start != charOffset)
+					start++;
+				for (end = charOffset;end >= 0;end++)
+				{
+					char c=doc.charAt(end);
+					if(!Character.isJavaIdentifierPart(c))
+						break;
+				}
+				_textField.selectText(true);
+				_textField.setSelectionRange(start, end - start);
+			}
+		}
+		return true;
 	}
 
 

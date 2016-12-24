@@ -3,7 +3,7 @@ package com.luajava;
 import java.util.*;
 import java.util.Map.*;
 
-public class LuaTable <K extends java.lang.Object, V extends java.lang.Object>extends LuaObject implements Map {
+public class LuaTable <K, V>extends LuaObject implements Map <K,V>{
 
 	@Override
 	public void clear() {
@@ -43,9 +43,9 @@ public class LuaTable <K extends java.lang.Object, V extends java.lang.Object>ex
 	}
 
 	@Override
-	public Set<LuaEntry<K,V>> entrySet() {
+	public Set<Entry<K,V>> entrySet() {
 		// TODO: Implement this method
-		HashSet<LuaEntry<K,V>> sets=new HashSet<LuaEntry<K,V>>();
+		HashSet<Entry<K,V>> sets=new HashSet<Entry<K,V>>();
 		push();
 		L.pushNil();
 		while (L.next(-2) != 0) {
@@ -198,7 +198,7 @@ public class LuaTable <K extends java.lang.Object, V extends java.lang.Object>ex
 		registerValue(-1);
 	}
 
-	public class LuaEntry <K,V> implements Entry {
+	public class LuaEntry <K,V> implements Entry <K,V>{
 
 		private K mKey;
 
@@ -216,7 +216,6 @@ public class LuaTable <K extends java.lang.Object, V extends java.lang.Object>ex
 			return mValue;
 		}
 
-		@Override
 		public V setValue(V value) {
 			// TODO: Implement this method
 			V old=mValue;

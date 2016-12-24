@@ -154,6 +154,12 @@ public class LuaApplication extends Application implements LuaContext
 		data.put(name,object);
 	}
 
+	@Override
+	public Map getGlobalData(){
+		return data;
+	}
+
+
 	public Object get(String name)
 	{
 		// TODO: Implement this method
@@ -222,7 +228,13 @@ public class LuaApplication extends Application implements LuaContext
 		Toast.makeText(this,msg,500).show();
 		
 	}
-	
+
+	@Override
+	public void sendError(String title, Exception msg) {
+
+	}
+
+
 } 
 
 

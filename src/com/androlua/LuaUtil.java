@@ -257,16 +257,21 @@ public class LuaUtil {
 	}
 
 	public static void unZip(String SourceDir) throws IOException {
-		unZip(SourceDir,new File(SourceDir).getParent());
+		unZip(SourceDir,new File(SourceDir).getParent(), "");
 	}
 
 	public static void unZip(String SourceDir, String extDir) throws IOException {
+		unZip(SourceDir,extDir, "");
+	}
+
+	public static void unZip(String SourceDir, String extDir,String fileExt) throws IOException {
 		ZipFile zip=new ZipFile(SourceDir);
 		Enumeration<? extends ZipEntry> entries=zip.entries();
 		while (entries.hasMoreElements()) {
 			ZipEntry entry=entries.nextElement();
 			String name=entry.getName();
-
+			if(!name.startsWith(fileExt))
+				continue;
 			String path=name;
 			if (entry.isDirectory()) {
 				File f=new File(extDir + File.separator + path);

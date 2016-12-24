@@ -204,10 +204,16 @@ public class CardView extends FrameLayout implements CardViewDelegate {
 
     private void initialize(Context context, AttributeSet attrs, int defStyleAttr) {
         dm=context.getResources().getDisplayMetrics();
+		TypedArray array = context.getTheme().obtainStyledAttributes(new int[] {  
+																		  android.R.attr.colorBackground, 
+																		  }); 
+		int backgroundColor = array.getColor(0, 0x00FFFAFAFA); 
+		array.recycle();
 		
 		//TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,
         //        R.style.CardView_Light);
-        int backgroundColor = 0x00FFFAFAFA;
+        //int backgroundColor = 0x00FFFAFAFA;
+		
 		//a.getColor(R.styleable.CardView_cardBackgroundColor, 0);
         float radius = dp(2);
 		//a.getDimension(R.styleable.CardView_cardCornerRadius, 0);

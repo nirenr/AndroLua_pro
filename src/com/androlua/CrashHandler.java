@@ -85,7 +85,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 		}
 		else
 		{
-			try
+			/*try
 			{
 				Thread.sleep(3000);
 			}
@@ -95,7 +95,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 			}
 			//退出程序
 			android.os.Process.killProcess(android.os.Process.myPid());
-			System.exit(0);
+			System.exit(0);*/
 		}
 	}
 
@@ -112,7 +112,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 			return false;
 		}
 		//使用Toast来显示异常信息
-		new Thread() {
+		/*new Thread() {
 			@Override
 			public void run()
 			{
@@ -120,7 +120,7 @@ public class CrashHandler implements UncaughtExceptionHandler
 				Toast.makeText(mContext, "很抱歉,程序出现异常,即将退出.", Toast.LENGTH_LONG).show();
 				Looper.loop();
 			}
-		}.start();
+		}.start();*/
 		//收集设备参数信息 
 		collectDeviceInfo(mContext);
 		//保存日志文件 

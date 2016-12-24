@@ -8,20 +8,23 @@ import com.luajava.*;
 public class LuaFragment extends Fragment
 {
 
-	private LuaTable mLayout;
+	private LuaTable mLayout=null;
 
-	private LuaObject mLoadLayout;
-	
-	public LuaFragment(LuaContext context,LuaTable layout){
-		mLoadLayout=context.getLuaState().getLuaObject("loadlayout");
+	private LuaObject mLoadLayout=null;
+	public LuaFragment(){
+
+	}
+/*
+	public LuaFragment(LuaTable layout){
+		mLoadLayout=layout.getLuaState().getLuaObject("loadlayout");
+		mLayout=layout;
+	}*/
+	public void setLayout(LuaTable layout){
 		mLayout=layout;
 	}
-
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		// TODO: Implement this method
-		//return super.onCreateView(inflater, container, savedInstanceState);
 		try {
 			return (View)mLoadLayout.call(mLayout);
 		}

@@ -98,6 +98,20 @@ static int clear (lua_State *L) {
   return 0;
 }
 
+static int find (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_pushvalue(L,3);  /* first key */
+  while (lua_next(L, 1)) {
+	if(lua_rawequal(L, -1, 2)) {
+      lua_pop(L, 1);  /* remove value */
+      return 1;
+	}
+    lua_pop(L, 1);  /* remove value */
+  }
+  lua_pushnil(L);
+  return 1;
+}
+
 #endif
 
 
@@ -496,6 +510,7 @@ static const luaL_Reg tab_funcs[] = {
   {"maxn", maxn},
   {"size", size},
   {"clear", clear},
+  {"find", find},
 #endif
   {"insert", tinsert},
   {"pack", pack},

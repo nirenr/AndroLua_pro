@@ -4,7 +4,7 @@ import "autotheme"
 
 activity.setTheme(autotheme())
 activity.setTitle("LogCat")
-items={"All","Lua","Tcc","Error","Warning","Info","Debug","Verbose","Clear"}
+items={"All","Lua","Test","Tcc","Error","Warning","Info","Debug","Verbose","Clear"}
 function onCreateOptionsMenu(menu)
   for k,v in ipairs(items) do
     m=menu.add(v)
@@ -46,6 +46,10 @@ end
 func.Lua=function()
   activity.setTitle("LogCat - Lua")
   task(readlog,"lua:* *:S",show)
+end
+func.Test=function()
+  activity.setTitle("LogCat - Test")
+  task(readlog,"test:* *:S",show)
 end
 func.Tcc=function()
   activity.setTitle("LogCat - Tcc")

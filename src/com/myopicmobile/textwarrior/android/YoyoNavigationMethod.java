@@ -16,8 +16,7 @@ import com.myopicmobile.textwarrior.common.*;
 import com.myopicmobile.textwarrior.common.ColorScheme.Colorable;
 import com.myopicmobile.textwarrior.common.Pair;
 
-public class YoyoNavigationMethod extends TouchNavigationMethod
-{
+public class YoyoNavigationMethod extends TouchNavigationMethod {
 	private final Yoyo _yoyoCaret;
 	private final Yoyo _yoyoStart;
 	private final Yoyo _yoyoEnd;
@@ -29,8 +28,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 
 	private int _yoyoSize;
 
-	public YoyoNavigationMethod(FreeScrollingTextField textField)
-	{
+	public YoyoNavigationMethod(FreeScrollingTextField textField) {
 		super(textField);
 		DisplayMetrics dm=textField.getContext().getResources().getDisplayMetrics();
 		_yoyoSize = (int) TypedValue.applyDimension(2, (float)(textField.BASE_TEXT_SIZE_PIXELS * 1.5), dm);
@@ -40,31 +38,26 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 	}
 
 	@Override
-	public boolean onDown(MotionEvent e)
-	{
+	public boolean onDown(MotionEvent e) {
 		super.onDown(e);
-		if (!_isCaretTouched)
-		{
+		if (!_isCaretTouched) {
 			int x = (int) e.getX() + _textField.getScrollX();
 			int y = (int) e.getY() + _textField.getScrollY();
 			_isCaretHandleTouched = _yoyoCaret.isInHandle(x, y);
 			_isStartHandleTouched = _yoyoStart.isInHandle(x, y);
 			_isEndHandleTouched = _yoyoEnd.isInHandle(x, y);
 
-			if (_isCaretHandleTouched)
-			{
+			if (_isCaretHandleTouched) {
 				_isShowYoyoCaret = true;
 				_yoyoCaret.setInitialTouch(x, y);
 				_yoyoCaret.invalidateHandle();
 			}
-			else if (_isStartHandleTouched)
-			{
+			else if (_isStartHandleTouched) {
 				_yoyoStart.setInitialTouch(x, y);
 				_textField.focusSelectionStart();
 				_yoyoStart.invalidateHandle();
 			}
-			else if (_isEndHandleTouched)
-			{
+			else if (_isEndHandleTouched) {
 				_yoyoEnd.setInitialTouch(x, y);
 				_textField.focusSelectionEnd();
 				_yoyoEnd.invalidateHandle();
@@ -75,8 +68,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 	}
 
 	@Override
-	public boolean onUp(MotionEvent e)
-	{
+	public boolean onUp(MotionEvent e) {
 		_isCaretHandleTouched = false;
 		_isStartHandleTouched = false;
 		_isEndHandleTouched = false;
@@ -89,66 +81,53 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 
 	@Override
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-							float distanceY)
-	{
+							float distanceY) {
 
-		if (_isCaretHandleTouched)
-		{
+		if (_isCaretHandleTouched) {
 			//TODO find out if ACTION_UP events are actually passed to onScroll
-			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP)
-			{
+			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
 				onUp(e2);
 			}
-			else
-			{	
+			else {	
 				_isShowYoyoCaret = true;
 				moveHandle(_yoyoCaret, e2);
 			}
 
 			return true;
 		}
-		else if (_isStartHandleTouched)
-		{
+		else if (_isStartHandleTouched) {
 			//TODO find out if ACTION_UP events are actually passed to onScroll
-			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP)
-			{
+			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
 				onUp(e2);
 			}
-			else
-			{
+			else {
 				moveHandle(_yoyoStart, e2);
 			}
 
 			return true;
 		}
-		else if (_isEndHandleTouched)
-		{
+		else if (_isEndHandleTouched) {
 			//TODO find out if ACTION_UP events are actually passed to onScroll
-			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP)
-			{
+			if ((e2.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
 				onUp(e2);
 			}
-			else
-			{
+			else {
 				moveHandle(_yoyoEnd, e2);
 			}
 
 			return true;
 		}
-		else
-		{
+		else {
 			return super.onScroll(e1, e2, distanceX, distanceY);
 		}
 	}
 
-	private void moveHandle(Yoyo _yoyo, MotionEvent e)
-	{
+	private void moveHandle(Yoyo _yoyo, MotionEvent e) {
 
 		Pair foundIndex = _yoyo.findNearestChar((int) e.getX(), (int) e.getY());
 		int newCaretIndex = foundIndex.getFirst();
 
-		if (newCaretIndex >= 0)
-		{
+		if (newCaretIndex >= 0) {
 			_textField.moveCaret(newCaretIndex);
 			//snap the handle to the caret
 			Rect newCaretBounds = _textField.getBoundingBox(newCaretIndex);
@@ -162,71 +141,67 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 
 
 	@Override
-	public boolean onSingleTapConfirmed(MotionEvent e)
-	{
+	public boolean onSingleTapUp(MotionEvent e) {
 		int x = (int) e.getX() + _textField.getScrollX();
 		int y = (int) e.getY() + _textField.getScrollY();
 
 		//ignore taps on handle
-		if (_yoyoCaret.isInHandle(x, y) || _yoyoStart.isInHandle(x, y) || _yoyoEnd.isInHandle(x, y))
-		{
+		if (_yoyoCaret.isInHandle(x, y) || _yoyoStart.isInHandle(x, y) || _yoyoEnd.isInHandle(x, y)) {
 			return true;
 		}
-		else
-		{
+		else {
 			_isShowYoyoCaret = true;
-			return super.onSingleTapConfirmed(e);
+			return super.onSingleTapUp(e);
 		}
 	}
 
 	@Override
-	public boolean onDoubleTap(MotionEvent e)
-	{
+	public boolean onDoubleTap(MotionEvent e) {
 		int x = (int) e.getX() + _textField.getScrollX();
 		int y = (int) e.getY() + _textField.getScrollY();
 
 		//ignore taps on handle
-		if (_yoyoCaret.isInHandle(x, y)){
+		if (_yoyoCaret.isInHandle(x, y)) {
 			_textField.selectText(true);
 			return true;
 		}
-		else if( _yoyoStart.isInHandle(x, y))
-		{
+		else if (_yoyoStart.isInHandle(x, y)) {
 			return true;
 		}
-		else
-		{
+		else {
 			return super.onDoubleTap(e);
 		}
 	}
 
 	@Override
-	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-						   float velocityY)
-	{
+	public void onLongPress(MotionEvent e) {
+		// TODO: Implement this method
+		onDoubleTap(e);
+	}
 
-		if (_isCaretHandleTouched || _isStartHandleTouched || _isEndHandleTouched)
-		{
+
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+						   float velocityY) {
+
+		if (_isCaretHandleTouched || _isStartHandleTouched || _isEndHandleTouched) {
 			onUp(e2);
 			return true;
 		}
-		else
-		{
+		else {
 			return super.onFling(e1, e2, velocityX, velocityY);
 		}
 	}
 
 	@Override
-	public void onTextDrawComplete(Canvas canvas)
-	{		
-		if (!_textField.isSelectText2())
-		{
+	public void onTextDrawComplete(Canvas canvas) {		
+		if (!_textField.isSelectText2()) {
 			_yoyoCaret.show();
 			_yoyoStart.hide();
 			_yoyoEnd.hide();
 
-			if (!_isCaretHandleTouched)
-			{
+			if (!_isCaretHandleTouched) {
 				Rect caret = _textField.getBoundingBox(_textField.getCaretPosition());
 				int x = caret.left + _textField.getPaddingLeft();
 				int y = caret.bottom + _textField.getPaddingTop();
@@ -236,14 +211,12 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 				_yoyoCaret.draw(canvas, _isCaretHandleTouched);
 			_isShowYoyoCaret = false;
 		}
-		else
-		{
+		else {
 			_yoyoCaret.hide();
 			_yoyoStart.show();
 			_yoyoEnd.show();
 
-			if (!(_isStartHandleTouched && _isEndHandleTouched))
-			{
+			if (!(_isStartHandleTouched && _isEndHandleTouched)) {
 				Rect caret = _textField.getBoundingBox(_textField.getSelectionStart());
 				int x = caret.left + _textField.getPaddingLeft();
 				int y = caret.bottom + _textField.getPaddingTop();
@@ -261,21 +234,18 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 	}
 
 	@Override
-	public Rect getCaretBloat()
-	{
+	public Rect getCaretBloat() {
 		return _yoyoCaret.HANDLE_BLOAT;
 	}
 
 	@Override
-	public void onColorSchemeChanged(ColorScheme colorScheme)
-	{
+	public void onColorSchemeChanged(ColorScheme colorScheme) {
 		// TODO: Implement this method
 		_yoyoCaret.setHandleColor(colorScheme.getColor(Colorable.CARET_BACKGROUND));
 	}
 
-	private class Yoyo
-	{
-		private final int YOYO_STRING_RESTING_HEIGHT = _yoyoSize / 2;
+	private class Yoyo {
+		private final int YOYO_STRING_RESTING_HEIGHT = _yoyoSize / 3;
 		private final Rect HANDLE_RECT = new Rect(0, 0, _yoyoSize, _yoyoSize) ;
 		public final Rect HANDLE_BLOAT;
 
@@ -298,23 +268,21 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 
 		private boolean _isShow;
 
-		public Yoyo()
-		{
+		public Yoyo() {
 			int radius = getRadius();
 			HANDLE_BLOAT = new Rect(
 				radius,
 				0,
 				0,
 				(int)HANDLE_RECT.bottom + YOYO_STRING_RESTING_HEIGHT);
-			
+
 			_brush = new Paint();
 			_brush.setColor(_textField.getColorScheme().getColor(Colorable.CARET_BACKGROUND));
 			//,_brush.setStrokeWidth(2);
 			_brush.setAntiAlias(true);  
 		}
 
-		public void setHandleColor(int color)
-		{
+		public void setHandleColor(int color) {
 			// TODO: Implement this method
 			_brush.setColor(color);
 		}
@@ -327,10 +295,9 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 		 * @param activated True if the yoyo is activated. This causes a 
 		 * 		different image to be loaded.
 		 */
-		public void draw(Canvas canvas, boolean activated)
-		{
+		public void draw(Canvas canvas, boolean activated) {
 			int radius = getRadius();
-			
+
 			canvas.drawLine(_anchorX, _anchorY,
 							_handleX + radius, _handleY + radius, _brush);
 			canvas.drawArc(new RectF(_anchorX - radius, _anchorY - radius / 2 - YOYO_STRING_RESTING_HEIGHT,
@@ -338,8 +305,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 			canvas.drawOval(new RectF(_handleX, _handleY, _handleX + HANDLE_RECT.right, _handleY + HANDLE_RECT.bottom), _brush);
 		}
 
-		final public int getRadius()
-		{
+		final public int getRadius() {
 			return HANDLE_RECT.right / 2;
 		}
 
@@ -347,8 +313,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 		 * Clear the yoyo at the current position and attaches it to (x, y),
 		 * with the handle hanging directly below.
 		 */
-		public void attachYoyo(int x, int y)
-		{
+		public void attachYoyo(int x, int y) {
 			invalidateYoyo(); //clear old position
 			setRestingCoord(x, y);
 			invalidateYoyo(); //update new position
@@ -359,36 +324,30 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 		 * Sets the yoyo string to be attached at (x, y), with the handle 
 		 * hanging directly below, but does not trigger any redrawing
 		 */
-		public void setRestingCoord(int x, int y)
-		{
+		public void setRestingCoord(int x, int y) {
 			_anchorX = x;
 			_anchorY = y;
 			_handleX = x - getRadius();
 			_handleY = y + YOYO_STRING_RESTING_HEIGHT;
 		}
 
-		private void invalidateYoyo()
-		{
+		private void invalidateYoyo() {
 			int handleCenter = _handleX + getRadius();
 			int x0, x1, y0, y1;
-			if (handleCenter >= _anchorX)
-			{
+			if (handleCenter >= _anchorX) {
 				x0 = _anchorX;
 				x1 = handleCenter + 1;
 			}
-			else
-			{
+			else {
 				x0 = handleCenter;
 				x1 = _anchorX + 1;
 			}
 
-			if (_handleY >= _anchorY)
-			{
+			if (_handleY >= _anchorY) {
 				y0 = _anchorY;
 				y1 = _handleY;
 			}
-			else
-			{
+			else {
 				y0 = _handleY;
 				y1 = _anchorY;
 			}
@@ -398,8 +357,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 			invalidateHandle();
 		}
 
-		public void invalidateHandle()
-		{
+		public void invalidateHandle() {
 			Rect handleExtent = new Rect(_handleX, _handleY,
 										 _handleX + HANDLE_RECT.right, _handleY + HANDLE_RECT.bottom);
 			_textField.invalidate(handleExtent);
@@ -418,8 +376,7 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 		 * 			is the exact character found by a strict search 
 		 * 
 		 */
-		public Pair findNearestChar(int handleX, int handleY)
-		{
+		public Pair findNearestChar(int handleX, int handleY) {
 			int attachedLeft = screenToViewX(handleX) - _xOffset + getRadius();
 			int attachedBottom = screenToViewY(handleY) - _yOffset - YOYO_STRING_RESTING_HEIGHT - 2;
 
@@ -435,35 +392,29 @@ public class YoyoNavigationMethod extends TouchNavigationMethod
 		 * Does not check if isInside(x, y). Calling methods have
 		 * to ensure that (x, y) is within the handle area.
 		 */
-		public void setInitialTouch(int x, int y)
-		{
+		public void setInitialTouch(int x, int y) {
 			_xOffset = x - _handleX;
 			_yOffset = y - _handleY;
 		}
 
-		public void clearInitialTouch()
-		{
+		public void clearInitialTouch() {
 			_xOffset = 0;
 			_yOffset = 0;
 		}
 
-		public boolean isShow()
-		{
+		public boolean isShow() {
 			return _isShow;
 		}
 
-		public void show()
-		{
+		public void show() {
 			_isShow = true;
 		}
 
-		public void hide()
-		{
+		public void hide() {
 			_isShow = false;
 		}
 
-		public boolean isInHandle(int x, int y)
-		{
+		public boolean isInHandle(int x, int y) {
 			return _isShow && (x >= _handleX
 				&& x < (_handleX + HANDLE_RECT.right)
 				&& y >= _handleY

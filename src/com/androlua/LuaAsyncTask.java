@@ -133,7 +133,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 			L.pop(1); 
 		}
 		catch (LuaException e) {
-			mLuaContext.sendMsg(e.getMessage());
+			mLuaContext.sendError("AsyncTask", e);
 		}
 		
 		if(loadeds!=null){
@@ -173,8 +173,8 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 			}
 			throw new LuaException(errorReason(ok) + ": " + L.toString(-1));
 		} 
-		catch (LuaException e) {			
-			mLuaContext.sendMsg(e.getMessage());
+		catch (LuaException e) {
+			mLuaContext.sendError("doInBackground", e);
 		}
 
 
@@ -192,7 +192,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 				mCallback.call((Object[])result);
 		}
 		catch (LuaException e) {
-			mLuaContext.sendMsg(e.getMessage());
+			mLuaContext.sendError("onPostExecute", e);
 		}
 		super.onPostExecute(result);
 		if(L!=null)
@@ -209,7 +209,7 @@ public class LuaAsyncTask extends AsyncTask implements LuaGcable {
 				mUpdate.call(values);
 		}
 		catch (LuaException e) {
-			mLuaContext.sendMsg(e.getMessage());
+			mLuaContext.sendError("onProgressUpdate", e);
 		}
 		super.onProgressUpdate(values);
 	}

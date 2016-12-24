@@ -259,6 +259,11 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 		return getResources().getDisplayMetrics().heightPixels;
 	}
 
+	@Override
+	public Map getGlobalData() {
+		return ((LuaApplication)getApplication()).getGlobalData();
+	}
+
 	//初始化lua使用的Java函数
 	private void initLua() throws Exception {
 		L = LuaStateFactory.newLuaState();
@@ -568,6 +573,11 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 		Log.d("lua", msg);
 	}
 
+	@Override
+	public void sendError(String title, Exception msg) {
+		runFunc("onError", title, msg);
+	}
+
 	public Object loadLib(String name) throws LuaException {
 		int i=name.indexOf(".");
 		String fn = name;
@@ -615,14 +625,14 @@ public class LuaService extends Service implements LuaContext,LuaBroadcastReceiv
 		long now=System.currentTimeMillis();
         if (toast == null || now - lastShow > 1000) { 
 			toastbuilder.setLength(0);
-            toast = Toast.makeText(this, text, 1000);    
+            toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
 			toastbuilder.append(text);
 		}
 		else {    
 			toastbuilder.append("\n");
 			toastbuilder.append(text);
 			toast.setText(toastbuilder.toString());      
-            toast.setDuration(1000);           
+            toast.setDuration(Toast.LENGTH_LONG);
 		}    
 		lastShow = now;
 		toast.show();

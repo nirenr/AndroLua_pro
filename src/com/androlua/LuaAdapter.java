@@ -176,8 +176,8 @@ public class LuaAdapter extends BaseAdapter {
 		if(bool)
 			mStyleCache.put(view,true);
 			
-		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) hm.entrySet();
-		for (LuaTable.LuaEntry<String, Object> entry: sets) { 
+		Set<Map.Entry<String, Object>> sets= hm.entrySet();
+		for (Map.Entry<String, Object> entry: sets) {
 			try {
 				String key=entry.getKey();
 				Object value = entry.getValue();
@@ -206,7 +206,7 @@ public class LuaAdapter extends BaseAdapter {
 					mAnimCache.put(convertView, anim);
 				}
 				catch (Exception e) {
-					Log.d("lua", e.getMessage());
+					mContext.sendError("setAnimation", e);
 				}
 			}
 			if (anim != null) {
@@ -217,25 +217,22 @@ public class LuaAdapter extends BaseAdapter {
 		return view;
 	}
 
-	private void setFilds(View view, LuaTable<String, Object> fields) {
-		Set<LuaTable.LuaEntry<String, Object>> sets=(Set<LuaTable.LuaEntry<String, Object>>) fields.entrySet();
-		for (LuaTable.LuaEntry<String, Object> entry2: sets) { 
-			try {
+	private void setFilds(View view, LuaTable<String, Object> fields) throws LuaException {
+		Set<Map.Entry<String, Object>> sets= fields.entrySet();
+		for (Map.Entry<String, Object> entry2: sets) {
 				String key2=entry2.getKey();
 				Object value2 = entry2.getValue();
 				if (key2.toLowerCase().equals("src"))
 					setHelper(view, value2);
 				else
 					javaSetter(view, key2, value2);
-			}
-			catch (Exception e2) {
-				Log.d("lua", e2.getMessage());
-			}
+
 		}
 	}
 
 	private void setHelper(View view, Object value) {
-		if (value instanceof LuaTable) {
+		try {
+			if (value instanceof LuaTable) {
 			setFilds(view, (LuaTable<String, Object>)value);
 		}
 		else if (view instanceof TextView) {
@@ -245,8 +242,7 @@ public class LuaAdapter extends BaseAdapter {
 				((TextView)view).setText(value.toString());
 		}
 		else if (view instanceof ImageView) {
-			try {
-				if (value instanceof Bitmap)
+					if (value instanceof Bitmap)
 					((ImageView)view).setImageBitmap((Bitmap)value);
 				else if (value instanceof String)
 					((ImageView)view).setImageBitmap(new AsyncLoader().getBitmap(mContext, (String)value));
@@ -254,11 +250,10 @@ public class LuaAdapter extends BaseAdapter {
 					((ImageView)view).setImageDrawable((Drawable)value);
 				else if (value instanceof Number)
 					((ImageView)view).setImageResource(((Number)value).intValue());
-			}
-			catch (Exception e) {
-				Log.d("lua", e.getMessage());
-			}
-
+		}
+		}
+		catch (Exception e) {
+			mContext.sendError("setHelper", e);
 		}
 	}
 
@@ -324,7 +319,10 @@ public class LuaAdapter extends BaseAdapter {
 					else if (value instanceof Long || value instanceof Integer) {
 						m.invoke(obj, new Object[]{LuaState.convertLuaNumber(((Number)value).longValue(), tp[0])});
 					}
-					else {
+					else if (value instanceof Boolean ){
+						m.invoke(obj, new Object[]{(Boolean)value});
+					}
+					else{
 						continue;
 					}
 					return 1;
@@ -398,7 +396,7 @@ public class LuaAdapter extends BaseAdapter {
 				mHandler.sendEmptyMessage(0);
 			}
 			catch (IOException e) {
-				mContext.sendMsg(e.getMessage());
+				mContext.sendError("getBitmap", e);
 			}
 
 		}

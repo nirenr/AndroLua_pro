@@ -228,7 +228,7 @@ int l_tcc_run(lua_State * L)
 		args[i - 2] = lua_tostring(L,i);
 	}
 
-    int ret=tcc_run(s, countof(args), args);
+    int ret=tcc_run(s, countof(args), (char**)args);
 	lua_pushinteger(L,ret);
 	return 1;
 }

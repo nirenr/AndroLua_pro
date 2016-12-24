@@ -46,7 +46,7 @@ public final class LuaJavaAPI {
 
 	private  static Class<?> List_class=List.class;
 
-	private  static Class<?> ArrayList_class=ArrayList_class;
+	private  static Class<?> ArrayList_class=ArrayList.class;
 
 	private  static Class<?> HashMap_class=HashMap.class;
 
@@ -185,7 +185,7 @@ public final class LuaJavaAPI {
 	 * 
 	 * @param luaState int that indicates the state used
 	 * @param obj Object to be indexed
-	 * @param methodName the name of the method
+	 * @param searchName the name of the method
 	 * @return number of returned objects
 	 */
 
@@ -880,7 +880,7 @@ public final class LuaJavaAPI {
 	/**
 	 * Checks to see if there is a class with the given name.
 	 * 
-	 * @param luaState int that represents the state to be used
+	 * @param L int that represents the state to be used
 	 * @param obj object to be inspected
 	 * @param className name of the field to be inpected
 	 * @return number of returned objects
@@ -960,7 +960,7 @@ public final class LuaJavaAPI {
 
 			if (obj instanceof Map) {
 				Map map = (Map)obj;
-				map.put(methodName, L.toJavaObject(2));
+				map.put(methodName, L.toJavaObject(3));
 				return 1;
 			}
 			else if (obj instanceof Class) {

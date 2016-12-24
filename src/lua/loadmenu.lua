@@ -36,6 +36,7 @@ local function loadmenu(menu,t,root)
         end
       elseif v[1]== SubMenu then
         local item=menu.addSubMenu(v.group or 0,id,v.order or 0,v.title)
+        item.HeaderTitle=v.title
         loadmenu(item,v,root)
       end
     end

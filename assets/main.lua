@@ -19,9 +19,27 @@ function onVersionChanged(n,o)
   local dlg=AlertDialogBuilder(activity)
   local title="更新"..o..">"..n
   local msg=[[
+    3.2.5.20161130
+    去除无用权限。
+    优化编辑器。
+    优化RippleLayout效果。
+    优化错误信息。
+    增加自定义动画LuaAnimation(测试)。
+    修复thread调用两次的bug。
+    bug修复。
+    
+    3.2.4
+    修复悬浮窗焦点切换无效的bug。
+    
+    3.2.3
+    关联alp文件。
+    增加简单test功能。
+    修复bug。
+    
     3.2.2
     优化FloatWindow焦点切换。
     修复bug。
+    
     3.2.1
     增加RippleLayout。
     增加LuaExpandableListAdapter适配器。
@@ -252,18 +270,14 @@ activity.setContentView(loadlayout(layout))
 
 lcode=[[
 {
-  RippleLayout,
+  LinearLayout,
+  orientation="vertical",
   layout_width="fill",
+  layout_height="fill",
   {
-    LinearLayout,
-    orientation="vertical",
+    TextView,
+    text="hello AndroLua+",
     layout_width="fill",
-    layout_height="fill",
-    {
-      TextView,
-      text="hello AndroLua+",
-      layout_width="fill",
-    },
   },
 }
 ]]
@@ -699,9 +713,10 @@ bin=function(luapath,appname,appver,packagename,apkpath)
   local libs=File(activity.ApplicationInfo.nativeLibraryDir).list()
   libs=luajava.astable(libs)
   for k,v in ipairs(libs) do
-    libs[k]="lib/armeabi/"..libs[k]
-    replace[libs[k]]=true
+    --libs[k]="lib/armeabi/"..libs[k]
+    replace[v]=true
   end
+
   local mdp=activity.Application.MdDir
   function getmodule(dir)
     local mds=File(activity.Application.MdDir..dir).listFiles()
@@ -727,7 +742,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     local s=f:read("*a")
     f:close()
     for m,n in s:gmatch("require *%(?\"([%w_]+)%.?([%w_]*)") do
-      cp=string.format("lib/armeabi/lib%s.so",m)
+      cp=string.format("lib%s.so",m)
       if n~="" then
         lp=string.format("lua/%s/%s.lua",m,n)
       else
@@ -742,7 +757,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       end
     end
     for m,n in s:gmatch("import *\"([%w_]+)%.?([%w_]*)") do
-      cp=string.format("lib/armeabi/lib%s.so",m)
+      cp=string.format("lib%s.so",m)
       if n~="" then
         lp=string.format("lua/%s/%s.lua",m,n)
       else
@@ -758,18 +773,12 @@ bin=function(luapath,appname,appver,packagename,apkpath)
     end
   end
 
-  replace["lib/armeabi/libluajava.so"]= false
-
-
-
+  replace["libluajava.so"]= false
 
   function addDir(out,dir,f)
     local ls=f.listFiles()
     for n=0,#ls-1 do
       local name=ls[n].getName()
-      if name:find("[^%w%._]") then
-        table.insert(errbuffer,"文件名仅支持字母数字与下划线："..name)
-      end
       if name:find("%.apk$") or name:find("%.luac$") or name:find("^%.") then
       elseif name:find("%.lua$") then
         checklib(luapath..dir..name)
@@ -878,7 +887,7 @@ bin=function(luapath,appname,appver,packagename,apkpath)
       replace["res/drawable/welcome.png"]=true
       copy(FileInputStream(wel),out)
     end
-    ]]
+   ]]
     local wel=File(luapath.."icon.png")
     if wel.exists() then
       entry=ZipEntry("res/drawable/icon.png")
@@ -895,7 +904,9 @@ bin=function(luapath,appname,appver,packagename,apkpath)
   local entry = zis.getNextEntry();
   while entry do
     local name=entry.getName()
+    local lib=name:match("([^/]+%.so)$")
     if replace[name] then
+    elseif lib and replace[lib] then
     elseif name:find("^assets/") then
     else
       out.putNextEntry(entry)

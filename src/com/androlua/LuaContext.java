@@ -32,11 +32,15 @@ public interface LuaContext
 	public Object doFile(String path,Object...arg);
 	
 	public void sendMsg(String msg);
-	
+
+	public void sendError(String title, Exception msg);
+
 	public int getWidth();
 	
 	public int getHeight();
-	
+
+	public Map getGlobalData();
+
 	public void regGc(LuaGcable obj);
 	
 }

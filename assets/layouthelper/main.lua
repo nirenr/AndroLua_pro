@@ -14,7 +14,6 @@ layout={
     orientation="vertical",
   },
 
-
   ck={
     LinearLayout;
     {
@@ -141,6 +140,11 @@ function getCurr(v)
   elseif luajava.instanceof(v.Parent,AbsoluteLayout) then
     fd_list.getAdapter().insert(5,"layout_x")
     fd_list.getAdapter().insert(6,"layout_y")
+  elseif luajava.instanceof(v.Parent,RelativeLayout) then
+    local adp=fd_list.getAdapter()
+    for k,v in ipairs(relative) do
+      adp.add(v)
+    end 
   end
   fd_dlg.show()
 end
@@ -167,6 +171,9 @@ activity.setTheme(android.R.style.Theme_Holo_Light)
 --activity.Theme=android.R.style.Theme_Material_Light
 activity.setContentView(loadlayout2(layout.main,{}))
 
+relative={
+  "layout_above","layout_alignBaseline","layout_alignBottom","layout_alignEnd","layout_alignLeft","layout_alignParentBottom","layout_alignParentEnd","layout_alignParentLeft","layout_alignParentRight","layout_alignParentStart","layout_alignParentTop","layout_alignRight","layout_alignStart","layout_alignTop","layout_alignWithParentIfMissing","layout_below","layout_centerHorizontal","layout_centerInParent","layout_centerVertical","layout_toEndOf","layout_toLeftOf","layout_toRightOf","layout_toStartOf"
+}
 
 --属性列表对话框
 fd_dlg=AlertDialogBuilder(activity)
@@ -236,43 +243,65 @@ checks.scaleType={
   "center",
   "centerCrop",
   "centerInside"}
-  
-  
+
+
 function addDir(out,dir,f)
-    local ls=f.listFiles()
-    for n=0,#ls-1 do
-      local name=ls[n].getName()
-      if ls[n].isDirectory() then
-        addDir(out,dir..name.."/",ls[n])
-      elseif name:find("%.j?pn?g$") then
-        table.insert(out,dir..name)
-      end
+  local ls=f.listFiles()
+  for n=0,#ls-1 do
+    local name=ls[n].getName()
+    if ls[n].isDirectory() then
+      addDir(out,dir..name.."/",ls[n])
+    elseif name:find("%.j?pn?g$") then
+      table.insert(out,dir..name)
     end
   end
+end
 
+function checkid()
+  local cs={}
+  local parent=currView.Parent.Tag
+  for k,v in ipairs(parent) do
+    if v==curr then
+      break
+    end
+    if type(v)=="table" and v.id then
+      table.insert(cs,v.id)
+    end
+  end
+  return cs
+end
+
+rbs={"layout_alignParentBottom","layout_alignParentEnd","layout_alignParentLeft","layout_alignParentRight","layout_alignParentStart","layout_alignParentTop","layout_centerHorizontal","layout_centerInParent","layout_centerVertical"}
+ris={"layout_above","layout_alignBaseline","layout_alignBottom","layout_alignEnd","layout_alignLeft","layout_alignRight","layout_alignStart","layout_alignTop","layout_alignWithParentIfMissing","layout_below","layout_toEndOf","layout_toLeftOf","layout_toRightOf","layout_toStartOf"}
+for k,v in ipairs(rbs) do
+  checks[v]={"true","false","none"}
+end
+
+for k,v in ipairs(ris) do
+  checks[v]=checkid
+end
 
 if luadir then
-checks.src={}
-addDir(checks.src,"",File(luadir))
---[[
-local fs=File(luadir).list()
-if fs then
-  checks.src={}
-  for k,v in ipairs(luajava.astable(fs)) do
-    if v:find("%.j?pn?g$") then
-      table.insert(checks.src,v)
-    end
+  checks.src=function()
+    local src={}
+    addDir(src,"",File(luadir))
+    return src
   end
-end]]
 end
---fd_dlg.setContentView(fd_list)
+
 fd_list.onItemClick=function(l,v,i,p)
   fd_dlg.hide()
   local fd=tostring(v.Text)
   if checks[fd] then
-    check_dlg.Title=fd
-    check_dlg.setItems(checks[fd])
-    check_dlg.show()
+    if type(checks[fd])=="table" then
+      check_dlg.Title=fd
+      check_dlg.setItems(checks[fd])
+      check_dlg.show()
+    else
+      check_dlg.Title=fd
+      check_dlg.setItems(checks[fd](fd))
+      check_dlg.show()
+    end 
   else
     func[fd]()
   end
@@ -291,7 +320,7 @@ check_dlg=AlertDialogBuilder(activity)
 check_list=check_dlg.getListView()
 check_list.onItemClick=function(l,v,i,p)
   local v=tostring(v.Text)
-  if #v==0 then
+  if #v==0 or v=="none" then
     v=nil
   end
   local fld=check_dlg.Title
@@ -319,6 +348,11 @@ setmetatable(func,{__index=function(t,k)
 })
 func["添加"]=function()
   add_dlg.Title=tostring(currView.Class.getSimpleName())
+  for n=0,#ns-1 do
+    if n~=i then
+      el.collapseGroup(n)
+    end
+  end
   add_dlg.show()
 end
 
@@ -377,7 +411,7 @@ wds={
   {"ListView","ExpandableListView","Spinner"},
   {"SeekBar","ProgressBar","RatingBar",
     "DatePicker","TimePicker","NumberPicker"},
-  {"LinearLayout","AbsoluteLayout","FrameLayout"},
+  {"LinearLayout","AbsoluteLayout","FrameLayout","RelativeLayout"},
   {"RadioGroup","GridLayout",
     "ScrollView","HorizontalScrollView"},
 }
