@@ -1,0 +1,69 @@
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-dontoptimize
+-dontpreverify
+-verbose
+-printmapping mapping.txt
+-optimizations !code/simplification/arithmetic,!field/,!class/merging/
+-keepattributes Annotation
+-keep class com.baidu.mobstat.**{*;}
+
+-keep class android.app.**{
+public <methods>;
+public <fields>;
+}
+-keep class android.content.**{*;}
+-keep class com.android.cglib.proxy.**{
+public <methods>;
+public <fields>;
+}
+-keep interface com.android.cglib.proxy.**{
+public <methods>;
+public <fields>;
+}
+
+-keep class android.widget.**{
+public <methods>;
+public <fields>;
+}
+
+-keep class com.androlua.**{
+public <methods>;
+public <fields>;
+}
+
+-keep class com.nirenr.**{
+public <methods>;
+public <fields>;
+}
+
+-keep interface com.androlua.**{
+public <methods>;
+public <fields>;
+}
+-keep interface com.nirenr.**{
+public <methods>;
+public <fields>;
+}
+-keep class com.luajava.**{
+public <methods>;
+public <fields>;
+}
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-keep final class com.android.cglib.dx.* {
+public <methods>;
+public <fields>;
+}
+-keep enum com.android.cglib.dx.* {*;}
+-keepattributes Signature
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.preference.Preference
+-keep public class * extends android.preference.PreferenceActivity
+-keep public class * extends android.accessibilityservice.AccessibilityService
+

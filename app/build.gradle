@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+android {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+    defaultConfig {
+        applicationId "com.androlua"
+        minSdkVersion 18
+        targetSdkVersion 23
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+        debug {
+            debuggable true
+            jniDebuggable true
+        }
+    }
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/android.mk'
+        }
+    }
+    productFlavors {
+    }
+}
+
+dependencies {
+    compile files('libs/Baidu_Mtj_3.7.5.5.jar')
+    implementation 'com.android.support:support-annotations:28.0.0'
+}

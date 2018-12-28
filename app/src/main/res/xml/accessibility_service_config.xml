@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+                       android:accessibilityEventTypes="typeAllMask"
+                       android:accessibilityFeedbackType="feedbackSpoken|feedbackHaptic|feedbackAudible"
+                       android:accessibilityFlags="flagDefault|flagReportViewIds|flagRetrieveInteractiveWindows|flagRequestTouchExplorationMode|flagRequestFilterKeyEvents"
+                       android:canRequestFilterKeyEvents="true"
+                       android:canRetrieveWindowContent="true"
+                       android:description="@string/accsibility_service_description"
+                       android:notificationTimeout="0"
+                       android:canPerformGestures="true"
+
+                       android:settingsActivity="com.androlua.Main"
+    />
+    <!--|flagRequestTouchExplorationMode|flagRequestEnhancedWebAccessibility|flagReportViewIds|flagRequestFilterKeyEvents"-->
+	

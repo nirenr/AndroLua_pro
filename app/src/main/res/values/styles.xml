@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="app_theme" parent="android:Theme.Holo.Light.NoActionBar">
+        <item name="android:windowBackground" >@drawable/welcome</item>
+    </style>
+</resources>

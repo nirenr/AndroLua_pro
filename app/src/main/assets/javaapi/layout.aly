@@ -1,0 +1,12 @@
+{
+  LinearLayout;
+  orientation="horizontal";
+  {
+    ProgressBar;
+  };
+  {
+    TextView;
+    textSize="24sp";
+    text="正在分析。。。";
+  };
+};
