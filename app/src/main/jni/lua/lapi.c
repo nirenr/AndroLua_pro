@@ -436,7 +436,8 @@ LUA_API const void *lua_topointer (lua_State *L, int idx) {
     case LUA_TTHREAD: return thvalue(o);
     case LUA_TUSERDATA: return getudatamem(uvalue(o));
     case LUA_TLIGHTUSERDATA: return pvalue(o);
-    default: return &o->value_;
+    case LUA_TSTRING: return svalue(o);
+    default: return NULL;
   }
 }
 LUA_API const void *lua_toluaobject (lua_State *L, int idx) {
@@ -810,14 +811,36 @@ LUA_API void lua_rawset (lua_State *L, int idx) {
   api_checknelems(L, 2);
   o = index2addr(L, idx);
   api_check(L, ttistable(o), "table expected");
-  slot = luaH_set(L, hvalue(o), L->top - 2);
+  Table *t=hvalue(o);
+  if(t->type==2)
+    luaG_runerror(L, "const table cannot be set");
+  else if(t->type==3)
+    luaG_runerror(L, "const array cannot be set");
+  slot = luaH_set(L, t, L->top - 2);
   setobj2t(L, slot, L->top - 1);
-  invalidateTMcache(hvalue(o));
-  luaC_barrierback(L, hvalue(o), L->top-1);
+  invalidateTMcache(t);
+  luaC_barrierback(L, t, L->top-1);
   L->top -= 2;
   lua_unlock(L);
 }
 
+//mod by nirenr
+LUA_API void lua_const (lua_State *L, int idx) {
+  StkId o;
+  lua_lock(L);
+  api_checknelems(L, 2);
+  o = index2addr(L, idx);
+  api_check(L, ttistable(o), "table expected");
+  if(hvalue(o)->type==1)
+    hvalue(o)->type=3;
+  else
+    hvalue(o)->type=2;
+  sethvalue(L, L->top, hvalue(o));  /* anchor it */
+  invalidateTMcache(hvalue(o));
+  luaC_barrierback(L, hvalue(o), L->top);
+  lua_unlock(L);
+}
+//---
 
 LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
   StkId o;
@@ -825,7 +848,12 @@ LUA_API void lua_rawseti (lua_State *L, int idx, lua_Integer n) {
   api_checknelems(L, 1);
   o = index2addr(L, idx);
   api_check(L, ttistable(o), "table expected");
-  luaH_setint(L, hvalue(o), n, L->top - 1);
+  Table *t=hvalue(o);
+  if(t->type==2)
+    luaG_runerror(L, "const table cannot be set");
+  else if(t->type==3)
+    luaG_runerror(L, "const array cannot be set");
+  luaH_setint(L, t, n, L->top - 1);
   luaC_barrierback(L, hvalue(o), L->top-1);
   L->top--;
   lua_unlock(L);
@@ -840,7 +868,12 @@ LUA_API void lua_rawsetp (lua_State *L, int idx, const void *p) {
   o = index2addr(L, idx);
   api_check(L, ttistable(o), "table expected");
   setpvalue(&k, cast(void *, p));
-  slot = luaH_set(L, hvalue(o), &k);
+  Table *t=hvalue(o);
+  if(t->type==2)
+    luaG_runerror(L, "const table cannot be set");
+  else if(t->type==3)
+    luaG_runerror(L, "const array cannot be set");
+  slot = luaH_set(L, t, &k);
   setobj2t(L, slot, L->top - 1);
   luaC_barrierback(L, hvalue(o), L->top - 1);
   L->top--;

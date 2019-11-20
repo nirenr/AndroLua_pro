@@ -112,6 +112,9 @@ public class Lexer {
             case DEFAULT:
             case CONTINUE:
             case GOTO:
+            case LAMBDA:
+            case DEFER:
+            case WHEN:
                 return true;
             default:
                 return false;
@@ -229,6 +232,7 @@ public class Lexer {
 
                 LuaTokenTypes lastType = null;
                 LuaTokenTypes lastType2 = null;
+                LuaTokenTypes lastType3 = null;
 
                 String lastName = "";
                 Pair lastPair = null;
@@ -313,6 +317,9 @@ public class Lexer {
                         case DEFAULT:
                         case CONTINUE:
                         case GOTO:
+                        case LAMBDA:
+                        case WHEN:
+                        case DEFER:
                             //关键字
                             tokens.add(new Pair(len, KEYWORD));
                             break;
@@ -374,6 +381,8 @@ public class Lexer {
                                 tokens.add(new Pair(len, LITERAL));
                             } else if (lastType == LuaTokenTypes.GOTO || lastType == LuaTokenTypes.AT) {
                                 tokens.add(new Pair(len, LITERAL));
+                            } else if (lastType == LuaTokenTypes.MULT && lastType3 == LuaTokenTypes.LOCAL) {
+                                tokens.add(new Pair(len, OPERATOR));
                             } else if (language.isBasePackage(name)) {
                                 tokens.add(new Pair(len, NAME));
                             } else if (lastType == LuaTokenTypes.DOT && language.isBasePackage(lastName) && language.isBaseWord(lastName, name)) {
@@ -409,7 +418,7 @@ public class Lexer {
                         default:
                             tokens.add(pair = new Pair(len, NORMAL));
                     }
-
+                    lastType3=lastType;
                     if (type != LuaTokenTypes.WHITE_SPACE
                         //&& type != LuaTokenTypes.NEWLINE && type != LuaTokenTypes.NL_BEFORE_LONGSTRING
                             ) {

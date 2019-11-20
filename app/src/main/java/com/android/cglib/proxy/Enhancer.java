@@ -37,7 +37,7 @@ public class Enhancer {
 
 	public Class<?> create() {
 		String superClsName = superclass.getName().replace(".", "/");
-		String subClsName = superClsName + Const.SUBCLASS_SUFFIX;
+		String subClsName = superClsName + Const.SUBCLASS_SUFFIX+"_"+hashCode();
 
 		TypeId<?> superType = TypeId.get("L" + superClsName + ";");
 		TypeId<?> subType = TypeId.get("L" + subClsName + ";");
@@ -51,7 +51,7 @@ public class Enhancer {
 		generateFieldsAndMethods(dexMaker, superType, subType);
 		try {
 			ClassLoader loader = dexMaker.generateAndLoad(Enhancer.class.getClassLoader(), new File(cacheDir));
-			return loader.loadClass(superclass.getName() + Const.SUBCLASS_SUFFIX);
+			return loader.loadClass(subClsName);//superclass.getName() + Const.SUBCLASS_SUFFIX);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
@@ -61,7 +61,7 @@ public class Enhancer {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private <S> void generateFieldsAndMethods(DexMaker dexMaker, TypeId<?> superType, TypeId<S> subType) {
+ 	private <S> void generateFieldsAndMethods(DexMaker dexMaker, TypeId<?> superType, TypeId<S> subType) {
 		TypeId<MethodInterceptor> methodInterceptorType = TypeId.get(MethodInterceptor.class);
 		TypeId<MethodProxyExecuter> methodProxyExecuterType = TypeId.get(MethodProxyExecuter.class);
 		TypeId<Class> classType = TypeId.get(Class.class);

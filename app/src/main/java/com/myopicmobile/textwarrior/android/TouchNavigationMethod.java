@@ -47,6 +47,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
     private float lastY;
     private float lastSize;
     private int fling;
+    private boolean _fastScroll;
 
     public TouchNavigationMethod(FreeScrollingTextField textField) {
         _textField = textField;
@@ -64,7 +65,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
         int x = screenToViewX((int) e.getX());
         int y = screenToViewY((int) e.getY());
         _isCaretTouched = isNearChar(x, y, _textField.getCaretPosition());
-
+        _fastScroll = x < _textField.getLeftOffset();
         if (_textField.isFlingScrolling()) {
             _textField.stopFlingScrolling();
         } else if (_textField.isSelectText()) {
@@ -93,7 +94,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        if(_textField.isAccessibilityEnabled()){
+        if (_textField.isAccessibilityEnabled()) {
             _textField.showIME(true);
             return true;
         }
@@ -139,6 +140,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
     public boolean onUp(MotionEvent e) {
         _textField.stopAutoScrollCaret();
         _isCaretTouched = false;
+        _fastScroll=false;
         lastDist = 0;
         fling = 0;
         return true;
@@ -162,7 +164,8 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
                 distanceY = 0;
             else if (fling == -1)
                 distanceX = 0;
-
+            if (_fastScroll)
+                distanceY *= _textField.getMaxScrollY() / _textField.getHeight();
             scrollView(distanceX, distanceY);
             //_textField.smoothScrollBy((int)distanceX, (int)distanceY);
 
@@ -305,7 +308,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-         _isCaretTouched = true;
+        _isCaretTouched = true;
         int x = screenToViewX((int) e.getX());
         int y = screenToViewY((int) e.getY());
         int charOffset = _textField.coordToCharIndex(x, y);
@@ -314,7 +317,7 @@ public class TouchNavigationMethod extends GestureDetector.SimpleOnGestureListen
             DocumentProvider doc = _textField.createDocumentProvider();
             int line = doc.findLineNumber(charOffset);
             int start = doc.getLineOffset(line);
-            int end = doc.getLineOffset(line+1)-1;
+            int end = doc.getLineOffset(line + 1) - 1;
             _textField.setSelectionRange(start, end - start);
         } else {
             if (charOffset >= 0) {

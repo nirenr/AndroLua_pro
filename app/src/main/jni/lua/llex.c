@@ -40,11 +40,11 @@
 static const char *const luaX_tokens [] = {
     "and", "break", "case", "continue", "default", "do", "else", "elseif",
     "end", "false", "for", "function", "goto", "if",
-    "in", "local", "nil", "not", "or", "repeat",
-    "return", "switch", "then", "true", "until", "while",
+    "in", "lambda", "local", "nil", "not", "or", "repeat",
+    "return", "switch", "then", "true", "until", "when", "while",
     "//", "..", "...", "==", ">=", "<=", "~=",
     "<<", ">>", "::", "<eof>",
-    "->", "=>", "<lambda>",
+    "->", "=>",
     "<number>", "<integer>", "<name>", "<string>"
 };
 
@@ -330,14 +330,12 @@ static int readhexaesc (LexState *ls) {
   return r;
 }
 
-
 static unsigned long readutf8esc (LexState *ls) {
   unsigned long r;
   int i = 4;  /* chars to be removed: '\', 'u', '{', and first digit */
   save_and_next(ls);  /* skip 'u' */
-
   //esccheck(ls, ls->current == '{', "missing '{'");
-//mod by nirenr
+  //r = gethexa(ls);  /* must have at least one digit */
   int m=ls->current == '{';
   if(!m)
     i=3;
@@ -348,26 +346,25 @@ static unsigned long readutf8esc (LexState *ls) {
 //---
   while ((save_and_next(ls), lisxdigit(ls->current))) {
     i++;
+    esccheck(ls, r <= (0x7FFFFFFFu >> 4), "UTF-8 value too large");
     r = (r << 4) + luaO_hexavalue(ls->current);
-    esccheck(ls, r <= 0x10FFFF, "UTF-8 value too large");
 //mod by nirenr
-    if(!m&&i==6){
+    if(!m&&i==8){
       save_and_next(ls);
       break;
     }
 //---
   }
-
-//mod by nirenr
+  //esccheck(ls, ls->current == '}', "missing '}'");
+  //next(ls);  /* skip '}' */
+  //mod by nirenr
   if(m){
     esccheck(ls, ls->current == '}', "missing '}'");
     next(ls);  /* skip '}' */
   }
-
   luaZ_buffremove(ls->buff, i);  /* remove saved chars from buffer */
   return r;
 }
-
 
 static void utf8esc (LexState *ls) {
   char buff[UTF8BUFFSZ];
@@ -468,7 +465,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
       case '-': {  /* '-' or '--' (comment) */
         next(ls);
         if (check_next1(ls, '>')) return TK_LET;//mod by nirenr
-          if (ls->current != '-') return '-';
+        if (ls->current != '-') return '-';
         /* else is a comment */
         next(ls);
         if (ls->current == '[') {  /* long comment? */

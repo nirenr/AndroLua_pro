@@ -163,7 +163,7 @@ public class LuaDialog extends AlertDialog implements  DialogInterface.OnClickLi
         setAdapter(adp);
         mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         for (int i:checkedItems)
-            mListView.setItemChecked(checkedItems[i],true);
+            mListView.setItemChecked(i,true);
     }
 
     public ListView getListView() {

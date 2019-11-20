@@ -91,9 +91,14 @@ public class LuaMultiAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        int t = ((Long) mData.get(position + 1).get("__type")).intValue() - 1;
-        return t < 0 ? 0 : t;
-    }
+        try{
+            int t = mData.get(position + 1).get("__type",Integer.class) - 1;
+            return t < 0 ? 0 : t;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+     }
 
 
     public void setAnimation(LuaTable<Integer, LuaFunction<Animation>> animation) {
@@ -192,7 +197,7 @@ public class LuaMultiAdapter extends BaseAdapter {
         // TODO: Implement this method
         View view = null;
         LuaObject holder = null;
-        int t = ((Long) mData.get(position + 1).get("__type")).intValue();
+        int t = mData.get(position + 1).get("__type", Integer.class);
         t = t < 1 ? 1 : t;
         if (convertView == null) {
             try {

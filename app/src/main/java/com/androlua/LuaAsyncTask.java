@@ -207,7 +207,6 @@ public class LuaAsyncTask extends AsyncTaskX implements LuaGcable {
 		catch (LuaException e) {
 			mLuaContext.sendError("onPostExecute", e);
 		}
-		super.onPostExecute(result);
 		if(L!=null)
 			L.gc(LuaState.LUA_GCCOLLECT, 1);
 		System.gc();

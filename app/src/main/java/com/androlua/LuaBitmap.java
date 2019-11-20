@@ -16,6 +16,8 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 public class LuaBitmap {
@@ -223,5 +225,15 @@ public class LuaBitmap {
             }
         }
         return null;
+    }
+
+    public static void removeBitmap(Bitmap obj) {
+        Set<Map.Entry<String, WeakReference<Bitmap>>> sets = cache.entrySet();
+        for (Map.Entry<String, WeakReference<Bitmap>> set : sets) {
+            if(obj.equals(set.getValue().get())){
+                cache.remove(set.getKey());
+                return;
+            }
+        }
     }
 }

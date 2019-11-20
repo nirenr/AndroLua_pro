@@ -228,7 +228,8 @@ public class AutoCompletePanel {
 			item.measure(0, 0);
 			_h = item.getMeasuredHeight();
 			return _h;
-		}/**
+		}
+		/**
 		 * 实现自动完成的过滤算法
 		 */
 		@Override

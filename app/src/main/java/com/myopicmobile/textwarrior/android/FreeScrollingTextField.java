@@ -909,6 +909,14 @@ public class FreeScrollingTextField extends View
         if (_showLineNumbers) {
             _brushLine.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
             canvas.drawLine(_leftOffset - _spaceWidth / 2, getScrollY(), _leftOffset - _spaceWidth / 2, getScrollY() + getHeight(), _brushLine);
+            if (getMaxScrollY() > getHeight()) {
+                int s = getScrollY() + (getHeight() * getScrollY() / getMaxScrollY());
+                int e = getScrollY() + (getHeight() * (getScrollY() + getHeight()) / getMaxScrollY());
+                if (e - s < _alphaWidth / 4)
+                    e = s + _alphaWidth / 4;
+                //_brushLine.setColor(_colorScheme.getColor(Colorable.CARET_FOREGROUND));
+                canvas.drawLine(_leftOffset - _spaceWidth / 2 - _alphaWidth / 4, s, _leftOffset - _spaceWidth / 2 - _alphaWidth / 4, e, _brushLine);
+            }
         }
 
         Typeface lastTypeface;
@@ -1007,7 +1015,7 @@ public class FreeScrollingTextField extends View
                 ++currIndex;
                 ++i;
                 spanLen--;
-               /* } else {
+                /*} else {
                     if (i + spanLen > rowLen)
                         spanLen = rowLen - i;
                     int end = i + spanLen;
@@ -1039,21 +1047,37 @@ public class FreeScrollingTextField extends View
         Rect bounds = canvas.getClipBounds();
         int bt = bounds.top;
         int bb = bounds.bottom;
-         for (Rect rect : lines) {
+        Rect curr=null;
+        for (Rect rect : lines) {
             /*if(rect.top==_caretRow){
                 doBlockRow(canvas,rect.bottom);
             }else if(rect.bottom==_caretRow){
                 doBlockRow(canvas,rect.top);
             }*/
-            int top = (rect.top+1) * rowHeight();
+            int top = (rect.top + 1) * rowHeight();
             int bottom = rect.bottom * rowHeight();
             if (bottom < bt || top > bb)
                 continue;
             int left = Math.min(getCharExtent(rect.left).getFirst(), getCharExtent(rect.right).getFirst());
+            if(rect.left<_caretPosition&&rect.right>=_caretPosition){
+                if(curr==null||curr.left<rect.left)
+                curr=rect;
+            }
             canvas.drawLine(left, top, left, bottom, _brushLine);
         }
+        if(curr!=null){
+            int top = (curr.top + 1) * rowHeight();
+            int bottom = curr.bottom * rowHeight();
+            if (bottom < bt || top > bb)
+                return;
+            int left = Math.min(getCharExtent(curr.left).getFirst(), getCharExtent(curr.right).getFirst());
+            _brushLine.setColor(_colorScheme.getColor(Colorable.CARET_FOREGROUND));
+            canvas.drawLine(left, top, left, bottom, _brushLine);
+            _brushLine.setColor(_colorScheme.getColor(Colorable.NON_PRINTING_GLYPH));
+        }
     }
-    private void doBlockRow(Canvas canvas,int _caretRow) {
+
+    private void doBlockRow(Canvas canvas, int _caretRow) {
         if (_isHighlightRow) {
             int y = getPaintBaseline(_caretRow);
             int originalColor = _brush.getColor();

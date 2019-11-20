@@ -7,14 +7,14 @@ import com.androlua.LuaContext;
 import java.lang.reflect.Method;
 
 /**
- * Created by nirenr on 2019/3/1.
+ * Created by nirenr on 2018/12/21.
  */
 
-public class LuaMethodInterceptor implements MethodInterceptor {
+public class LuaAbstractMethodInterceptor implements MethodInterceptor {
     private final LuaContext mContext;
     private LuaObject obj;
 
-    public LuaMethodInterceptor(LuaObject obj) {
+    public LuaAbstractMethodInterceptor(LuaObject obj) {
         this.obj = obj;
         mContext = obj.getLuaState().getContext();
     }
@@ -40,10 +40,7 @@ public class LuaMethodInterceptor implements MethodInterceptor {
                 else
                     return null;
             }
-            Object[] na = new Object[args.length + 1];
-            System.arraycopy(args,0,na,1,args.length);
-            na[0]=new SuperCall(object,methodProxy);
-            args=na;
+
             Object ret = null;
             try {
                 // Checks if returned type is void. if it is returns null.
@@ -65,32 +62,6 @@ public class LuaMethodInterceptor implements MethodInterceptor {
                 else if (retType.isPrimitive() || Number.class.isAssignableFrom(retType))
                     return 0;
             return ret;
-        }
-    }
-
-    private class SuperCall implements LuaMetaTable{
-
-        private final Object mObject;
-        private final MethodProxy mMethodProxy;
-
-        public SuperCall(Object obj, MethodProxy methodProxy){
-            mObject =obj;
-            mMethodProxy=methodProxy;
-        }
-
-        @Override
-        public Object __call(Object... arg) throws LuaException {
-            return mMethodProxy.invokeSuper(mObject,arg);
-        }
-
-        @Override
-        public Object __index(String key) {
-            return null;
-        }
-
-        @Override
-        public void __newIndex(String key, Object value) {
-
         }
     }
 }

@@ -11,11 +11,14 @@ import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 import com.luajava.LuaState;
+import com.luajava.LuaTable;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class LuaApplication extends Application implements LuaContext {
 
@@ -248,6 +251,12 @@ public class LuaApplication extends Application implements LuaContext {
             edit.putInt(key, (Integer) value);
         else if (value instanceof Float)
             edit.putFloat(key, (Float) value);
+        else if (value instanceof Set)
+            edit.putStringSet(key, (Set<String>) value);
+        else if (value instanceof LuaTable)
+            edit.putStringSet(key, (HashSet<String>) ((LuaTable) value).values());
+        else if (value instanceof Boolean)
+            edit.putBoolean(key, (Boolean) value);
         else
             return false;
         edit.apply();

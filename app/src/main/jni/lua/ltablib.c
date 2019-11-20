@@ -57,7 +57,7 @@ static void checktab (lua_State *L, int arg, int what) {
   }
 }
 
-
+//mod by nirenr
 #if defined(LUA_COMPAT_MAXN)
 static int maxn (lua_State *L) {
   lua_Number max = 0;
@@ -112,8 +112,74 @@ static int find (lua_State *L) {
   return 1;
 }
 
-#endif
+static int gfind_aux (lua_State *L) {
+  lua_settop(L,0);
+  lua_pushvalue(L,lua_upvalueindex(1));
+  lua_pushvalue(L,lua_upvalueindex(2));
+  lua_pushvalue(L,lua_upvalueindex(3));
+  while (lua_next(L, 1)) {
+    if(lua_rawequal(L,-1,2)){
+      lua_pop(L,1);
+      lua_pushvalue(L,-1);
+      lua_replace(L, lua_upvalueindex(3));
+      return 1;
+    }
+    lua_pop(L, 1);  /* remove value */
+  }
+  return 0;
+}
 
+static int gfind (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  if(lua_gettop(L)==2)
+      lua_pushnil(L);
+  lua_pushcclosure(L,gfind_aux,3);
+  return 1;
+}
+
+static int clone_aux (lua_State *L,int idx) {
+    luaL_checktype(L, idx, LUA_TTABLE);
+    const char *id = lua_pushfstring(L, "%p",
+                                      lua_topointer(L, idx));
+    lua_gettable(L,1);
+    if(lua_type(L,-1)!=LUA_TNIL){
+        lua_remove(L,idx);
+        return 1;
+    }
+    lua_remove(L,idx+1);
+    lua_newtable(L);
+    lua_pushvalue(L,-1);
+    lua_setfield(L,1,id);
+    lua_pushnil(L);  /* first key */
+    while (lua_next(L, idx)) {
+        if(lua_type(L,idx+3)==LUA_TTABLE)
+           clone_aux(L,idx+3);
+        lua_pushvalue(L,idx+2);
+        lua_insert(L,idx+2);
+        lua_settable(L,idx+1);
+    }
+    if(lua_getmetatable(L,idx))
+      lua_setmetatable(L,idx+1);
+    lua_remove(L,idx);
+    return 1;
+}
+
+static int clone (lua_State *L) {
+    luaL_checktype(L, 1, LUA_TTABLE);
+    lua_newtable(L);
+    lua_insert(L,1);
+    clone_aux(L,2);
+    lua_remove(L,1);
+  return 1;
+}
+
+static int tconst (lua_State *L) {
+  luaL_checktype(L, 1, LUA_TTABLE);
+  lua_const(L,1);
+  return 1;
+}
+#endif
+//---
 
 static int tinsert (lua_State *L) {
   lua_Integer e = aux_getn(L, 1, TAB_RW) + 1;  /* first empty element */
@@ -511,6 +577,9 @@ static const luaL_Reg tab_funcs[] = {
   {"size", size},
   {"clear", clear},
   {"find", find},
+  {"gfind", gfind},
+  {"clone", clone},
+  {"const", tconst},
 #endif
   {"insert", tinsert},
   {"pack", pack},

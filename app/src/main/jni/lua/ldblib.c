@@ -241,7 +241,33 @@ static int db_setlocal (lua_State *L) {
   return 1;
 }
 
-
+static int db_getfenv (lua_State *L) {
+  lua_Debug ar;
+  const char *name;
+  int nvar = 1;  /* local-variable index */
+  /* stack-level argument */
+    int level = (int)luaL_checkinteger(L, 1);
+    if (!lua_getstack(L, level, &ar))  /* out of range? */
+      return luaL_argerror(L, 1, "level out of range");
+    lua_getinfo(L, "u", &ar);
+    name = lua_getlocal(L, &ar, nvar + ar.nparams);
+    if (name)
+        return 1;
+    return 1;
+}
+static int db_setfenv (lua_State *L) {
+    lua_Debug ar;
+    const char *name;
+    int nvar = 1;  /* local-variable index */
+    /* stack-level argument */
+    int level = (int)luaL_checkinteger(L, 1);
+    luaL_checktype(L,2,LUA_TTABLE);
+    if (!lua_getstack(L, level, &ar))  /* out of range? */
+        return luaL_argerror(L, 1, "level out of range");
+    lua_getinfo(L, "u", &ar);
+    lua_setlocal(L, &ar, nvar + ar.nparams);
+    return 0;
+}
 /*
 ** get (if 'get' is true) or set an upvalue from a closure
 */
@@ -432,6 +458,8 @@ static const luaL_Reg dblib[] = {
   {"debug", db_debug},
   {"getuservalue", db_getuservalue},
   {"gethook", db_gethook},
+  {"getfenv", db_getfenv},
+  {"setfenv", db_setfenv},
   {"getinfo", db_getinfo},
   {"getlocal", db_getlocal},
   {"getregistry", db_getregistry},

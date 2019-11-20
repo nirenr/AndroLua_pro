@@ -781,6 +781,11 @@ void luaV_finishOp (lua_State *L) {
   if (!luaV_fastset(L,t,k,slot,luaH_get,v)) \
     Protect(luaV_finishset(L,t,k,v,slot)); }
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#define LOG_TAG "lua"
+#define LOGD(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#endif
 
 
 void luaV_execute (lua_State *L) {
@@ -789,7 +794,7 @@ void luaV_execute (lua_State *L) {
   TValue *k;
   StkId base;
   ci->callstatus |= CIST_FRESH;  /* fresh invocation of 'luaV_execute" */
- newframe:  /* reentry point when frame changes (call/return) */
+  newframe:  /* reentry point when frame changes (call/return) */
   lua_assert(ci == L->ci);
   cl = clLvalue(ci->func);  /* local reference to function's closure */
   k = cl->p->k;  /* local reference to function's constant table */
@@ -806,6 +811,10 @@ void luaV_execute (lua_State *L) {
       }
       vmcase(OP_LOADK) {
         TValue *rb = k + GETARG_Bx(i);
+        /*LOGD("type error %d %d",ttype(ra),ttype(rb));
+        if(ra->tt_!=LUA_TNIL&&rb->tt_!=LUA_TNIL&&ra->tt_<LUA_MULTRET&&rb->tt_<LUA_MULTRET&&rb->tt_!=ra->tt_){
+          luaG_runerror(L, "type error %d %d",ra->tt_,rb->tt_);
+        }*/
         setobj2s(L, ra, rb);
         vmbreak;
       }
@@ -813,6 +822,11 @@ void luaV_execute (lua_State *L) {
         TValue *rb;
         lua_assert(GET_OPCODE(*ci->u.l.savedpc) == OP_EXTRAARG);
         rb = k + GETARG_Ax(*ci->u.l.savedpc++);
+        /*if(ra->tt_!=LUA_TNIL&&rb->tt_!=LUA_TNIL&&rb->tt_!=ra->tt_){
+          luaO_tostring(L, ra);
+          luaO_tostring(L, rb);
+          luaG_runerror(L, "type error %s %s",tsvalue(ra),tsvalue(rb));
+        }*/
         setobj2s(L, ra, rb);
         vmbreak;
       }
@@ -849,11 +863,28 @@ void luaV_execute (lua_State *L) {
         TValue *upval = cl->upvals[GETARG_A(i)]->v;
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
+        if(ttistable(ra)) {
+            Table *t = hvalue(ra);
+            switch (t->type) {
+                case 1:
+                    if (!ttisinteger(rb))
+                        luaG_runerror(L, "array key must be a integer");
+                    break;
+                case 2:
+                    luaG_runerror(L, "const table cannot be set");
+                    break;
+                case 3:
+                    luaG_runerror(L, "array key must be a integer");
+                    break;
+            }
+        }
         settableProtected(L, upval, rb, rc);
         vmbreak;
       }
       vmcase(OP_SETUPVAL) {
         UpVal *uv = cl->upvals[GETARG_B(i)];
+        /*if(uv->v->tt_!=LUA_TNIL&&uv->v->tt_!=ra->tt_) \
+          luaG_runerror(L, "type error");\*/
         setobj(L, uv->v, ra);
         luaC_upvalbarrier(L, uv);
         vmbreak;
@@ -861,13 +892,41 @@ void luaV_execute (lua_State *L) {
       vmcase(OP_SETTABLE) {
         TValue *rb = RKB(i);
         TValue *rc = RKC(i);
+        if(ttistable(ra)) {
+            Table *t = hvalue(ra);
+            switch (t->type) {
+                case 1:
+                    if (!ttisinteger(rb))
+                        luaG_runerror(L, "array key must be a integer");
+                    break;
+                case 2:
+                    luaG_runerror(L, "const table cannot be set");
+                    break;
+                case 3:
+                    luaG_runerror(L, "array key must be a integer");
+                    break;
+            }
+        }
         settableProtected(L, ra, rb, rc);
+        vmbreak;
+      }
+      vmcase(OP_NEWARRAY) {
+        int b = GETARG_B(i);
+        //int c = GETARG_C(i);
+        Table *t = luaH_new(L);
+        sethvalue(L, ra, t);
+        //LOGD("newtable %d",b);
+        t->type=1;
+        if (b != 0)
+          luaH_resize(L, t, luaO_fb2int(b), luaO_fb2int(0));
+        checkGC(L, ra + 1);
         vmbreak;
       }
       vmcase(OP_NEWTABLE) {
         int b = GETARG_B(i);
         int c = GETARG_C(i);
         Table *t = luaH_new(L);
+        t->type=0;
         sethvalue(L, ra, t);
         if (b != 0 || c != 0)
           luaH_resize(L, t, luaO_fb2int(b), luaO_fb2int(c));

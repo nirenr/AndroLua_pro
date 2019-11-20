@@ -504,6 +504,7 @@ typedef struct Table {
   Node *lastfree;  /* any free position is before this position */
   struct Table *metatable;
   GCObject *gclist;
+  lu_byte type;
 } Table;
 
 

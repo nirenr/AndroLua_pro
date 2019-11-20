@@ -25,6 +25,8 @@
 package com.luajava;
 
 
+import android.util.Log;
+
 /**
  * LuaState if the main class of LuaJava for the Java developer.
  * LuaState is a mapping of most of Lua's C API functions.
@@ -34,16 +36,6 @@ package com.luajava;
  * @author Thiago Ponte
  */
 public class LuaState {
-
-    private static Class<?> Number_class = Number.class;
-
-    private static Class<?> Byte_class = Byte.class;
-    private static Class<?> Short_class = Short.class;
-    private static Class<?> Integer_class = Integer.class;
-    private static Class<?> Long_class = Long.class;
-    private static Class<?> Float_class = Float.class;
-    private static Class<?> Double_class = Double.class;
-
 
     private final static String LUAJAVA_LIB = "luajava";
 
@@ -142,6 +134,17 @@ public class LuaState {
         LuaStateFactory.removeLuaState(luaState);
         _close(luaState);
         this.luaState = 0;
+    }
+
+    @Override
+    protected void finalize() {
+        Log.i("luaState", "finalize: "+luaState);
+        try {
+           close();
+        }
+        catch (Exception e) {
+            System.err.println("Unable to release luaState " + luaState);
+        }
     }
 
     /**
@@ -977,6 +980,7 @@ public class LuaState {
      * @param obj Object to be pushed into lua
      */
     public void pushJavaObject(Object obj) {
+        LuaJavaAPI.pushJavaObject();
         _pushJavaObject(luaState, obj);
     }
 
@@ -1181,19 +1185,19 @@ public class LuaState {
             } else if (retType == Short.TYPE) {
                 return db.shortValue();
             }
-        } else if (retType.isAssignableFrom(Number_class)) {
+        } else if (Number.class.isAssignableFrom(retType)) {
             // Checks all possibilities of number types
-            if (retType.isAssignableFrom(Integer_class)) {
-                return new Integer(db.intValue());
-            } else if (retType.isAssignableFrom(Long_class)) {
+            if (retType.isAssignableFrom(Long.class)) {
                 return new Long(db.longValue());
-            } else if (retType.isAssignableFrom(Float_class)) {
+            } else if (retType.isAssignableFrom(Integer.class)) {
+                return new Integer(db.intValue());
+            } else if (retType.isAssignableFrom(Float.class)) {
                 return new Float(db.floatValue());
-            } else if (retType.isAssignableFrom(Double_class)) {
+            } else if (retType.isAssignableFrom(Double.class)) {
                 return db;
-            } else if (retType.isAssignableFrom(Byte_class)) {
+            } else if (retType.isAssignableFrom(Byte.class)) {
                 return new Byte(db.byteValue());
-            } else if (retType.isAssignableFrom(Short_class)) {
+            } else if (retType.isAssignableFrom(Short.class)) {
                 return new Short(db.shortValue());
             }
         }
@@ -1218,19 +1222,19 @@ public class LuaState {
             } else if (retType == Short.TYPE) {
                 return lg.shortValue();
             }
-        } else if (retType.isAssignableFrom(Number_class)) {
+        } else if (Number.class.isAssignableFrom(retType)) {
             // Checks all possibilities of number types
-            if (retType.isAssignableFrom(Integer_class)) {
-                return new Integer(lg.intValue());
-            } else if (retType.isAssignableFrom(Long_class)) {
+            if (retType.isAssignableFrom(Long.class)) {
                 return new Long(lg.longValue());
-            } else if (retType.isAssignableFrom(Float_class)) {
+            } else if (retType.isAssignableFrom(Integer.class)) {
+                return new Integer(lg.intValue());
+            } else if (retType.isAssignableFrom(Float.class)) {
                 return new Float(lg.floatValue());
-            } else if (retType.isAssignableFrom(Double_class)) {
+            } else if (retType.isAssignableFrom(Double.class)) {
                 return lg;
-            } else if (retType.isAssignableFrom(Byte_class)) {
+            } else if (retType.isAssignableFrom(Byte.class)) {
                 return new Byte(lg.byteValue());
-            } else if (retType.isAssignableFrom(Short_class)) {
+            } else if (retType.isAssignableFrom(Short.class)) {
                 return new Short(lg.shortValue());
             }
         }

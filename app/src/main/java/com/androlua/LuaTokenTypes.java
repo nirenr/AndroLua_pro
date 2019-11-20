@@ -83,6 +83,9 @@ public enum LuaTokenTypes {
     FUNCTION,
     ENDREGION,
     LABEL,
-    AT
+    AT,
+    DEFER,
+    WHEN,
+    LAMBDA
 
 }

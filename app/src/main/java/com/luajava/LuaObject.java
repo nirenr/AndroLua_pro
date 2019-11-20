@@ -24,6 +24,8 @@
 
 package com.luajava;
 
+import android.util.Log;
+
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
@@ -195,6 +197,7 @@ public class LuaObject implements Serializable {
 
 	@Override
 	protected void finalize() {
+		Log.i("luaObject", "finalize: "+ref+";"+toString());
 		try {
 			synchronized (L) {
 				if (L.getPointer() != 0)
@@ -378,6 +381,40 @@ public class LuaObject implements Serializable {
 			L.pop(1);
 			return obj;
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getObject(Class<T> type) {
+		push();
+		T obj=null;
+		try {
+			obj=(T)LuaJavaAPI.compareTypes(L,type,-1);
+		}
+		catch (LuaException e) {}
+		L.pop(1);
+		return obj;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T get(Object key, Class<T> type) {
+		// TODO: Implement this method
+		push();
+		T obj=null;
+		try {
+			L.pushObjectValue(key);
+			L.getTable(-2);
+			obj=(T)LuaJavaAPI.compareTypes(L,type,-1);
+			L.pop(1);
+		}
+		catch (LuaException e) {e.printStackTrace();}
+	    L.pop(1);
+		if(obj == null){
+			if(Number.class.isAssignableFrom(type))
+				obj=(T)Integer.valueOf(0);
+			if(Boolean.class.isAssignableFrom(type))
+				obj=(T)Boolean.valueOf(false);
+		}
+		return obj;
 	}
 
 	/**

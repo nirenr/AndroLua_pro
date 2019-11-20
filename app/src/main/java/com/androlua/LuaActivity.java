@@ -51,7 +51,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.baidu.mobstat.StatService;
 import com.luajava.JavaFunction;
 import com.luajava.LuaException;
 import com.luajava.LuaObject;
@@ -169,6 +168,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
         StrictMode.setThreadPolicy(policy);
         //设置print界面
         super.onCreate(null);
+
         WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics outMetrics = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(outMetrics);
@@ -202,6 +202,12 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
         //定义文件夹
         LuaApplication app = (LuaApplication) getApplication();
+        if(app.getClass()!=LuaApplication.class){
+            while (true){
+                if(app.getClass()==LuaApplication.class)
+                    break;
+            }
+        }
         localDir = app.getLocalDir();
         odexDir = app.getOdexDir();
         libDir = app.getLibDir();
@@ -213,7 +219,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
 
         handler = new MainHandler();
-
 
 
         try {
@@ -303,7 +308,8 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                 d.show();*/
                 return;
             }
-        }}
+        }
+    }
 
     private void chcek1() {
         try {
@@ -333,7 +339,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             v0_1.setAccessible(true);
             v0_1.set(null, true);
         } catch (Exception e) {
-           // e.printStackTrace();
+            // e.printStackTrace();
            /* StackTraceElement[] arrayOfStackTraceElement = e.getStackTrace();
             // 遍历整个堆栈查询xposed相关信息
             for (StackTraceElement stackTraceElement : arrayOfStackTraceElement) {
@@ -410,6 +416,14 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
 
     public Uri getUriForPath(String path) {
         return FileProvider.getUriForFile(this, getPackageName(), new File(path));
+    }
+
+    public long test(String src, int n) {
+        long t=System.currentTimeMillis();
+        for (int i = 0; i < n; i++) {
+            L.LdoString(src);
+        }
+        return System.currentTimeMillis()-t;
     }
 
     public Uri getUriForFile(File path) {
@@ -869,7 +883,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     protected void onStart() {
         super.onStart();
         runFunc("onStart");
-        StatService.onPageStart(this, pageName);
     }
 
     @Override
@@ -888,7 +901,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
     protected void onStop() {
         super.onStop();
         runFunc("onStop");
-        StatService.onPageEnd(this, pageName);
     }
 
     public static LuaActivity getActivity(String name) {
@@ -1507,19 +1519,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
                 L.setUpValue(-2, 1);
                 ok = L.pcall(0, 0, 0);
                 if (ok == 0) {
-                    if (sKey == null) {
-                        LuaObject key = env.getField("app_key");
-                        if (key.isString()) {
-                            sKey = key.toString();
-                            StatService.setAppKey(key.toString());
-                        }
-                        LuaObject channel = env.getField("app_channel");
-                        if (channel.isString())
-                            StatService.setAppChannel(this, channel.toString(), true);
-                        StatService.setOn(this, StatService.EXCEPTION_LOG);
-                    }
-
-
                     LuaObject title = env.getField("appname");
                     if (title.isString())
                         setTitle(title.getString());
@@ -1804,6 +1803,7 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             toastbuilder.setLength(0);
             toast = Toast.makeText(this, text, Toast.LENGTH_LONG);
             toastbuilder.append(text);
+            toast.show();
         } else {
             toastbuilder.append("\n");
             toastbuilder.append(text);
@@ -1811,7 +1811,6 @@ public class LuaActivity extends Activity implements LuaBroadcastReceiver.OnRece
             toast.setDuration(Toast.LENGTH_LONG);
         }
         lastShow = now;
-        toast.show();
     }
 
     private void setField(String key, Object value) {

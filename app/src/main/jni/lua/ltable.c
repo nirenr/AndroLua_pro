@@ -426,6 +426,7 @@ Table *luaH_new (lua_State *L) {
   t->flags = cast_byte(~0);
   t->array = NULL;
   t->sizearray = 0;
+  t->type=0;
   setnodevector(L, t, 0);
   return t;
 }
@@ -660,6 +661,9 @@ unsigned int luaH_getn (Table *t) {
   unsigned int j = t->sizearray;
   if (j > 0 && ttisnil(&t->array[j - 1])) {
     /* there is a boundary in the array part: (binary) search for it */
+    /*for (j; j > 0; j--) {
+      if (!ttisnil(&t->array[j - 1])) return j;
+    }*/
     unsigned int i = 0;
     while (j - i > 1) {
       unsigned int m = (i+j)/2;

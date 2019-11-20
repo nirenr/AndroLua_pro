@@ -26,7 +26,7 @@ public class LuaTable <K, V>extends LuaObject implements Map <K,V>{
 		push();
 		try {
 			L.pushObjectValue(key);
-			b = L.getTable(-2) == LuaState.LUA_TNIL;
+			b = L.getTable(-2) != LuaState.LUA_TNIL;
 			L.pop(1);
 		}
 		catch (LuaException e) {
@@ -177,9 +177,19 @@ public class LuaTable <K, V>extends LuaObject implements Map <K,V>{
 	}
 
 	@Override
-	public Collection values() {
-		// TODO: Implement this method
-		return null;
+	public Collection<V> values() {
+		ArrayList<V> sets=new ArrayList<>();
+		push();
+		L.pushNil();
+		while (L.next(-2) != 0) {
+			try {
+				sets.add((V)L.toJavaObject(-1));
+			}
+			catch (LuaException e) {}
+			L.pop(1);
+		}
+		L.pop(1);
+		return sets;
 	}
 
 

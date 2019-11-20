@@ -11,12 +11,17 @@ public class MethodProxyExecuter {
     @SuppressWarnings({"rawtypes"})
     public static Object executeInterceptor(MethodInterceptor interceptor, Class<?> superClass, String methodName,
                                             Class[] argsType, Object[] argsValue, Object object) {
+        if(argsValue==null)
+            argsValue=new Object[0];
+        if(argsType==null)
+            argsType=new Class[0];
         if (interceptor == null)
             return executeMethod(superClass, methodName, argsType, argsValue, object);
         try {
             MethodProxy methodProxy = new MethodProxy(superClass, methodName, argsType);
             return interceptor.intercept(object, argsValue, methodProxy);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ProxyException(e.getMessage());
         }
     }

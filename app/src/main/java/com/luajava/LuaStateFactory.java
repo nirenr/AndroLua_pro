@@ -24,6 +24,8 @@
 
 package com.luajava;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
@@ -59,7 +61,7 @@ public final class LuaStateFactory
 		LuaState L = new LuaState();
 		
 		states.put(L.getPointer(), L);
-		
+
 		return L;
 	}
 	
