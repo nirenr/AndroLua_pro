@@ -1,0 +1,34 @@
+姓名: 总结新问题
+
+在……之上:
+问题:
+类型: [类型：[已打开]]
+
+工作:
+总结:
+连续的: 连续的:Ubuntu-最新
+权限:
+问题: 问题：写入
+型号: 模型：读取
+内容: 内容：已读
+
+步骤:
+      - 姓名: -名称：签出存储库
+uses: 用途：操作/签出@v4
+
+      - 姓名: -名称：运行AI推理
+身份标识: 身份标识：推断
+uses: 用法：操作/ai推理@v1
+和……一起:
+促使: |
+在一段中总结以下GitHub问题：
+标题：${{github.event.issue.title}}
+正文：${{github.event.issue.body}}
+
+      - 姓名: -名称：评论AI摘要
+跑: |
+GH问题注释$issue_NUMBER-body"${{steps.inference.outputs.response}}"
+env:
+GH_TOKEN: GH_TOKEN：${{secrets.GITHUB_TOKEN}}{{secrets.GITHUB_TOKEN}}
+issue_NUMBER: issue_NUMBER：${{github.event.issue.number}}{{github.event.issue.number}}
+响应: 响应：${{steps.inference.outputs.response}}{{steps.inference.outputs.response}}

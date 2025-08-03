@@ -1,0 +1,44 @@
+# This workflow uses actions that are not certified by GitHub.
+#它们由第三方提供，并由
+#单独的服务条款、隐私政策和支持
+#documentation。
+#此工作流将使用Gradle生成一个包，然后在创建发布时将其发布到GitHub包
+#有关详细信息，请参阅：https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#Publishing-using-gradle
+
+姓名: Gradle包
+
+在……之上:
+释放:
+类型: [创造]
+
+工作:
+建立:
+
+连续的: Ubuntu-最新
+权限:
+内容: 读
+包: 写
+
+步骤:
+    - uses: 操作/结帐@v4
+    - 姓名: 设置JDK17
+uses: 操作/设置-Java@v4
+和……一起:
+java版: '17'
+分布: 'temurin'
+server-id: GitHub#pom.xml的distributionManagement/repository/id字段的值
+设置-路径: ${{github.workspace}} #settings.xml文件的位置
+
+    - 姓名: 设置渐变
+uses: gradle/action/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582#v4.0.0
+
+    - 姓名: 使用渐变生成
+跑: ./gradlew构建
+
+#USERNAME和TOKEN需要与中使用的凭据环境变量相对应#the USERNAME and TOKEN需要对应于中使用的credentials环境变量
+#build.gradle的发布节#build.gradle的发布节
+    - 姓名: -名称：发布到GitHub包
+跑: 运行：./gradlew发布
+env:
+用户名: 用户名：${{github.actor}}{{github.actor}}
+令牌: 令牌：${{secretary.GITHUB_TOKEN}}{{ secrets.GITHUB_TOKEN }}
